@@ -1,3 +1,9 @@
+# ESLint
+.eslintrc.json
+
+# Config
+config.json
+
 # Logs
 logs
 *.log
