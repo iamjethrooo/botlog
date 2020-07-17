@@ -5,60 +5,64 @@ const cheerio = require('cheerio');
 const { MessageEmbed } = require('discord.js');
 
 module.exports = class FloridaManCommand extends Command {
-  constructor(client) {
-    super(client, {
-      name: 'floridaman',
-      aliases: ['florida', 'onthisday', 'otd'],
-      group: 'misc',
-      memberName: 'floridaman',
-      description: 'Generate a Florida Man headline!',
-      throttling: {
-        usages: 1,
-        duration: 6
-      }
-    });
-  }
+	constructor(client) {
+		super(client, {
+			name: 'floridaman',
+			aliases: ['florida', 'onthisday', 'otd'],
+			group: 'misc',
+			memberName: 'floridaman',
+			description: 'Generate a Florida Man headline!',
+			throttling: {
+				usages: 1,
+				duration: 6,
+			},
+		});
+	}
 
-  run(message) {
-  	console.log(message);
+	run(message, args) {
   	let url = 'https://floridamanbirthdaychallenge.com/floridaman/';
-  	let args = message.argString.slice(1).split(/ +/).join(' ')
   	args = args.toLowerCase();
-  	if (args.length > 0){
+  	if (args.length > 0) {
   		console.log(args);
   		if (checkDate(args, 'MMMM DD') || checkDate(args, 'MMM DD')) {
   			args = moment(args).format('MMMM-DD');
-  			url += args.toLowerCase();
+  		}
+  		else if (checkDate(args, 'MMM D') || checkDate(args, 'MMMM D')) {
+  			args = moment(args).format('MMMM-D');
   		}
   		else if (args == 'now' || args == 'today') {
   			args = moment().format('MMMM-DD');
-  			url += args.toLowerCase();
   		}
   		else {
-  			return message.say("Invalid date!");
+  			return message.say('Invalid date!');
   		}
   	}
+  	else {
+  		args = moment().format('MMMM-DD');
+  	}
 
+  	url += args.toLowerCase();
+  	console.log(url);
   	rp(url)
-  		.then(function(html){
-  			let $ = cheerio.load(html);
+  		.then(function(html) {
+  			const $ = cheerio.load(html);
   			let title = $('title', html).text().slice(args.length + 1);
   			title = title.substr(0, title.length - 13);
-  			console.log(title);
-  			let date = moment(args).format('MMMM DD');
-  			let imageUrl = $('img.attachment-twentyseventeen-featured-image').attr('src');
+  			const imageUrl = $('img.attachment-twentyseventeen-featured-image').attr('src');
   			imageUrl.split(/ +/);
   			const embed = new MessageEmbed()
   				.setColor('#D2691E')
-  				.setTitle(`${date} Florida News`)
+  				.setTitle(`${args} Florida News`)
   				.setDescription(title)
   				.setURL(imageUrl)
   				.setThumbnail(imageUrl)
-  				.setFooter(`Requested by ${message.author.username}#${message.author.discriminator}`)
+  				.setFooter(`Requested by ${message.author.username}#${message.author.discriminator}`);
   			return message.say(embed);
   		})
-  		.catch(console.error);
-  }
+  		.catch(err => {
+  			return message.say('There aren\'t any news for this date! :(');
+  		});
+	}
 };
 
 function checkDate(date, dateFormat) {
