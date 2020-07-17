@@ -16,8 +16,10 @@ const client = new CommandoClient ({
 client.registry
 	.registerDefaultTypes()
 	.registerGroups([
-		['misc', 'Miscellaneous Commands'],
+		['animals', 'Animal Commands'],
 		['guild', 'Guild Commands'],
+		['music', 'Music Commands'],
+		['misc', 'Miscellaneous Commands'],
 	])
 	.registerDefaultGroups()
 	.registerDefaultCommands({
@@ -32,6 +34,15 @@ client.once('ready', () => {
 		type: 'STREAMING',
 		url: 'https://www.twitch.tv/greekgodx',
 	});
+});
+
+client.on('message', message => {
+	// If message is media
+	if (message.channel.id == '733239970562703411') {
+		if(!(message.attachments.size > 0 || message.embeds.length > 0)) {
+			message.delete();
+		}
+	}
 });
 
 client.on('error', console.error);
