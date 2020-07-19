@@ -1,8 +1,7 @@
-# ESLint
+# Custom
 .eslintrc.json
-
-# Config
 config.json
+.env
 
 # Logs
 logs
