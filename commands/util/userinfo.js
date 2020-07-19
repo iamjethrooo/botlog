@@ -15,7 +15,7 @@ module.exports = class UserInfoCommand extends Command {
 
 	run(message, args) {
 		let permissions = [];
-		const member = message.mentions.members.first() || message.guild.members.cache.get(args[0]) || message.member;
+		const member = message.mentions.members.first() || message.guild.members.cache.get(args[0]) || message.member || message.author;
 		const randomColor = "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); });
 		const embed = new MessageEmbed()
 			.setColor(randomColor)
@@ -24,7 +24,7 @@ module.exports = class UserInfoCommand extends Command {
 			.setThumbnail(member.user.displayAvatarURL({ dynamic: true} ))
 			.addField('Status', status[member.user.presence.status], true)
 			.addField('Joined at: ', moment(member.joinedAt).format('dddd, MMMM Do YYYY, HH:mm:ss'), true)
-			.addField('Created at: ', moment(member.createdAt).format('dddd, MMMM Do YYYY, HH:mm:ss'), true)
+			.addField('Created at: ', moment(member.user.createdAt).format('dddd, MMMM Do YYYY, HH:mm:ss'), true)
 			.addField(`Roles [${member.roles.cache.filter(r => r.id !== message.guild.id).map(roles => `\`${roles.name}\``).length}]`,`${member.roles.cache.filter(r => r.id !== message.guild.id).map(roles => `<@&${roles.id }>`).join(" **|** ") || "No Roles"}`, true)
 			.setTimestamp();
 
