@@ -65,7 +65,7 @@ client.on('message', message => {
 client.on('guildCreate', guild => {
 	const channel = client.channels.cache.get('669193383503200266');
 	// channel.send('Pa shoutout po kay <@>');
-	channel.send('Salamat po sa pag accept 🙂');
+	channel.send('Salamat po sa pag invite 🙂');
 	channel.send('Pa shoutout po kay Chief Investigator <@699632157236396082>'); // Gabby
 	channel.send('Pa shoutout po kay <@454079835958935562>, alias Icarus, alias blaze, alias Oni, alias 𝐹𝓇𝑒𝓎𝒶'); // Blaze
 	channel.send('Pa shoutout po kay <@602678848693338134>, musta sa NYC?'); // Gin
