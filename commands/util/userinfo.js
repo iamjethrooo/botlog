@@ -24,7 +24,7 @@ module.exports = class UserInfoCommand extends Command {
 			.setThumbnail(member.user.displayAvatarURL({ dynamic: true} ))
 			.addField('Status', status[member.user.presence.status], true)
 			.addField('Joined at: ', moment(member.joinedAt).format('dddd, MMMM Do YYYY, HH:mm:ss'), true)
-			.addField('Created at: ', moment(message.author.createdAt).format('dddd, MMMM Do YYYY, HH:mm:ss'), true)
+			.addField('Created at: ', moment(member.createdAt).format('dddd, MMMM Do YYYY, HH:mm:ss'), true)
 			.addField(`Roles [${member.roles.cache.filter(r => r.id !== message.guild.id).map(roles => `\`${roles.name}\``).length}]`,`${member.roles.cache.filter(r => r.id !== message.guild.id).map(roles => `<@&${roles.id }>`).join(" **|** ") || "No Roles"}`, true)
 			.setTimestamp();
 
