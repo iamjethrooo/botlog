@@ -14,7 +14,6 @@ module.exports = class ServerInfoCommand extends Command {
 	run(message) {
 		const randomColor = "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); });
 		const icon = message.guild.iconURL();
-		console.log(message.guild.channels);
 		const embed = new MessageEmbed()
 			.setAuthor(message.guild.name, icon)
 			.setColor(randomColor)
