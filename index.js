@@ -47,10 +47,11 @@ const picsOnlyChannels = ['733239970562703411', '669514986548232193', '669520318
 
 client.on('message', message => {
 	const isBot = message.author.bot;
-	const isAdmin = message.member.hasPermission('ADMINISTRATOR');
+	
 
 	// Removes text in media-only channel
 	if (picsOnlyChannels.includes(message.channel.id)) {
+		const isAdmin = message.member.hasPermission('ADMINISTRATOR');
 		if (!isAdmin && !isBot) {
 			if (!(message.attachments.size > 0 || message.embeds.length > 0)) {
 				message.delete();
@@ -72,9 +73,9 @@ client.on('guildCreate', guild => {
 	channel.send('Pa shoutout po kay <@509434286022328340>, hi daw sabi ng asawa nya'); // Morgan
 	channel.send('Pa shoutout po sa Linus ng Baguio, <@321156839020691457> na mahaba rin ang hair'); // Mr. M00
 	channel.send('Pa shoutout po sa server owner nating malupet, <@543589081574015036>'); // Rice
-	channel.send('Pa shoutout po sa mga admin ng server, <@625722729991241756> <@429778312869707776> <@486944028663873536> nice job po mga ser');
+	channel.send('Pa shoutout po sa mga admin ng server, <@625722729991241756> <@429778312869707776> <@486944028663873536> nice job po mga ser'); // Admins
 	channel.send('Pa shoutout po kay <@458231661239205888>, pro Raft player'); // LLLL
-	channel.send('Pa shoutout po kay <@302076261281300491> who tried to lick a toad once');
+	channel.send('Pa shoutout po kay <@302076261281300491> who tried to lick a toad once'); // That Guy
 	channel.send('CACAWW! Shoutout po kay <@264666701633683456>, balang araw magiging mod ka rin'); // Crow
 	channel.send('Pa shoutout po kay <@386805742730084353>, sOmeBoDY COme Giiit Heeer, ShE\'S DanCIng LiKE A sStrRIPERR'); // Kaito
 	channel.send('Pa shoutout po kay <@496523098439548929> ang pogi nyo po, sana all'); // Jethro
