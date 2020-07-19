@@ -23,9 +23,9 @@ module.exports = class PruneCommand extends Command {
 	}
 
 	run(message, { deleteCount }) {
-		if(msg.guild) {
-			if(!msg.member.hasPermission('ADMINISTRATOR') && !this.client.isOwner(msg.author)) {
-				return msg.reply('Only administrators may use this command.');
+		if(message.guild) {
+			if(!message.member.hasPermission('ADMINISTRATOR') && !this.client.isOwner(message.author)) {
+				return message.reply('Only administrators may use this command.');
 			}
 		}		
 		message.channel
