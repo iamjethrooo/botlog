@@ -73,6 +73,7 @@ client.on('guildCreate', guild => {
 	channel.send('Pa shoutout po sa Linus ng Baguio, <@321156839020691457> na mahaba rin ang hair'); // Mr. M00
 	channel.send('Pa shoutout po sa server owner nating malupet, <@543589081574015036>'); // Rice
 	channel.send('Pa shoutout po kay <@458231661239205888>, tara Raft'); // LLLL
+	channel.send('Pa shoutout po kay <@302076261281300491> who tried to lick a toad once');
 	channel.send('CACAWW! Shoutout po kay <@264666701633683456>, balang araw magiging mod ka rin'); // Crow
 	channel.send('Pa shoutout po kay <@386805742730084353>, sOmeBoDY COme Giiit Heeer, ShE\'S DanCIng LiKE A sStrRIPERR'); // Kaito
 	channel.send('Pa shoutout po kay <@496523098439548929> ang pogi nyo po, sana all'); // Jethro
