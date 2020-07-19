@@ -1,7 +1,9 @@
 const { oneLine } = require('common-tags');
 const { Command } = require('discord.js-commando');
 const { MessageEmbed } = require('discord.js');
-const { prefix } = require('../../config.json');
+require('dotenv').config();
+
+const prefix = process.env.PREFIX
 
 module.exports = class HelpCommand extends Command {
 	constructor(client) {
