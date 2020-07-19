@@ -55,7 +55,7 @@ module.exports = class HelpCommand extends Command {
 						{ name: '🐱 Animals', value: '`cat` `dog`' },
 						{ name: '😂 Fun', value: '`chucknorris` `clap` `florida` `insult` `mock` `quote` `say` `spam`' },
 						{ name: '🔨 Moderation', value: '`prefix` `prune`' },
-						{ name: '🔧 Utility', value: '`help` `invite` `ping` `userinfo` `weather`' },
+						{ name: '🔧 Utility', value: '`help` `invite` `ping` `poll` `serverinfo` `userinfo` `weather`' },
 					)
 		}
 
