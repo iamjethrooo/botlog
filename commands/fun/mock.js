@@ -15,7 +15,6 @@ module.exports = class MockCommand extends Command {
 	}
 
 	async run(message, args) {
-		console.log(message.author);
 		if (args.length < 1) {
 			return message.say('Please provide some text to mock.');
 		}
@@ -59,7 +58,7 @@ const applyText = (canvas, text) => {
 	const ctx = canvas.getContext('2d');
 
 	// Base font size
-	let fontSize = 80;
+	let fontSize = 75;
 
 	do {
 		ctx.font = `${fontSize -= 5}px sans-serif`;
