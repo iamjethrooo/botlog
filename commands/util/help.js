@@ -14,6 +14,7 @@ module.exports = class HelpCommand extends Command {
 				The command may be part of a command name or a whole command name.
 				If it isn't specified, all available commands will be listed.
 			`,
+			format: '(command)',
 			args: [
 				{
 					key: 'command',
@@ -35,7 +36,7 @@ module.exports = class HelpCommand extends Command {
 				embed.setAuthor(`${prefix} ${commands[0].name} info`)
 					.addFields(
 							{ name: 'Description', value: commands[0].description, inline:true },
-							{ name: 'Usage', value: `${prefix} ${commands[0].name} ${commands[0].format}`, inline:true },
+							{ name: 'Usage', value: `${prefix} ${commands[0].name} ${commands[0].format ? commands[0].format : ''}`, inline:true },
 						)
 					.setFooter('P.S.: "<>" is required, "()" is optional');
 			} else if(commands.length > 1) {

@@ -7,10 +7,10 @@ module.exports = class MockCommand extends Command {
 	constructor(client) {
 		super(client, {
 			name: 'mock',
-			group: 'memes',
+			group: 'fun',
 			memberName: 'mock',
-			description: 'mOcK',
-			usage: '<word/sentence>'
+			description: 'mOcKifY a mESsAgE.',
+			format: '<message>'
 		});
 	}
 

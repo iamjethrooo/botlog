@@ -7,7 +7,7 @@ module.exports = class InsultCommand extends Command {
 		super(client, {
 			name: 'insult',
 			aliases: ['roast'],
-			group: 'misc',
+			group: 'fun',
 			memberName: 'insult',
 			description: 'Generate an evil insult!',
 			throttling: {

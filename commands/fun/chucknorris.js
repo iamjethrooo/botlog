@@ -7,7 +7,7 @@ module.exports = class ChuckNorrisCommand extends Command {
 		super(client, {
 			name: 'chucknorris',
 			aliases: ['chuckfact', 'norris', 'chuck-norris'],
-			group: 'misc',
+			group: 'fun',
 			memberName: 'chucknorris',
 			description: 'Get a satirical fact about Chuck Norris!',
 			throttling: {

@@ -5,7 +5,7 @@ module.exports = class SayCommand extends Command {
 		super(client, {
 			name: 'say',
 			aliases: ['parrot', 'copy'],
-			group: 'misc',
+			group: 'fun',
 			memberName: 'say',
 			description: 'Replies with the text you provide.',
 			args: [
@@ -20,6 +20,7 @@ module.exports = class SayCommand extends Command {
 	}
 
 	run(message, { text }) {
+		message.delete();
 		return message.say(text);
 	}
 };

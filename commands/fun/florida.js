@@ -9,9 +9,10 @@ module.exports = class FloridaManCommand extends Command {
 		super(client, {
 			name: 'florida',
 			aliases: ['floridaman'],
-			group: 'misc',
+			group: 'fun',
 			memberName: 'florida',
 			description: 'Generate a Florida Man headline!',
+      format: '(date)',
 			throttling: {
 				usages: 1,
 				duration: 6,

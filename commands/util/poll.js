@@ -8,7 +8,7 @@ module.exports = class PollCommand extends Command {
 			group: 'util',
 			memberName: 'poll',
 			description: 'Make a poll.',
-			format: ''
+			format: '<title> <options>'
 		});
 	}
 

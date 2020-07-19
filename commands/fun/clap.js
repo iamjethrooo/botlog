@@ -4,9 +4,9 @@ module.exports = class ClapCommand extends Command {
 	constructor(client) {
 		super(client, {
 			name: 'clap',
-			group: 'misc',
+			group: 'fun',
 			memberName: 'clap',
-			description: 'Clap',
+			description: 'Clapify a message.',
 			format: '<sentence>',
 		});
 	}

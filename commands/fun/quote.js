@@ -6,7 +6,7 @@ module.exports = class MotivateCommand extends Command {
 	constructor(client) {
 		super(client, {
 			name: 'quote',
-			group: 'misc',
+			group: 'fun',
 			memberName: 'quote',
 			description: 'Generate a random quote.',
 			throttling: {

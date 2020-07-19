@@ -6,7 +6,7 @@ module.exports = class InviteCommand extends Command {
 		super(client, {
 			name: 'invite',
 			aliases: ['invite', 'link'],
-			group: 'misc',
+			group: 'util',
 			memberName: 'invite',
 			description: 'Want to invite this bot to another server? Use this command!',
 			throttling: {
