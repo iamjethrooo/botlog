@@ -23,6 +23,11 @@ module.exports = class PruneCommand extends Command {
 	}
 
 	run(message, { deleteCount }) {
+		if(msg.guild) {
+			if(!msg.member.hasPermission('ADMINISTRATOR') && !this.client.isOwner(msg.author)) {
+				return msg.reply('Only administrators may use this command.');
+			}
+		}		
 		message.channel
 			.bulkDelete(deleteCount + 1)
 			.then(messages => {
