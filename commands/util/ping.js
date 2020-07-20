@@ -15,6 +15,7 @@ module.exports = class PingCommand extends Command {
 	}
 
 	async run(msg) {
+		msg.delete();
 		const pingMsg = await msg.reply('Pinging...');
 		return pingMsg.edit(`${msg.channel.type !== 'dm' ? `${msg.author}, ` : ''}Pong! \`${(pingMsg.editedTimestamp || pingMsg.createdTimestamp) - (msg.editedTimestamp || msg.createdTimestamp)}ms.\``);
 	}
