@@ -17,7 +17,6 @@ client.registry
 		['animals', 'Animal Commands'],
 		['fun', 'Fun Commands'],
 		['guild', 'Guild Commands'],
-		['music', 'Music Commands'],
 		['util', 'Utility Commands'],
 	])
 	.registerDefaultGroups()
