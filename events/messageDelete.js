@@ -19,7 +19,7 @@ module.exports = {
 		if (message.guild.id === '732563481328484392') {
 			channel = client.channels.cache.get('735378475279712359');
 		} else if (message.guild.id === '669190303353143306') {
-			channel = cliend.channels.cache.get('735391451831205909');
+			channel = client.channels.cache.get('735391451831205909');
 		}
 		const embed = new MessageEmbed()
 			.setAuthor(`${message.author.username}#${message.author.discriminator}`, message.author.displayAvatarURL({ dynamic: true} ))
