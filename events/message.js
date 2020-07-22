@@ -1,6 +1,7 @@
 const picsOnlyChannels = ['733239970562703411', '669514986548232193', '669520318615912466', '735401124135174185'];
 module.exports = {
 	run: message => {
+		if (message.guild === null) return;
 		const isBot = message.author.bot;
 		// Removes text messages in media-only channels
 		if (picsOnlyChannels.includes(message.channel.id) && !isBot) {
