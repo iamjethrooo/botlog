@@ -16,7 +16,6 @@ module.exports = class SnipeCommand extends Command {
 		if (!sniped) {
 			return message.say('There\'s nothing to snipe!');
 		}
-		console.log(sniped.createdAt);
 		const embed = new MessageEmbed()
 			.setAuthor(`${sniped.author.username}#${sniped.author.discriminator}`, sniped.author.displayAvatarURL({ dynamic: true} ))
 			.setDescription(sniped.content)
