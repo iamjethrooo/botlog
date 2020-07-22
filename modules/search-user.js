@@ -1,7 +1,7 @@
 const { MessageEmbed } = require('discord.js')
 
-const search = async(message, args, client) => {
-	const users = await client.users.cache.filter(u => u.username.toLowerCase() == args.toLowerCase());
+const search = async(message, args, ) => {
+	const users = await message.guild.members.cache.filter(u => u.user.username.toLowerCase() == args.toLowerCase() || u.displayName.toLowerCase() == args.toLowerCase());
 	
 	if (users.size > 1) {
 		let i = 1;
@@ -11,7 +11,7 @@ const search = async(message, args, client) => {
 			.setDescription('')
 			.setTimestamp();
 		users.forEach(user => {
-			embed.setDescription(`${embed.description}\n\`${i}. ${user.username}#${user.discriminator}\``)
+			embed.setDescription(`${embed.description}\n\`${i}. ${user.user.username}#${user.user.discriminator}\``)
 			choices[i] = user.id;
 			i++;
 		});
@@ -29,16 +29,14 @@ const search = async(message, args, client) => {
 				});
 		});
 		return id;
+	} else if (users.size < 1){
+		message.say('User does not exist!');
+		return null;
 	} else {
-		if (users.size < 1) {
-			message.say('User does not exist!');
-			return null;
-		} else {
-			return users.first().id;
-		}
+		return users.first().id;
 	}
 }
 
-const getMember = async (message, args, client) => args.length > 0 ? message.mentions.members.first() || message.guild.members.cache.get(args) || message.guild.members.cache.get(await search(message, args, client)) : message.member || message.author;
+const getMember = async (message, args) => args.length > 0 ? message.mentions.members.first() || message.guild.members.cache.get(args) || message.guild.members.cache.get(await search(message, args)) : message.member || message.author;
 
 module.exports = getMember;
