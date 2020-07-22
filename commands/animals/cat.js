@@ -1,7 +1,8 @@
 const { Command } = require('discord.js-commando');
-require('dotenv').config();
 const querystring = require('query-string');
-const r2 = require('r2');
+const fetch = require('node-fetch');
+
+require('dotenv').config();
 
 module.exports = class CatCommand extends Command {
 	constructor(client) {
@@ -16,14 +17,12 @@ module.exports = class CatCommand extends Command {
 
 	async run(message, args) {
 		const images = await loadImage(message.author.username, args);
-		const image = images[0];
 
-		message.channel.send({ files: [ image.url ] });
+		message.say({ files: [ images[0].url ] });
 	}
 };
 
 async function loadImage(sub_id, mime = 'jpg, png') {
-	const url = 'https://api.thecatapi.com/';
 	const headers = {
 		'x-api-key': process.env.CAT_API,
 	};
@@ -36,10 +35,8 @@ async function loadImage(sub_id, mime = 'jpg, png') {
 	};
 	const queryString = querystring.stringify(query);
 
-	try {
-		return await r2.get(`${url}v1/images/search?${queryString}`, { headers }).json;
-	}
-	catch (err) {
-		console.log(err);
-	}
+	return await fetch(`https://api.thecatapi.com/v1/images/search?${queryString}`, { method: 'GET', headers: headers })
+		.then(res => res.json())
+		.then(json => json)
+		.catch(console.error);
 }
