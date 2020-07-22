@@ -14,6 +14,7 @@ client.snipes = {
 module.exports = {
 	run: message => {
 		let channel;
+		if (message.author.bot) return;
 		client.snipes.set(message);
 		if (message.guild.id === '732563481328484392') {
 			channel = client.channels.cache.get('735378475279712359');
