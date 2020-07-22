@@ -6,7 +6,7 @@ module.exports = {
 		client.user.setPresence({
 			status: 'online',
 			activity: {
-				name: 'Netflix with Node VPN',
+				name: 'Netflix with Nord VPN',
 				type: 'WATCHING',
 				url: 'https://www.twitch.tv/mrmoo_linux'
 			},
