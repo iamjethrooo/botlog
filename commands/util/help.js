@@ -54,7 +54,7 @@ module.exports = class HelpCommand extends Command {
 				.addFields(
 						{ name: '🐱 Animals', value: '`cat` `dog`' },
 						{ name: '😂 Fun', value: '`chucknorris` `clap` `florida` `insult` `mock` `quote` `say` `spam`' },
-						{ name: '🔨 Moderation', value: '`prefix` `prune`' },
+						{ name: '🔨 Moderation', value: '`disable` `enable` `prefix` `prune`' },
 						{ name: '🔧 Utility', value: '`help` `invite` `ping` `poll` `serverinfo` `userinfo` `weather`' },
 					)
 		}
