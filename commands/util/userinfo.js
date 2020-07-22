@@ -15,7 +15,8 @@ module.exports = class UserInfoCommand extends Command {
 	}
 
 	async run(message, args) {
-		const member = await getMember(message, args, this.client);
+		const member = await getMember(message, args);
+		if (member == null) return;
 		const randomColor = "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); });
 		const embed = new MessageEmbed()
 			.setColor(randomColor)
@@ -27,7 +28,7 @@ module.exports = class UserInfoCommand extends Command {
 			.addField('Created at: ', moment(member.user.createdAt).format('dddd, MMMM Do YYYY, HH:mm:ss'), true)
 			.addField(`Roles [${member.roles.cache.filter(r => r.id !== message.guild.id).map(roles => `\`${roles.name}\``).length}]`,`${member.roles.cache.filter(r => r.id !== message.guild.id).map(roles => `<@&${roles.id }>`).join(" **|** ") || "No Roles"}`, true)
 			.setTimestamp();
-		message.say(embed);
+		return message.say(embed);
 	}
 };
 
