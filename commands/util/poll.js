@@ -8,7 +8,7 @@ module.exports = class PollCommand extends Command {
 			group: 'util',
 			memberName: 'poll',
 			description: 'Make a poll.',
-			format: '<title> <options>'
+			format: '<title> <options> (timeout in seconds)'
 		});
 	}
 
@@ -16,7 +16,10 @@ module.exports = class PollCommand extends Command {
 		args = args.split(' ');
 		const title = args[0];
 		const options = args.slice(1);
-		pollEmbed(message, title, options)
+		options.pop();
+		console.log(options);
+		console.log(args[args.length - 1]);
+		pollEmbed(message, title, options, parseInt(args[args.length - 1]))
 			.catch(console.error);
 	}
 }
