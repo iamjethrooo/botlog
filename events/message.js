@@ -10,7 +10,7 @@ module.exports = {
 			if (!isAdmin) {
 				if (!(message.attachments.size > 0 || message.embeds.length > 0)) {
 					message.delete()
-						.then(message.say(`Don't chat here.`)
+						.then(message.say(`Don't chat here, please use the <#735804432985620521> channel above.`)
 							.then(message => message.delete({ timeout: 5000 }))
 							.catch(console.error)
 							);
