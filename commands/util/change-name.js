@@ -7,10 +7,12 @@ module.exports = class ChangeNameCommand extends Command {
 			memberName: 'change-name',
 			group: 'util',
 			description: 'Change the bot\'s name!',
+			ownerOnly: true
 		});
 	}
 
 	run(message, args) {
+
 		return this.client.user.setUsername(args.toString());
 	}
 }
