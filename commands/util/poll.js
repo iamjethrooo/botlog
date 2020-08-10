@@ -17,8 +17,6 @@ module.exports = class PollCommand extends Command {
 		const title = args[0];
 		const options = args.slice(1);
 		options.pop();
-		console.log(options);
-		console.log(args[args.length - 1]);
 		pollEmbed(message, title, options, parseInt(args[args.length - 1]))
 			.catch(console.error);
 	}
