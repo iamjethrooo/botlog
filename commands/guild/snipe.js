@@ -12,6 +12,13 @@ module.exports = class SnipeCommand extends Command {
 	}
 
 	run(message) {
+		return message.reply(`The \`snipe\` command is disabled.`);
+		if(!message.guild) {
+			return message.say(`You can't use this command in a DM!`);
+		}
+		if(!message.member.hasPermission('ADMINISTRATOR')) {
+			return message.reply('Only administrators may use this command.');
+		}
 		const sniped = this.client.snipes.get(message.channel.id);
 		if (!sniped) {
 			return message.say('There\'s nothing to snipe!');
