@@ -22,6 +22,11 @@ module.exports = class PrefixCommand extends Command {
 
 	async run(msg, args) {
 		// Just output the prefix
+		if(message.guild) {
+			if(!message.member.hasPermission('ADMINISTRATOR')) {
+				return message.reply('Only administrators may use this command.');
+			}
+		}
 		if(!args.prefix) {
 			const prefix = msg.guild ? msg.guild.commandPrefix : this.client.commandPrefix;
 			return msg.reply(`${prefix ? `The command prefix is \`\`${prefix}\`\`.` : 'There is no command prefix.'} To run commands, use ${msg.anyUsage('command')}.`);
