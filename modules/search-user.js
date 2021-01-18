@@ -1,8 +1,9 @@
 const { MessageEmbed } = require('discord.js')
 
 const search = async(message, args) => {
+	//console.log(message.guild.members.cache.filter(u => console.log(u)));
 	const users = await message.guild.members.cache.filter(u => u.user.username.toLowerCase() == args.toLowerCase() || u.nickname.toLowerCase() == args.toLowerCase());
-	
+	console.log(users);
 	if (users.size > 1) {
 		let i = 1;
 		let choices = [];
