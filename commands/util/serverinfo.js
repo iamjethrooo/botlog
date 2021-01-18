@@ -12,15 +12,8 @@ module.exports = class ServerInfoCommand extends Command {
 	}
 
 	run(message) {
-		if(message.guild) {
-			if(!message.member.hasPermission('ADMINISTRATOR')) {
-				return message.reply('Only administrators may use this command.');
-			}
-		}
-		
 		const randomColor = "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); });
 		const icon = message.guild.iconURL();
-
 		const embed = new MessageEmbed()
 			.setAuthor(message.guild.name, icon)
 			.setColor(randomColor)

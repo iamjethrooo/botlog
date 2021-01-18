@@ -21,7 +21,6 @@ module.exports = class ChangeNicknameCommand extends Command {
 		nickname = nickname.join(' ');
 		const unit = duration.pop();
 		duration = duration.join('');
-		
 		switch(unit) {
 			case 's':
 				duration *= 1000;
