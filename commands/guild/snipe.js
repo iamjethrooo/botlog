@@ -27,6 +27,7 @@ module.exports = class SnipeCommand extends Command {
 				.setAuthor(`${sniped.author.username}#${sniped.author.discriminator}`, sniped.author.displayAvatarURL({ dynamic: true }))
 				.setDescription(sniped.content)
 				.setTimestamp(sniped.createdAt)
+				.setColor(message.member.displayHexColor)
 			return message.say(embed);
 		}
 	}
