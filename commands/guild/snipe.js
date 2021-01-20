@@ -15,21 +15,14 @@ module.exports = class SnipeCommand extends Command {
 		if (!message.guild) {
 			return message.say(`You can't use this command in a DM!`);
 		}
-		if (!message.member.hasPermission('ADMINISTRATOR')) {
-			return message.reply('Only administrators may use this command.');
-		}
-		if (message.guild) {
-			if (!message.member.hasPermission('ADMINISTRATOR')) {
-				return message.reply('Only administrators may use this command.');
-			}
 
-		}
 		const sniped = this.client.snipes.get(message.channel.id);
-		if (!sniped) {
-			return message.say('There\'s nothing to snipe!');
-		}
+
 
 		if (message.member.hasPermission('ADMINISTRATOR') || message.member.roles.cache.find(r => r.name === "Sniper") || message.member.roles.cache.find(r => r.name === "Enforcer")) {
+			if (!sniped) {
+				return message.say('There\'s nothing to snipe!');
+			}
 			const embed = new MessageEmbed()
 				.setAuthor(`${sniped.author.username}#${sniped.author.discriminator}`, sniped.author.displayAvatarURL({ dynamic: true }))
 				.setDescription(sniped.content)
