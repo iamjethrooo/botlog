@@ -12,15 +12,14 @@ module.exports = class SnipeCommand extends Command {
 	}
 
 	run(message) {
-		return message.reply(`The \`snipe\` command is disabled.`);
-		if(!message.guild) {
+		if (!message.guild) {
 			return message.say(`You can't use this command in a DM!`);
 		}
-		if(!message.member.hasPermission('ADMINISTRATOR')) {
+		if (!message.member.hasPermission('ADMINISTRATOR')) {
 			return message.reply('Only administrators may use this command.');
 		}
-		if(message.guild) {
-			if(!message.member.hasPermission('ADMINISTRATOR')) {
+		if (message.guild) {
+			if (!message.member.hasPermission('ADMINISTRATOR')) {
 				return message.reply('Only administrators may use this command.');
 			}
 
@@ -29,10 +28,13 @@ module.exports = class SnipeCommand extends Command {
 		if (!sniped) {
 			return message.say('There\'s nothing to snipe!');
 		}
-		const embed = new MessageEmbed()
-			.setAuthor(`${sniped.author.username}#${sniped.author.discriminator}`, sniped.author.displayAvatarURL({ dynamic: true} ))
-			.setDescription(sniped.content)
-			.setTimestamp(sniped.createdAt)
-		return message.say(embed);
+
+		if (message.member.hasPermission('ADMINISTRATOR') || message.member.roles.cache.find(r => r.name === "Sniper") || message.member.roles.cache.find(r => r.name === "Enforcer")) {
+			const embed = new MessageEmbed()
+				.setAuthor(`${sniped.author.username}#${sniped.author.discriminator}`, sniped.author.displayAvatarURL({ dynamic: true }))
+				.setDescription(sniped.content)
+				.setTimestamp(sniped.createdAt)
+			return message.say(embed);
+		}
 	}
 }
