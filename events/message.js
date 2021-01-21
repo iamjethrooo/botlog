@@ -11,15 +11,32 @@ module.exports = {
 			const isAdmin = message.member.hasPermission('ADMINISTRATOR');
 			if (!isAdmin) {
 				if (!(message.attachments.size > 0 || message.embeds.length > 0)) {
+					// Store values related to the message
 					const discussionChannel = client.channels.cache.get('735804432985620521');
-					console.log(message);
+					const guildId = message.guild.id;
+					const channelId = message.channel.id;
+					const authorId = message.author.id;
+					const content = message.content;
+					let hasReplied = false;
+
+					if (message.reference) hasReplied = true;
+					let referenceId;
+					if (hasReplied) referenceId = message.reference.messageID;
+					//console.log(message);
 					message.delete()
 						.then(message.say(`Don't chat here, please use the <#735804432985620521> channel above.`)
 							.then(message => message.delete({ timeout: 5000 }))
-							.then(discussionChannel.send(`**Message removed in:** <#${message.channel.id}>\n**Message sent by:** <@${message.author.id}>\n**Message content:** ${message.content}`))
 							.catch(console.error)
-							)
+						)
 						.catch(console.error);
+
+					// If author replied to a message
+					if (hasReplied) {
+						discussionChannel.send(`**Message removed in:** <#${channelId}>\n**Message sent by:** <@${message.author.id}>\n**Message content:** ${message.content}\n**Message replied to:** https://discord.com/channels/${guildId}/${channelId}/${message.reference.messageID}`)
+					}
+					else {
+						discussionChannel.send(`**Message removed in:** <#${channelId}>\n**Message sent by:** <@${message.author.id}>\n**Message content:** ${message.content}`)
+					}
 				}
 			}
 		}
