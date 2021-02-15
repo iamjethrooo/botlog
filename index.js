@@ -18,6 +18,7 @@ client.registry
 		['fun', 'Fun Commands'],
 		['guild', 'Guild Commands'],
 		['util', 'Utility Commands'],
+		['horni', 'Horni Commands'],
 	])
 	.registerDefaultGroups()
 	.registerDefaultCommands({
