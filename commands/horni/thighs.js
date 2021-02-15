@@ -17,5 +17,6 @@ module.exports = class AssCommand extends Command {
 		}
 		if (message.channel.id == 708300479968575584) {
 			return message.say("<a:Ginbonk:808888585511501895>");
+		}
 	}
 }
