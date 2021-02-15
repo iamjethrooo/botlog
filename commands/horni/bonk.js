@@ -4,9 +4,9 @@ const { MessageEmbed } = require('discord.js');
 module.exports = class GinBonkCommand extends Command {
 	constructor(client) {
 		super(client, {
-			name: 'ginbonk',
+			name: 'bonk',
 			group: 'horni',
-			memberName: 'ginbonk',
+			memberName: 'bonk',
 			description: 'Bonk.'
 		});
 	}
@@ -16,6 +16,6 @@ module.exports = class GinBonkCommand extends Command {
 			return message.say(`You can't use this command in a DM!`);
 		}
 
-		return message.say("<:bonk:795103973349916683>");
+		return message.say("<a:Ginbonk:808888585511501895>");
 	}
 }

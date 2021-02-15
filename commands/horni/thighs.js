@@ -16,7 +16,6 @@ module.exports = class AssCommand extends Command {
 			return message.say(`You can't use this command in a DM!`);
 		}
 		if (message.channel.id == 708300479968575584) {
-			return message.say("<:bonk:795103973349916683>");
-		}
+			return message.say("<a:Ginbonk:808888585511501895>");
 	}
 }
