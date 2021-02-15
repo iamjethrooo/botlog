@@ -16,6 +16,6 @@ module.exports = class GinBonkCommand extends Command {
 			return message.say(`You can't use this command in a DM!`);
 		}
 
-		return message.say("<a:Ginbonk:808888585511501895>");
+		return message.say("<:bonk:795103973349916683>");
 	}
 }
