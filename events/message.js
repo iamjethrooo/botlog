@@ -10,6 +10,7 @@ module.exports = {
 		if (picsOnlyChannels.includes(message.channel.id) && !isBot) {
 			const isAdmin = message.member.hasPermission('ADMINISTRATOR');
 			if (!isAdmin) {
+				// For discussions category
 				if (!(message.attachments.size > 0 || message.embeds.length > 0)) {
 					// Store values related to the message
 					const discussionChannel = client.channels.cache.get('735804432985620521');
@@ -37,16 +38,6 @@ module.exports = {
 					else {
 						discussionChannel.send(`**Message removed in:** <#${channelId}>\n**Message sent by:** <@${message.author.id}>\n**Message content:** ${message.content}`)
 					}
-				}
-			}
-		}
-
-		// Auto reacts to images posted in #memes in BBC Discord
-		if (message.guild.id == '669190303353143306') {
-			if (message.channel.id == '669355693140213780') {
-				if (message.attachments.size > 0 || message.embeds.length > 0) {
-					message.react(message.guild.emojis.cache.find(emoji => emoji.name == 'DrakeYes'));
-					message.react(message.guild.emojis.cache.find(emoji => emoji.name == 'DrakeNo'));
 				}
 			}
 		}
