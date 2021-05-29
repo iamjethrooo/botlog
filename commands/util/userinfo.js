@@ -27,7 +27,7 @@ async run(message, args) {
 		var count = 0;
 		for (var i = 0; i < roles.length; i++) {
 			count += roles[i].length + 1;
-			if (count < 1000) {
+			if (count < 900) {
 				max = i;
 			} else {
 				cut = true;
