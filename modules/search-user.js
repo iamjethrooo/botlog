@@ -1,7 +1,6 @@
 const { MessageEmbed } = require('discord.js')
 
 const search = async(message, args) => {
-	console.log(args);
 	const users = await message.guild.members.cache.filter(u => u.user.username.toLowerCase() == args.toLowerCase());
 
 	if (users.size > 1) {
