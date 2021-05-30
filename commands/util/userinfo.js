@@ -19,15 +19,14 @@ async run(message, args) {
 		const member = await getMember(message, args);
 		if (member == null) return;
 		const randomColor = "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); });
-		const roles = member.roles.cache.filter(role => role.id !== message.guild.id).map(role => role.name);
-
+		const roles =	member.roles.cache.filter(r => r.id !== message.guild.id).map(roles => `<@&${roles.id }>`)
 		// Determines whether to reduce the roles array, since Discord only supports up to 1024 characters on an embed.
 		var cut = false;
 		var max = 0;
 		var count = 0;
 		for (var i = 0; i < roles.length; i++) {
-			count += roles[i].length + 1;
-			if (count < 500) {
+			count += roles[i].length + 7;
+			if (count < 950) {
 				max = i;
 			} else {
 				cut = true;
