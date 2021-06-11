@@ -12,7 +12,6 @@ module.exports = class ChangeNameCommand extends Command {
 	}
 
 	run(message, args) {
-
 		return this.client.user.setUsername(args.toString());
 	}
 }
