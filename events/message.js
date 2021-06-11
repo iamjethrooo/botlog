@@ -1,5 +1,5 @@
 const picsOnlyChannels = ['669514957938753558', '800543054221541376', '669514986548232193', '671669574961201157', '801677818760003594'];
-const index = require('../index.js')
+const index = require('../index.js');
 const client = index.client;
 
 module.exports = {
