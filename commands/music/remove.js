@@ -5,6 +5,7 @@ module.exports = class RemoveSongCommand extends Command {
     super(client, {
       name: 'remove',
       memberName: 'remove',
+      aliases: ['rm'],
       group: 'music',
       description: 'Remove a specific song from queue!',
       guildOnly: true,
