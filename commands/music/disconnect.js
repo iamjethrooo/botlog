@@ -5,14 +5,13 @@ module.exports = class DisconnectCommand extends Command {
 		super(client, {
 			name: 'disconnect',
 			aliases: ['dc'],
-			group: 'fun',
+			group: 'music',
 			memberName: 'disconnect',
 			description: 'Summon the bot to your VC!'
 		});
 	}
 
 	run(message) {
-		console.log(message);
 		message.member.voice.channel.leave();
 	}
 }
