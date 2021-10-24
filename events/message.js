@@ -15,7 +15,7 @@ module.exports = {
 				// For discussions category
 				if (!(message.attachments.size > 0 || message.embeds.length > 0)) {
 					// Store values related to the message
-					//const discussionChannel = client.channels.cache.get('735804432985620521');
+					const discussionChannel = client.channels.cache.get('735804432985620521');
 					const guildId = message.guild.id;
 					const channelId = message.channel.id;
 					const authorId = message.author.id;
@@ -40,10 +40,10 @@ module.exports = {
 
 					// If author replied to a message
 					if (hasReplied) {
-						//discussionChannel.send(`**Message removed in:** <#${channelId}>\n**Message sent by:** <@${message.author.id}>\n**Message content:** ${message.content}\n**Message replied to:** https://discord.com/channels/${guildId}/${channelId}/${message.reference.messageID}`)
+						discussionChannel.send(`**Message removed in:** <#${channelId}>\n**Message sent by:** <@${message.author.id}>\n**Message content:** ${message.content}\n**Message replied to:** https://discord.com/channels/${guildId}/${channelId}/${message.reference.messageID}`)
 					}
 					else {
-						//discussionChannel.send(`**Message removed in:** <#${channelId}>\n**Message sent by:** <@${message.author.id}>\n**Message content:** ${message.content}`)
+						discussionChannel.send(`**Message removed in:** <#${channelId}>\n**Message sent by:** <@${message.author.id}>\n**Message content:** ${message.content}`)
 					}
 				}
 			}
