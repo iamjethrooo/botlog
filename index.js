@@ -39,6 +39,7 @@ const client = new CommandoClient ({
 	owner: '496523098439548929',
 	invite: '',
 	unknownCommandResponse: false,
+  disableEveryone: true,
 });
 
 client.registry
