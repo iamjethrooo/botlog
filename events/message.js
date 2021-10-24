@@ -1,5 +1,7 @@
-const picsOnlyChannels = ['669514957938753558', '800543054221541376', '669514986548232193', '671669574961201157', '801677818760003594'];
+const picsOnlyChannels = ['669514957938753558', '800543054221541376', '669514986548232193', '671669574961201157', '801677818760003594', '901646890817445948'];
 const index = require('../index.js');
+const Discord = require('discord.js');
+const { Util } = require('discord.js')
 const client = index.client;
 
 module.exports = {
@@ -23,13 +25,17 @@ module.exports = {
 					if (message.reference) hasReplied = true;
 					let referenceId;
 					if (hasReplied) referenceId = message.reference.messageID;
-					//console.log(message);
+
 					message.delete()
 						.then(message.say(`Don't chat here, please use the <#735804432985620521> channel above.`)
 							.then(message => message.delete({ timeout: 5000 }))
 							.catch(console.error)
 						)
 						.catch(console.error);
+
+						if (message.mentions.everyone) {
+							message.content = Util.removeMentions(message.content);
+						}
 
 					// If author replied to a message
 					if (hasReplied) {
