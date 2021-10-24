@@ -2,7 +2,7 @@
 .eslintrc.json
 config.json
 .env
-.sqlite
+*.sqlite
 
 # Logs
 logs
