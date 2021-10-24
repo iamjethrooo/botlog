@@ -20,6 +20,11 @@ module.exports = class SayCommand extends Command {
 	}
 
 	run(message, { text }) {
+		if(message.guild) {
+			if(!message.member.hasPermission('ADMINISTRATOR')) {
+				return;
+			}
+		}
 		message.delete();
 		return message.say(text);
 	}
