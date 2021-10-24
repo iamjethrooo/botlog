@@ -16,14 +16,14 @@ module.exports = {
 			clientStatus: 'Test'
 		})
 		.catch(console.error);
-
+		/*
 		client.invites = guildInvites;
 		// Fetch invites for every guild and add to clientInvites
 		for (const guild of client.guilds.cache.values()) {
 			guild.fetchInvites()
 			.then(invite => client.invites.set(guild.id, invite))
 			.catch(error => console.log(error));
-		}
+		} */
 
 	}
 }
