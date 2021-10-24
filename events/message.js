@@ -36,7 +36,6 @@ module.exports = {
 						if (message.content.includes('@everyone') || message.content.includes('@here') ) {
 							message.content = Util.removeMentions(message.content);
 						}
-						message.channel.send(message.content);
 
 					// If author replied to a message
 					if (hasReplied) {
