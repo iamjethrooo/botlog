@@ -7,7 +7,7 @@ module.exports = class SayCommand extends Command {
 			aliases: ['parrot', 'copy'],
 			group: 'fun',
 			memberName: 'say',
-			description: 'Replies with the text you provide.',
+			description: 'Sends a message with the text you provide.',
 			args: [
 				{
 					key: 'text',

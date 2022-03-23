@@ -11,7 +11,7 @@ module.exports = class FloridaManCommand extends Command {
 			aliases: ['floridaman'],
 			group: 'fun',
 			memberName: 'florida',
-			description: 'Generate a Florida Man headline!',
+			description: 'Generate a Florida Man headline.',
       format: '(date)',
 			throttling: {
 				usages: 1,

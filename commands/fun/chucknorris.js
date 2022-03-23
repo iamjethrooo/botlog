@@ -9,7 +9,7 @@ module.exports = class ChuckNorrisCommand extends Command {
 			aliases: ['chuckfact', 'norris', 'chuck-norris'],
 			group: 'fun',
 			memberName: 'chucknorris',
-			description: 'Get a satirical fact about Chuck Norris!',
+			description: 'Get a satirical fact about Chuck Norris.',
 			throttling: {
 				usages: 1,
 				duration: 6,

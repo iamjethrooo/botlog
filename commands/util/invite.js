@@ -8,7 +8,7 @@ module.exports = class InviteCommand extends Command {
 			aliases: ['invite', 'link'],
 			group: 'util',
 			memberName: 'invite',
-			description: 'Want to invite this bot to another server? Use this command!',
+			description: 'Want to invite this bot to another server? Use this command.',
 			throttling: {
 				usages: 1,
 				duration: 6,

@@ -52,7 +52,7 @@ MaxResponseTime = MaxResponseTime > 150 ? 150 : MaxResponseTime &&
         aliases: ['play-song', 'add', 'p'],
         memberName: 'play',
         group: 'music',
-        description: 'Play any song or playlist from youtube!',
+        description: 'Play any song from youtube.',
         guildOnly: true,
         clientPermissions: [
           'SPEAK',

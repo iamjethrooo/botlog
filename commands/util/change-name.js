@@ -6,8 +6,9 @@ module.exports = class ChangeNameCommand extends Command {
 			name: 'change-name',
 			memberName: 'change-name',
 			group: 'util',
-			description: 'Change the bot\'s name!',
-			ownerOnly: true
+			description: 'Change the bot\'s name.',
+			userPermissions: ['ADMINISTRATOR'],
+			hidden: true
 		});
 	}
 

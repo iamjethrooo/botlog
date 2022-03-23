@@ -2,6 +2,7 @@ const { CommandoClient } = require('discord.js-commando');
 const { Structures } = require('discord.js');
 const path = require('path');
 const fs = require('fs');
+const mongoose = require("mongoose");
 
 require('dotenv').config();
 
@@ -54,10 +55,10 @@ client.registry
 	])
 	.registerDefaultGroups()
 	.registerDefaultCommands({
-		help: false,
+		help: true,
 		unknownCommand: false,
-		ping: false,
-		prefix: false
+		ping: true,
+		prefix: true
 	})
 	.registerCommandsIn(path.join(__dirname, 'commands'));
 
@@ -80,6 +81,12 @@ fs.readdir('./events/', (err, files) => {
 });
 
 client.on('error', console.error);
+
+mongoose.connect(process.env.MONGODB_SRV).then(() => {
+	console.log('Connected to the database.');
+}).catch((err) => {
+	console.log(err);
+});
 
 client.login(process.env.DISCORD_TOKEN);
 

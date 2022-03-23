@@ -8,7 +8,7 @@ module.exports = class SpamCommand extends Command {
 			aliases: ['morgan'],
 			group: 'fun',
 			memberName: 'spam',
-			description: 'Spam your chat!',
+			description: 'Spam your chat.',
 			throttling: {
 				usages: 1,
 				duration: 6,

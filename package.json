@@ -17,6 +17,7 @@
     "cheerio": "^1.0.0-rc.10",
     "discord-api-types": "^0.23.1",
     "discord-paginationembed": "^2.1.0",
+    "discord-player": "^5.2.2",
     "discord.js": "github:discordjs/discord.js#v12",
     "discord.js-commando": "^0.12.3",
     "dotenv": "^8.6.0",
@@ -26,6 +27,7 @@
     "libsodium-wrappers": "^0.7.9",
     "moment": "^2.29.1",
     "mongodb": "^4.1.1",
+    "mongoose": "^6.2.8",
     "node-opus": "^0.3.3",
     "node-pre-gyp": "^0.15.0",
     "pg": "^8.7.1",
@@ -36,7 +38,7 @@
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "simple-youtube-api": "^5.2.1",
-    "ytdl-core": "^4.9.1"
+    "ytdl-core": "^4.11.0"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",

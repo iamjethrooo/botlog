@@ -7,7 +7,7 @@ module.exports = class BurbankCommand extends Command {
 			name: 'burbank',
 			group: 'fun',
 			memberName: 'burbank',
-			description: 'Look at The Burbank\'s Ungodly Concoction'
+			description: 'Check out The Burbank\'s Ungodly Concoction.'
 		});
 	}
 

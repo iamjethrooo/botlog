@@ -9,7 +9,7 @@ module.exports = class WeatherCommand extends Command {
 			name: 'weather',
 			group: 'util',
 			memberName: 'weather',
-			description: 'Know the weather!(PH only)',
+			description: 'Know the weather.',
 			format: '<city>'
 		});
 	}
