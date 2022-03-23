@@ -15,8 +15,9 @@ module.exports = class WeatherCommand extends Command {
 	}
 
 	run(message, args) {
-		if (args.length < 1) return message.say('Please provide a location.');
-		const city = args.split(' ').join('%20');
+		let city = "";
+		if (args.length < 1) city = "Baguio City";
+		else city = args.split(' ').join('%20');
 		const randomColor = "#000000".replace(/0/g, function () { return (~~(Math.random() * 16)).toString(16); });
 
 		fetch(`http://api.openweathermap.org/data/2.5/weather?q=${city},ph&units=metric&appid=${process.env.WEATHER_API}`)
