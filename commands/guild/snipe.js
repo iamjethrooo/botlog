@@ -19,7 +19,7 @@ module.exports = class SnipeCommand extends Command {
 		const sniped = this.client.snipes.get(message.channel.id);
 
 
-		if (message.member.hasPermission('ADMINISTRATOR') || message.member.roles.cache.find(r => r.name === "Sniper") || message.member.roles.cache.find(r => r.name === "Enforcer")) {
+		if (message.member.hasPermission('ADMINISTRATOR') || message.member.roles.cache.find(r => r.name === "Sniper" || r.name === "Enforcer" || r.name === "Ruby (Lvl. 75+)" || r.name === "Emerald (Lvl. 60+)" || r.name === "Sapphire (Lvl. 45+)" || r.name === "Steel (Lvl. 30+)" || r.name === "Obsidian (Lvl. 15+)")) {
 			if (!sniped) {
 				return message.say('There\'s nothing to snipe!');
 			}
