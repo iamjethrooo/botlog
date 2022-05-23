@@ -23,10 +23,15 @@ module.exports = class SnipeCommand extends Command {
 			if (!sniped) {
 				return message.say('There\'s nothing to snipe!');
 			}
+			let content = `**${sniped[0].author}**: ${sniped[0].content}`;
+			if (sniped.length > 1) {
+				content = `**${sniped[1].author}**: ${sniped[1].content}\n` + content;
+			}
+			if (sniped.length > 2) {
+				content = `**${sniped[2].author}**: ${sniped[2].content}\n` + content;
+			}
 			const embed = new MessageEmbed()
-				.setAuthor(`${sniped.author.username}#${sniped.author.discriminator}`, sniped.author.displayAvatarURL({ dynamic: true }))
-				.setDescription(sniped.content)
-				.setTimestamp(sniped.createdAt)
+				.setDescription(content)
 				.setColor(message.member.displayHexColor)
 			return message.say(embed);
 		}
