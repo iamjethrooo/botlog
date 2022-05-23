@@ -6,14 +6,23 @@ client.snipes = {
 	get: function(ChannelId) {
 		return this[ChannelId];
 	},
-	set: function(msg) {
-		this[msg.channel.id] = msg;
+	add: function(msg) {
+		let snipes = [];
+		if (this[msg.channel.id] === undefined) {
+			snipes.push(msg);
+		} else {
+			snipes = this[msg.channel.id];
+			snipes.unshift(msg);
+		}
+		snipes.length = Math.min(snipes.length, 3);
+		console.log(snipes.length);
+		this[msg.channel.id] = snipes;
 	}
 }
 
 module.exports = {
 	run: message => {
 		if (message.author.bot) return;
-		client.snipes.set(message);
+		client.snipes.add(message);
 	}
 }
