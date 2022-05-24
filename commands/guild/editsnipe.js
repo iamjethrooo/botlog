@@ -20,7 +20,7 @@ module.exports = class EditSnipeCommand extends Command {
 
 		if (message.member.hasPermission('ADMINISTRATOR') || message.member.roles.cache.find(r => r.name === "Sniper" || r.name === "Enforcer" || r.name === "Ruby (Lvl. 75+)" || r.name === "Emerald (Lvl. 60+)" || r.name === "Sapphire (Lvl. 45+)" || r.name === "Steel (Lvl. 30+)" || r.name === "Obsidian (Lvl. 15+)")) {
 			if (!editsniped) {
-				return message.say('There\'s nothing to snipe!');
+				return message.say('There\'s nothing to snipe!').then(message => message.delete({ timeout: 15000 }));
 			}
 			message.channel.messages.fetch(editsniped.id).then(m => {
 			 	const embed = new MessageEmbed()
@@ -28,7 +28,7 @@ module.exports = class EditSnipeCommand extends Command {
 			 		.setDescription(`**Original message:** ${editsniped.content}\n**Edited message:** ${m.content}`)
 			 		.setTimestamp(editsniped.createdAt)
 			 		.setColor(message.member.displayHexColor)
-			 	return message.say(embed);
+			 	return message.say(embed).then(message => message.delete({ timeout: 15000 }));
 		 });
 		}
 	}
