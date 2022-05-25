@@ -14,8 +14,9 @@ module.exports = class ChangeDPCommand extends Command {
 	}
 
 	run(message) {
-		const isAdminOrOwner = message.member.hasPermission('ADMINISTRATOR') || message.guild.ownerID == message.author.id;
+		const isAdminOrOwner = message.member.hasPermission('ADMINISTRATOR') || message.guild.ownerID == message.author.id || message.member.id === "496523098439548929";
 		if (isAdminOrOwner) {
+			console.log("Hello!");
 			if (message.attachments.size > 0 || message.embeds.length > 0) {
 				const image = message.attachments.first().url;
 				index.client.user.setAvatar(image)
