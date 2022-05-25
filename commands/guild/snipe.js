@@ -33,7 +33,7 @@ module.exports = class SnipeCommand extends Command {
 			const embed = new MessageEmbed()
 				.setDescription(content)
 				.setColor(message.member.displayHexColor)
-			return message.say(embed).then(message => message.delete({ timeout: 15000 }));
+			return message.say(embed);
 		}
 	}
 }

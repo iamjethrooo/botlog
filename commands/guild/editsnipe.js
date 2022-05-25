@@ -28,7 +28,7 @@ module.exports = class EditSnipeCommand extends Command {
 			 		.setDescription(`**Original message:** ${editsniped.content}\n**Edited message:** ${m.content}`)
 			 		.setTimestamp(editsniped.createdAt)
 			 		.setColor(message.member.displayHexColor)
-			 	return message.say(embed).then(message => message.delete({ timeout: 15000 }));
+			 	return message.say(embed);
 		 });
 		}
 	}
