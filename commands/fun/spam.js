@@ -11,7 +11,7 @@ module.exports = class SpamCommand extends Command {
 			description: 'Spam your chat.',
 			throttling: {
 				usages: 1,
-				duration: 6,
+				duration: 5,
 			},
 		});
 	}

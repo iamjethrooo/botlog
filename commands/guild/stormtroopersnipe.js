@@ -26,7 +26,11 @@ module.exports = class SnipeCommand extends Command {
 			name: 'stormtroopersnipe',
 			group: 'guild',
 			memberName: 'stormtroopersnipe',
-			description: 'Reveals a recently deleted message from a random channel.'
+			description: 'Reveals a recently deleted message from a random channel.',
+			throttling: {
+				usages: 1,
+				duration: 10,
+			},
 		});
 	}
 

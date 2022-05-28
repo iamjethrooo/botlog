@@ -7,7 +7,11 @@ module.exports = class EditSnipeCommand extends Command {
 			name: 'editsnipe',
 			group: 'guild',
 			memberName: 'editsnipe',
-			description: 'Reveal the last edited message in the channel.'
+			description: 'Reveal the last edited message in the channel.',
+			throttling: {
+				usages: 1,
+				duration: 10,
+			},
 		});
 	}
 

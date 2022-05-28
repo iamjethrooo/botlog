@@ -7,7 +7,11 @@ module.exports = class SnipeCommand extends Command {
 			name: 'snipe',
 			group: 'guild',
 			memberName: 'snipe',
-			description: 'Reveal the last deleted message in the channel.'
+			description: 'Reveal the last deleted message in the channel.',
+			throttling: {
+				usages: 1,
+				duration: 10,
+			},
 		});
 	}
 
