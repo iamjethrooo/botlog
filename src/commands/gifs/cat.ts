@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import type { CommandInteraction } from 'discord.js';
+import type { CommandInteraction, Message } from 'discord.js';
 import axios from 'axios';
 import * as data from '../../config.json';
 
@@ -24,6 +24,22 @@ export class CatCommand extends Command {
       .catch(async error => {
         console.error(error);
         return await interaction.reply(
+          'Something went wrong when trying to fetch a cute kitty gif :('
+        );
+      });
+  }
+
+  public override async messageRun(message: Message) {
+    axios
+      .get(`https://api.tenor.com/v1/random?key=${data.tenorAPI}&q=cat&limit=1`)
+      .then(async response => {
+        return await message.reply({
+          content: response.data.results[0].url
+        });
+      })
+      .catch(async error => {
+        console.error(error);
+        return await message.reply(
           'Something went wrong when trying to fetch a cute kitty gif :('
         );
       });
