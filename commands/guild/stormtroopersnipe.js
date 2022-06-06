@@ -16,7 +16,7 @@ const serverIds = [ '670938708031307807', '669539569942921235', '670926387980402
 // suggestions, moderations, appeal
 // const testIds = [ '953963313526636544', '835436182778544128', '848135530197942282', '852763685084201000', '901646890817445948', '970559289523597322', '978228788561346571', '979318605374177300' ];
 // var allIds = testIds;
-var allIds = mainIds.concat(vcIds.concat(personalIds.concat(createsIds.concat(copiumIds.concat(casinoIds.concat(botsIds.concat(serverIds)))))));
+var allIds = mainIds.concat(vcIds.concat(personalIds.concat(createsIds)));
 const { Command } = require('discord.js-commando');
 const { MessageEmbed } = require('discord.js');
 
