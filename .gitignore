@@ -3,6 +3,10 @@
 config.json
 .env
 *.sqlite
+*.bat
+prisma/migrations/
+Lavalink.jar
+*.yml
 
 # Logs
 logs
