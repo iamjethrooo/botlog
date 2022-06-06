@@ -1,0 +1,10 @@
+{
+  "playLiveStreams": true,
+  "playVideosLongerThan1Hour": true,
+  "maxQueueLength": 1000,
+  "inactivityTime": 30,
+  "AutomaticallyShuffleYouTubePlaylists": false,
+  "LeaveTimeOut": 0,
+  "MaxResponseTime": 30,
+  "deleteOldPlayMessage": true
+}
