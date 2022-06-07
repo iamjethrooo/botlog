@@ -6,7 +6,7 @@ import {
 } from '@sapphire/framework';
 import type { CommandInteraction, Message } from 'discord.js';
 import axios from 'axios';
-import * as data from '../../config.json';
+require('dotenv').config();
 
 @ApplyOptions<CommandOptions>({
   name: 'triggered',
@@ -15,7 +15,7 @@ import * as data from '../../config.json';
 export class TriggeredCommand extends Command {
   public override chatInputRun(interaction: CommandInteraction) {
     axios
-      .get(`https://api.tenor.com/v1/random?key=${data.tenorAPI}&q=triggered&limit=1`)
+      .get(`https://api.tenor.com/v1/random?key=${process.env.TENOR_API!}&q=triggered&limit=1`)
       .then(async response => {
         return await interaction.reply({
           content: response.data.results[0].url
@@ -31,7 +31,7 @@ export class TriggeredCommand extends Command {
 
   public override async messageRun(message: Message) {
     axios
-      .get(`https://api.tenor.com/v1/random?key=${data.tenorAPI}&q=triggered&limit=1`)
+      .get(`https://api.tenor.com/v1/random?key=${process.env.TENOR_API!}&q=triggered&limit=1`)
       .then(async response => {
         return await message.reply({
           content: response.data.results[0].url

@@ -11,7 +11,7 @@ import type { CommandInteraction, Message } from 'discord.js';
   description: 'Replies with Pong!'
 })
 export class PingCommand extends Command {
-  public async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: CommandInteraction) {
     const ping = Date.now() - interaction.createdTimestamp;
     const apiPing = Math.round(interaction.client.ws.ping);
     return await interaction.reply(
@@ -21,7 +21,7 @@ export class PingCommand extends Command {
     );
   }
 
-  public async messageRun(message: Message) {
+  public override async messageRun(message: Message) {
     const ping = Date.now() - message.createdTimestamp;
     const apiPing = Math.round(message.client.ws.ping);
     return await message.reply(

@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed } from 'discord.js';
+import { CommandInteraction, MessageEmbed, Message } from 'discord.js';
 import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
@@ -34,6 +34,33 @@ export class FortuneCommand extends Command {
       .catch(async error => {
         console.error(error);
         return await interaction.reply(
+          'Something went wrong when fetching a fortune cookie :('
+        );
+      });
+  }
+
+  public override async messageRun(message: Message) {
+    axios
+      .get('http://yerkee.com/api/fortune')
+      .then(async response => {
+        const tip: string = response.data.fortune;
+        const embed = new MessageEmbed()
+          .setColor('#F4D190')
+          .setAuthor({
+            name: 'Fortune Coookie',
+            url: 'https://yerkee.com',
+            iconURL: 'https://i.imgur.com/58wIjK0.png'
+          })
+          .setDescription(tip)
+          .setTimestamp()
+          .setFooter({
+            text: 'Powered by yerkee.com'
+          });
+        return await message.reply({ embeds: [embed] });
+      })
+      .catch(async error => {
+        console.error(error);
+        return await message.reply(
           'Something went wrong when fetching a fortune cookie :('
         );
       });

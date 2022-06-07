@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed } from 'discord.js';
+import { CommandInteraction, MessageEmbed, Message } from 'discord.js';
 import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
@@ -34,6 +34,33 @@ export class InsultCommand extends Command {
       .catch(async error => {
         console.error(error);
         return await interaction.reply(
+          'Something went wrong when fetching an insult :('
+        );
+      });
+  }
+
+  public override async messageRun(message: Message) {
+    axios
+      .get('https://evilinsult.com/generate_insult.php?lang=en&type=json')
+      .then(async response => {
+        const insult: string = response.data.insult;
+        const embed = new MessageEmbed()
+          .setColor('#E41032')
+          .setAuthor({
+            name: 'Evil Insult',
+            url: 'https://evilinsult.com',
+            iconURL: 'https://i.imgur.com/bOVpNAX.png'
+          })
+          .setDescription(insult)
+          .setTimestamp()
+          .setFooter({
+            text: 'Powered by evilinsult.com'
+          });
+        return await message.reply({ embeds: [embed] });
+      })
+      .catch(async error => {
+        console.error(error);
+        return await message.reply(
           'Something went wrong when fetching an insult :('
         );
       });

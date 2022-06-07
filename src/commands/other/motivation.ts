@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed } from 'discord.js';
+import { CommandInteraction, MessageEmbed, Message } from 'discord.js';
 import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
@@ -40,6 +40,36 @@ export class MotivationCommand extends Command {
           'Something went wrong when fetching a motivational quote :('
         );
       });
+  }
+
+  public override async messageRun(message: Message) {
+      axios
+        .get('https://type.fit/api/quotes')
+        .then(async response => {
+          const quotes = response.data;
+
+          const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+
+          const embed = new MessageEmbed()
+            .setColor('#FFD77A')
+            .setAuthor({
+              name: 'Motivational Quote',
+              url: 'https://type.fit',
+              iconURL: 'https://i.imgur.com/Cnr6cQb.png'
+            })
+            .setDescription(`*"${randomQuote.text}*"\n\n-${randomQuote.author}`)
+            .setTimestamp()
+            .setFooter({
+              text: 'Powered by type.fit'
+            });
+          return await message.reply({ embeds: [embed] });
+        })
+        .catch(async error => {
+          console.error(error);
+          return await message.reply(
+            'Something went wrong when fetching a motivational quote :('
+          );
+        });
   }
 
   public override registerApplicationCommands(

@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed } from 'discord.js';
+import { CommandInteraction, MessageEmbed, Message } from 'discord.js';
 import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
@@ -34,6 +34,33 @@ export class KanyeCommand extends Command {
       .catch(async error => {
         console.error(error);
         return await interaction.reply(
+          'Something went wrong when fetching a Kanye quote :('
+        );
+      });
+  }
+
+  public override async messageRun(message: Message) {
+    axios
+      .get('https://api.kanye.rest/?format=json')
+      .then(async response => {
+        const quote: string = response.data.quote;
+        const embed = new MessageEmbed()
+          .setColor('#F4D190')
+          .setAuthor({
+            name: 'Kanye West',
+            url: 'https://kanye.rest',
+            iconURL: 'https://i.imgur.com/SsNoHVh.png'
+          })
+          .setDescription(quote)
+          .setTimestamp()
+          .setFooter({
+            text: 'Powered by kanye.rest'
+          });
+        return await message.reply({ embeds: [embed] });
+      })
+      .catch(async error => {
+        console.error(error);
+        return await message.reply(
           'Something went wrong when fetching a Kanye quote :('
         );
       });

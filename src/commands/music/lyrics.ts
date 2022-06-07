@@ -7,10 +7,10 @@ import {
 import { CommandInteraction, MessageEmbed } from 'discord.js';
 import { container } from '@sapphire/framework';
 import { GeniusLyrics } from 'genius-discord-lyrics';
-import * as data from '../../config.json';
 import { PaginatedMessage } from '@sapphire/discord.js-utilities';
+require('dotenv').config();
 
-const genius = new GeniusLyrics(data.geniusLyricsAPI);
+const genius = new GeniusLyrics(process.env.GENIUS_API!);
 
 @ApplyOptions<CommandOptions>({
   name: 'lyrics',
@@ -33,7 +33,7 @@ export class LyricsCommand extends Command {
           'Please provide a valid song name or start playing one and try again!'
         );
       }
-      title = player.queue.current?.title as string;
+      title = player.queue.current ?.title as string;
     }
 
     try {

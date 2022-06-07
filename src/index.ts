@@ -5,15 +5,15 @@ import {
 } from '@sapphire/framework';
 import type { NewsChannel, TextChannel, ThreadChannel } from 'discord.js';
 import { Player } from 'lavaclient';
-import * as data from './config.json';
 import { Queue } from './lib/utils/queue/Queue';
 import type { Song } from './lib/utils/queue/Song';
 import { ExtendedClient } from './structures/ExtendedClient';
+require('dotenv').config();
 
 load({
   client: {
-    id: data.spotify_client_id,
-    secret: data.spotify_client_secret
+    id: process.env.SPOTIFY_CLIENT_ID!,
+    secret: process.env.SPOTIFY_CLIENT_SECRET!
   },
   autoResolveYoutubeTracks: true
 });
@@ -22,11 +22,12 @@ const client = new ExtendedClient();
 
 client.on('ready', async () => {
   client.music.connect(client.user!.id);
-  client.user?.setActivity('/', {
+  client.user ?.setActivity('/', {
     type: 'WATCHING'
   });
-  client.user?.setStatus('online');
+  client.user ?.setStatus('online');
 });
+
 
 export type MessageChannel = TextChannel | ThreadChannel | NewsChannel | null;
 
@@ -66,4 +67,4 @@ ApplicationCommandRegistries.setDefaultBehaviorWhenNotIdentical(
   RegisterBehavior.Overwrite
 );
 
-client.login(data.token);
+client.login(process.env.DISCORD_TOKEN);

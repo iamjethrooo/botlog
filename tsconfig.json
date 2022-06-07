@@ -1,6 +1,7 @@
 {
   "extends": "@sapphire/ts-config",
   "compilerOptions": {
+    "target": "ES6",
     "rootDir": "src",
     "incremental": true,
     "outDir": "dist",

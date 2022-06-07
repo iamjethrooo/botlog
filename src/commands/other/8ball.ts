@@ -2,14 +2,15 @@ import { ApplyOptions } from '@sapphire/decorators';
 import {
   ApplicationCommandRegistry,
   Command,
-  CommandOptions
+  CommandOptions,
+  Args
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed } from 'discord.js';
+import { CommandInteraction, MessageEmbed, Message } from 'discord.js';
 import * as fs from 'fs';
 
 @ApplyOptions<CommandOptions>({
   name: '8ball',
-  description: 'Get the answer to anything!'
+  description: 'Get the answer to anything!',
 })
 export class EightBallCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
@@ -38,6 +39,34 @@ export class EightBallCommand extends Command {
       .setColor('#000000')
       .setTimestamp();
     return await interaction.reply({ embeds: [answerEmbed] });
+  }
+
+  public override async messageRun(message: Message, args: Args) {
+      const question = await args.rest('string');
+
+      if (question.length > 255) {
+        return await message.reply('Please ask a shorter question!');
+      }
+
+      const possibleAnswers = fs.readFileSync(
+        '././src/resources/other/8ball.json',
+        'utf-8'
+      );
+      const answersArray: Array<string> = JSON.parse(possibleAnswers).answers;
+
+      const randomAnswer =
+        answersArray[Math.floor(Math.random() * answersArray.length)];
+
+      const answerEmbed = new MessageEmbed()
+        .setTitle(question)
+        .setAuthor({
+          name: 'Magic 8 Ball',
+          iconURL: 'https://i.imgur.com/HbwMhWM.png'
+        })
+        .setDescription(randomAnswer)
+        .setColor('#000000')
+        .setTimestamp();
+      return await message.reply({ embeds: [answerEmbed] });
   }
 
   public override registerApplicationCommands(

@@ -7,7 +7,7 @@ import {
 import type { CommandInteraction } from 'discord.js';
 import { PaginatedMessage } from '@sapphire/discord.js-utilities';
 import axios from 'axios';
-import * as data from '../../config.json';
+require('dotenv').config();
 
 @ApplyOptions<CommandOptions>({
   name: 'game-search',
@@ -15,7 +15,7 @@ import * as data from '../../config.json';
 })
 export class GameSearchCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
-    if (!data.rawgAPI)
+    if (!process.env.RAWG_API)
       return await interaction.reply(':x: Command is Disabled - Missing API Key');
     const title = interaction.options.getString('game', true);
     const filteredTitle = this.filterTitle(title);
@@ -149,7 +149,7 @@ export class GameSearchCommand extends Command {
   public override registerApplicationCommands(
     registery: ApplicationCommandRegistry
   ): void {
-    if (!data.rawgAPI) {
+    if (!process.env.RAWG_API) {
       return console.log('Game-Search-Command - Disabled');
     } else console.log('Game-Search-Command - Enabled');
     registery.registerChatInputCommand({
@@ -171,8 +171,8 @@ export class GameSearchCommand extends Command {
   }
 
   private getGameDetails(query: string): Promise<any> {
-    return new Promise(async function (resolve, reject) {
-      const url = `https://api.rawg.io/api/games/${query}?key=${data.rawgAPI}`;
+    return new Promise(async function(resolve, reject) {
+      const url = `https://api.rawg.io/api/games/${query}?key=${process.env.RAWG_API!}`;
       try {
         const response = await axios.get(url);
         if (response.status === 429) {
@@ -195,7 +195,7 @@ export class GameSearchCommand extends Command {
         let data = response.data;
         if (data.redirect) {
           const redirect = await axios.get(
-            `https://api.rawg.io/api/games/${data.slug}?key=${data.rawgAPI}`
+            `https://api.rawg.io/api/games/${data.slug}?key=${process.env.RAWG_API!}`
           );
           data = redirect.data;
         }

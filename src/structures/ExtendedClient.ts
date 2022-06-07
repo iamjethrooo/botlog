@@ -1,20 +1,21 @@
 import { SapphireClient } from '@sapphire/framework';
-import { Intents } from 'discord.js';
+import { Intents, Message } from 'discord.js';
 import { Node } from 'lavaclient';
-import * as data from '../config.json';
 import { embedButtons } from '../lib/utils/music/ButtonHandler';
 import { NowPlayingEmbed } from './../lib/utils/music/NowPlayingEmbed';
 import { manageStageChannel } from './../lib/utils/music/channelHandler';
 import { inactivityTime } from '../lib/utils/music/handleOptions';
+require('dotenv').config();
 
 export class ExtendedClient extends SapphireClient {
   readonly music: Node;
   playerEmbeds: { [key: string]: string };
   leaveTimers: { [key: string]: NodeJS.Timer };
+  snipes: Map<string, Message[]>;
 
   public constructor() {
     super({
-      defaultPrefix: 'bbc',
+      defaultPrefix: process.env.PREFIX,
       loadMessageCommandListeners: true,
       intents: [
         Intents.FLAGS.GUILDS,
@@ -23,15 +24,16 @@ export class ExtendedClient extends SapphireClient {
         Intents.FLAGS.GUILD_VOICE_STATES
       ]
     });
+    this.snipes = new Map<string, Message[]>();
 
     this.music = new Node({
       sendGatewayPayload: (id, payload) =>
-        this.guilds.cache.get(id)?.shard?.send(payload),
+        this.guilds.cache.get(id) ?.shard ?.send(payload),
       connection: {
-        host: data.lava_host,
-        password: data.lava_pass,
-        port: data.lava_port,
-        secure: data.lava_secure
+        host: process.env.LAVA_HOST!,
+        password: process.env.LAVA_PASS!,
+        port: parseInt(process.env.LAVA_PORT!),
+        secure: process.env.LAVA_SECURE! == 'true'
       }
     });
 
@@ -82,8 +84,8 @@ export class ExtendedClient extends SapphireClient {
       );
 
       // Stage Channels
-      if (voiceChannel?.type === 'GUILD_STAGE_VOICE') {
-        const botUser = voiceChannel?.members.get(this.application?.id!);
+      if (voiceChannel ?.type === 'GUILD_STAGE_VOICE') {
+        const botUser = voiceChannel ?.members.get(this.application ?.id!);
         await manageStageChannel(voiceChannel, botUser!, queue);
       }
     });
@@ -95,5 +97,6 @@ declare module '@sapphire/framework' {
     readonly music: Node;
     playerEmbeds: { [key: string]: string };
     leaveTimers: { [key: string]: NodeJS.Timer };
+    snipes: Map<string, Message[]>;
   }
 }

@@ -40,15 +40,15 @@ export class PlayCommand extends Command {
     const interactionMember = interaction.member as GuildMember;
 
     let player = client.music.players.get(interaction.guild!.id);
-    if (player?.queue.tracks.length! >= optionsFile.maxQueueLength)
+    if (player ?.queue.tracks.length! >= optionsFile.maxQueueLength)
       return await interaction.followUp(
         `:x: Can't add anymore songs to the queue`
       );
 
     // had a precondition make sure the user is infact in a voice channel
-    const voiceChannel = interaction.guild?.voiceStates?.cache?.get(
+    const voiceChannel = interaction.guild ?.voiceStates ?.cache ?.get(
       interaction.user.id
-    )?.channel;
+    ) ?.channel;
 
     let tracks: Addable[] = [];
     let message: string = '';
@@ -91,7 +91,7 @@ export class PlayCommand extends Command {
     }
 
     // Apply options
-    let playerQueue: number = player?.queue.tracks.length ?? 0;
+    let playerQueue: number = player ?.queue.tracks.length ?? 0;
     let liveStreams: boolean = false;
     let queueLimit: boolean = false;
     let longerThan1Hour: boolean = false;
@@ -137,7 +137,7 @@ export class PlayCommand extends Command {
 
     if (shufflePlaylist == 'Yes') shuffleQueue(tracks as Song[]);
 
-    if (!player?.connected) {
+    if (!player ?.connected) {
       const channelDB = await prisma.guild.findFirst({
         where: {
           id: interaction.guild!.id
@@ -149,7 +149,7 @@ export class PlayCommand extends Command {
 
       player ??= client.music.createPlayer(interaction.guild!.id);
       player.queue.channel = interaction.channel as MessageChannel;
-      if (channelDB?.volume) {
+      if (channelDB ?.volume) {
         await player.setVolume(channelDB.volume);
       }
       await player.connect(voiceChannel!.id, { deafened: true });
@@ -171,7 +171,7 @@ export class PlayCommand extends Command {
       const NowPlaying = new NowPlayingEmbed(
         player.queue.current!,
         player.accuratePosition,
-        player.queue.current?.length as number,
+        player.queue.current ?.length as number,
         player.volume,
         player.queue.tracks!,
         player.queue.last!,
