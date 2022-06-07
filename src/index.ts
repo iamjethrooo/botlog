@@ -22,9 +22,6 @@ const client = new ExtendedClient();
 
 client.on('ready', async () => {
   client.music.connect(client.user!.id);
-  client.user ?.setActivity('/', {
-    type: 'WATCHING'
-  });
   client.user ?.setStatus('online');
 });
 
