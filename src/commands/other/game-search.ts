@@ -14,7 +14,7 @@ require('dotenv').config();
   description: 'Search for video game information'
 })
 export class GameSearchCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: CommandInteraction): Promise<void> {
     if (!process.env.RAWG_API)
       return await interaction.reply(':x: Command is Disabled - Missing API Key');
     const title = interaction.options.getString('game', true);
@@ -23,7 +23,7 @@ export class GameSearchCommand extends Command {
     try {
       var data = await this.getGameDetails(filteredTitle);
     } catch (error: any) {
-      return await interaction.reply(error);
+      return await interaction.reply(<string> error);
     }
 
     const PaginatedEmbed = new PaginatedMessage();

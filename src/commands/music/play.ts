@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { TrackInfo } from '@lavaclient/types';
 import type { Song } from './../../lib/utils/queue/Song';
 import { NowPlayingEmbed } from '../../lib/utils/music/NowPlayingEmbed';
@@ -28,7 +29,7 @@ import { shuffleQueue } from '../../lib/utils/music/handleOptions';
   ]
 })
 export class PlayCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: CommandInteraction): Promise<void>{
     await interaction.deferReply();
 
     const { client } = container;

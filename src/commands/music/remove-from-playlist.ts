@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ApplyOptions } from '@sapphire/decorators';
 import {
   ApplicationCommandRegistry,
@@ -13,7 +14,7 @@ import prisma from '../../lib/prisma';
   preconditions: ['GuildOnly', 'userInDB', 'playlistExists']
 })
 export class RemoveFromPlaylistCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: CommandInteraction): Promise<void> {
     await interaction.deferReply();
     const playlistName = interaction.options.getString('playlist-name', true);
     const location = interaction.options.getInteger('location', true);

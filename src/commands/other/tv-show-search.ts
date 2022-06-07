@@ -14,13 +14,13 @@ import axios from 'axios';
   preconditions: ['GuildOnly']
 })
 export class TVShowSearchCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: CommandInteraction): Promise<void> {
     const query = interaction.options.getString('query', true);
 
     try {
       var data = await this.getData(query);
     } catch (error: any) {
-      return await interaction.reply(error);
+      return await interaction.reply(<string> error);
     }
 
     const PaginatedEmbed = new PaginatedMessage();
