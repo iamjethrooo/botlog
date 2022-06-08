@@ -9,6 +9,7 @@ import {
   CommandOptions
 } from '@sapphire/framework';
 import type { CommandInteraction, GuildMember } from 'discord.js';
+import { Message } from 'discord.js';
 import { container } from '@sapphire/framework';
 import type { MessageChannel } from '../..';
 import searchSong from '../../lib/utils/music/searchSong';
@@ -29,7 +30,7 @@ import { shuffleQueue } from '../../lib/utils/music/handleOptions';
   ]
 })
 export class PlayCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction): Promise<void>{
+  public override async chatInputRun(interaction: CommandInteraction): Promise<void> {
     await interaction.deferReply();
 
     const { client } = container;
@@ -186,6 +187,10 @@ export class PlayCommand extends Command {
       );
     }
     return;
+  }
+
+  public override async messageRun(message: Message) {
+
   }
 
   public override registerApplicationCommands(
