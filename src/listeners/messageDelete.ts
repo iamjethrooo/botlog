@@ -9,7 +9,7 @@ import type { Message } from 'discord.js';
 @ApplyOptions<ListenerOptions>({
   event: 'messageDelete'
 })
-export class DeleteListener extends Listener {
+export class MessageDeleteListener extends Listener {
   public override async run(message: Message): Promise<void> {
     if (message.author.bot) return;
     const { client } = container;
