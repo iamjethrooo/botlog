@@ -2,7 +2,7 @@
   "playLiveStreams": true,
   "playVideosLongerThan1Hour": true,
   "maxQueueLength": 1000,
-  "inactivityTime": 30,
+  "inactivityTime": 300,
   "AutomaticallyShuffleYouTubePlaylists": false,
   "LeaveTimeOut": 0,
   "MaxResponseTime": 30,
