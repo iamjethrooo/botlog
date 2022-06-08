@@ -12,6 +12,7 @@ export class ExtendedClient extends SapphireClient {
   playerEmbeds: { [key: string]: string };
   leaveTimers: { [key: string]: NodeJS.Timer };
   snipes: Map<string, Message[]>;
+  editsnipes: Map<string, Message>;
 
   public constructor() {
     super({
@@ -24,7 +25,9 @@ export class ExtendedClient extends SapphireClient {
         Intents.FLAGS.GUILD_VOICE_STATES
       ]
     });
+
     this.snipes = new Map<string, Message[]>();
+    this.editsnipes = new Map<string, Message>;
 
     this.music = new Node({
       sendGatewayPayload: (id, payload) =>
@@ -98,5 +101,6 @@ declare module '@sapphire/framework' {
     playerEmbeds: { [key: string]: string };
     leaveTimers: { [key: string]: NodeJS.Timer };
     snipes: Map<string, Message[]>;
+    editsnipes: Map<string, Message>;
   }
 }

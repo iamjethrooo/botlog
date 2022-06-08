@@ -7,23 +7,12 @@ import {
 import type { Message } from 'discord.js';
 
 @ApplyOptions<ListenerOptions>({
-  event: 'messageDelete'
+  event: 'messageUpdate'
 })
 export class MessageUpdateListener extends Listener {
   public override async run(message: Message): Promise<void> {
     if (message.author.bot) return;
     const { client } = container;
-
-    let snipes: Message[] = [];
-
-    if (!client.snipes.get(message.channel.id)) {
-      snipes.push(message);
-    } else {
-      snipes = client.snipes.get(message.channel.id)!;
-      snipes.unshift(message);
-    }
-    snipes.length = Math.min(snipes.length, 3);
-    client.snipes.set(message.channel.id, snipes);
-
+    client.editsnipes.set(message.channel.id, message);
   }
 }
