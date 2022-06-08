@@ -14,6 +14,9 @@ import fetch from 'node-fetch';
 })
 export class SpamCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
+    if (interaction.channelId != '682838969179832423') {
+      return await interaction.reply({ ephemeral: true, content: 'You can\'t use that command here!' });
+  }
     fetch('https://www.reddit.com/r/copypasta/new.json?sort=top', {
         method: 'GET',
     })
@@ -33,8 +36,8 @@ export class SpamCommand extends Command {
   }
 
   public override async messageRun(message: Message) {
-    if (message.channel.id == '682838969179832423') {
-        
+    if (message.channel.id != '682838969179832423') {
+      return;
     }
     fetch('https://www.reddit.com/r/copypasta/new.json?sort=top', {
         method: 'GET',
