@@ -16,8 +16,10 @@ export class MessageListener extends Listener {
     if (message.guild === null) return;
     const { client } = container;
     const isBot = message.author.bot;
+    if (isBot) return;
+
     // Removes text messages in media-only channels
-    if (picsOnlyChannels.includes(message.channel.id) && !isBot) {
+    if (picsOnlyChannels.includes(message.channel.id)) {
       const isAdmin = message.member!.permissions.has('ADMINISTRATOR');
       if (!isAdmin) {
         // For discussions category
@@ -34,18 +36,17 @@ export class MessageListener extends Listener {
           if (message.reference) hasReplied = true;
           let referenceId;
           if (hasReplied) referenceId = message.reference!.messageId;
-          message.channel.send(`Don't chat here, please use the <#735804432985620521> channel above.`);
-          message.delete();
+          message.delete().then(message.channel.send(`Don't chat here, please use the <#735804432985620521> channel above.`).then(message => setTimeout(() => message.delete(), 5000)));
           if (content.includes('@everyone') || content.includes('@here')) {
             content = Util.removeMentions(content);
           }
 
           // If author replied to a message
           if (hasReplied) {
-            discussionChannel!.send(`**Message removed in:** <#${channelId}>\n**Message sent by:** <@${authorId}>\n**Message content:** ${content}\n**Message replied to:** https://discord.com/channels/${guildId}/${channelId}/${message.reference.messageID}`)
+            return discussionChannel!.send(`**Message removed in:** <#${channelId}>\n**Message sent by:** <@${authorId}>\n**Message content:** ${content}\n**Message replied to:** https://discord.com/channels/${guildId}/${channelId}/${message.reference.messageID}`)
           }
           else {
-            discussionChannel!.send(`**Message removed in:** <#${channelId}>\n**Message sent by:** <@${authorId}>\n**Message content:** ${content}`)
+            return discussionChannel!.send(`**Message removed in:** <#${channelId}>\n**Message sent by:** <@${authorId}>\n**Message content:** ${content}`)
           }
         }
       }
