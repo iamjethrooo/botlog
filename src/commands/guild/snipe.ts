@@ -36,9 +36,7 @@ export class SnipeCommand extends Command {
       return await interaction.reply({ embeds: [embed] });
     }
 
-    await interaction.reply('You don\'t have the permissions to run this command!');
-    setTimeout(() => interaction.deleteReply(), 15000);
-    return;
+    return await interaction.reply({ ephemeral: true, content: 'You don\'t have the permissions to run this command!' });
   }
 
   public override async messageRun(message: Message) {
