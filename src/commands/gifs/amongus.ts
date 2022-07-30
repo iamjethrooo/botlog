@@ -10,6 +10,7 @@ require('dotenv').config();
 
 @ApplyOptions<CommandOptions>({
   name: 'amongus',
+  aliases: ['amogus'],
   description: 'Replies with a random Among Us gif!'
 })
 export class AmongUsCommand extends Command {
