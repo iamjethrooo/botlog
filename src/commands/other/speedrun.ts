@@ -61,8 +61,7 @@ export class SpeedRunCommand extends Command {
           ':x: Try searching again with the following suggestions.',
           initial.data[0].names.international + ` doesn't have any runs.`
         )
-        .setTimestamp()
-        .setFooter({ text: 'Powered by www.speedrun.com' });
+        .setTimestamp();
 
       gameNameArr.forEach((game, i) => {
         gameName.addField(`:video_game: Result ${i + 1}`, game);
@@ -74,8 +73,8 @@ export class SpeedRunCommand extends Command {
       queryCat = !queryCat ? categories[0].category.data.name : queryCat;
       for (let i = 0; i <= categories.length; ++i) {
         if (
-          categories[i]?.category.data.name.toLowerCase() ==
-          queryCat?.toLowerCase()
+          categories[i] ?.category.data.name.toLowerCase() ==
+            queryCat ?.toLowerCase()
         ) {
           break;
         } else if (i == categories.length)
@@ -111,7 +110,7 @@ export class SpeedRunCommand extends Command {
       message.addAction({
         style:
           categories[index].category.data.name.toLowerCase() ==
-          queryCat.toLowerCase()
+            queryCat.toLowerCase()
             ? 'SUCCESS'
             : 'PRIMARY',
         customId: `Category-${index}`,
@@ -159,13 +158,13 @@ export class SpeedRunCommand extends Command {
     try {
       categories.forEach((category: any) => {
         if (
-          category.category.data.name.toLowerCase() == queryCat?.toLowerCase()
+          category.category.data.name.toLowerCase() == queryCat ?.toLowerCase()
         ) {
           const catRules = new MessageEmbed()
             .setDescription(
               category.category.data.rules.toString().length
                 ? `**${category.category.data.name} Rules**:\n` +
-                    category.category.data.rules.toString()
+                category.category.data.rules.toString()
                 : 'No Data'
             )
             .setColor('#3E8657')
@@ -175,7 +174,6 @@ export class SpeedRunCommand extends Command {
                 category.game.data.names.international +
                 ' - ' +
                 category.category.data.name,
-              url: 'http://speedrun.com/'
             });
           PaginatedEmbed.addPageEmbed(catRules);
           for (let i = 0; i <= category.players.data.length; ++i) {
@@ -209,11 +207,11 @@ export class SpeedRunCommand extends Command {
                   .setTitle(
                     category.runs[i]
                       ? trophyIcon +
-                          SpeedRunCommand.convertTime(
-                            category.runs[i].run.times.primary_t
-                          ) +
-                          ' by ' +
-                          runnerName
+                      SpeedRunCommand.convertTime(
+                        category.runs[i].run.times.primary_t
+                      ) +
+                      ' by ' +
+                      runnerName
                       : 'No Data'
                   )
                   .setThumbnail(category.game.data.assets['cover-medium'].uri)
@@ -227,17 +225,12 @@ export class SpeedRunCommand extends Command {
                       category.game.data.names.international +
                       ' - ' +
                       category.category.data.name,
-                    url: 'http://speedrun.com/'
                   })
                   .addField(
                     ':calendar_spiral: Date Played:',
                     category.runs[i] ? category.runs[i].run.date : 'No Data'
                   )
                   .addField(':video_game: Played On:', platform + region + emu)
-                  .setFooter({
-                    text: 'Powered by www.speedrun.com',
-                    iconURL: 'https://i.imgur.com/PpxR9E1.png'
-                  })
               );
             }
           }
@@ -287,23 +280,23 @@ export class SpeedRunCommand extends Command {
         ms === undefined
           ? min.toString() + 'm ' + sec.toString() + 's'
           : min.toString() +
-            'm ' +
-            sec.toString() +
-            's ' +
-            ms.toString() +
-            'ms';
+          'm ' +
+          sec.toString() +
+          's ' +
+          ms.toString() +
+          'ms';
     } else {
       str =
         ms === undefined
           ? hr.toString() + 'h ' + min.toString() + 'm ' + sec.toString() + 's'
           : hr.toString() +
-            'h ' +
-            min.toString() +
-            'm ' +
-            sec.toString() +
-            's ' +
-            ms.toString() +
-            'ms';
+          'h ' +
+          min.toString() +
+          'm ' +
+          sec.toString() +
+          's ' +
+          ms.toString() +
+          'ms';
     }
     return str;
   }

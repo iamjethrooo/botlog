@@ -21,14 +21,9 @@ export class KanyeCommand extends Command {
           .setColor('#F4D190')
           .setAuthor({
             name: 'Kanye West',
-            url: 'https://kanye.rest',
-            iconURL: 'https://i.imgur.com/SsNoHVh.png'
           })
           .setDescription(quote)
-          .setTimestamp()
-          .setFooter({
-            text: 'Powered by kanye.rest'
-          });
+          .setTimestamp();
         return await interaction.reply({ embeds: [embed] });
       })
       .catch(async error => {
@@ -48,14 +43,9 @@ export class KanyeCommand extends Command {
           .setColor('#F4D190')
           .setAuthor({
             name: 'Kanye West',
-            url: 'https://kanye.rest',
-            iconURL: 'https://i.imgur.com/SsNoHVh.png'
           })
           .setDescription(quote)
-          .setTimestamp()
-          .setFooter({
-            text: 'Powered by kanye.rest'
-          });
+          .setTimestamp();
         return await message.reply({ embeds: [embed] });
       })
       .catch(async error => {

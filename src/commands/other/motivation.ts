@@ -9,6 +9,7 @@ import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
   name: 'motivation',
+  aliases: ['motivate'],
   description: 'Replies with a motivational quote!'
 })
 export class MotivationCommand extends Command {
@@ -24,14 +25,9 @@ export class MotivationCommand extends Command {
           .setColor('#FFD77A')
           .setAuthor({
             name: 'Motivational Quote',
-            url: 'https://type.fit',
-            iconURL: 'https://i.imgur.com/Cnr6cQb.png'
           })
           .setDescription(`*"${randomQuote.text}*"\n\n-${randomQuote.author}`)
-          .setTimestamp()
-          .setFooter({
-            text: 'Powered by type.fit'
-          });
+          .setTimestamp();
         return await interaction.reply({ embeds: [embed] });
       })
       .catch(async error => {
@@ -43,33 +39,28 @@ export class MotivationCommand extends Command {
   }
 
   public override async messageRun(message: Message) {
-      axios
-        .get('https://type.fit/api/quotes')
-        .then(async response => {
-          const quotes = response.data;
+    axios
+      .get('https://type.fit/api/quotes')
+      .then(async response => {
+        const quotes = response.data;
 
-          const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
 
-          const embed = new MessageEmbed()
-            .setColor('#FFD77A')
-            .setAuthor({
-              name: 'Motivational Quote',
-              url: 'https://type.fit',
-              iconURL: 'https://i.imgur.com/Cnr6cQb.png'
-            })
-            .setDescription(`*"${randomQuote.text}*"\n\n-${randomQuote.author}`)
-            .setTimestamp()
-            .setFooter({
-              text: 'Powered by type.fit'
-            });
-          return await message.reply({ embeds: [embed] });
-        })
-        .catch(async error => {
-          console.error(error);
-          return await message.reply(
-            'Something went wrong when fetching a motivational quote :('
-          );
-        });
+        const embed = new MessageEmbed()
+          .setColor('#FFD77A')
+          .setAuthor({
+            name: 'Motivational Quote',
+          })
+          .setDescription(`*"${randomQuote.text}*"\n\n-${randomQuote.author}`)
+          .setTimestamp();
+        return await message.reply({ embeds: [embed] });
+      })
+      .catch(async error => {
+        console.error(error);
+        return await message.reply(
+          'Something went wrong when fetching a motivational quote :('
+        );
+      });
   }
 
   public override registerApplicationCommands(

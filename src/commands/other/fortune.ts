@@ -21,14 +21,9 @@ export class FortuneCommand extends Command {
           .setColor('#F4D190')
           .setAuthor({
             name: 'Fortune Coookie',
-            url: 'https://yerkee.com',
-            iconURL: 'https://i.imgur.com/58wIjK0.png'
           })
           .setDescription(tip)
-          .setTimestamp()
-          .setFooter({
-            text: 'Powered by yerkee.com'
-          });
+          .setTimestamp();
         return await interaction.reply({ embeds: [embed] });
       })
       .catch(async error => {
@@ -48,14 +43,9 @@ export class FortuneCommand extends Command {
           .setColor('#F4D190')
           .setAuthor({
             name: 'Fortune Coookie',
-            url: 'https://yerkee.com',
-            iconURL: 'https://i.imgur.com/58wIjK0.png'
           })
           .setDescription(tip)
-          .setTimestamp()
-          .setFooter({
-            text: 'Powered by yerkee.com'
-          });
+          .setTimestamp();
         return await message.reply({ embeds: [embed] });
       })
       .catch(async error => {
