@@ -72,7 +72,7 @@ export class SnipeCommand extends Command {
     const { client } = container;
 
     if (
-      !message.member!.permissions.has("ADMINISTRATOR") ||
+      message.member!.permissions.has("ADMINISTRATOR") ||
       message.member!.roles.cache.find(
         (r) =>
           r.name === "Sniper" ||
@@ -84,57 +84,53 @@ export class SnipeCommand extends Command {
           r.name === "Obsidian (Lvl. 15+)"
       )
     ) {
-      return await message
-        .reply("You don't have the permissions to run this command!")
-        .then((message) => setTimeout(() => message.delete(), 15000));
-    }
-
-    const sniped = client.snipes.get(message.channel.id);
-
-    if (!sniped) {
-      return await message
-        .reply("There's nothing to snipe!")
-        .then((message) => setTimeout(() => message.delete(), 15000))
-        .then(message.delete);
-    }
-
-    let num = await args.pick("integer").catch(() => -1);
-
-    if (num <= 0) {
-      let content = `**${sniped[0].author}**: ${sniped[0].content}`;
-      if (sniped.length > 1) {
-        content = `**${sniped[1].author}**: ${sniped[1].content}\n` + content;
+      const sniped = client.snipes.get(message.channel.id);
+      if (!sniped) {
+        return await message
+          .reply("There's nothing to snipe!")
+          .then((message) => setTimeout(() => message.delete(), 15000))
+          .then(message.delete);
       }
+      let num = await args.pick("integer").catch(() => -1);
 
-      if (sniped.length > 2) {
-        content = `**${sniped[2].author}**: ${sniped[2].content}\n` + content;
+      if (num <= 0) {
+        let content = `**${sniped[0].author}**: ${sniped[0].content}`;
+        if (sniped.length > 1) {
+          content = `**${sniped[1].author}**: ${sniped[1].content}\n` + content;
+        }
+        if (sniped.length > 2) {
+          content = `**${sniped[2].author}**: ${sniped[2].content}\n` + content;
+        }
+        const embed = new MessageEmbed()
+          .setDescription(content)
+          .setColor(message.member!.displayHexColor!);
+        return await message.reply({ embeds: [embed] });
+      } else {
+        num--;
+        if (!sniped[num]) {
+          return await message
+            .reply("There's nothing to snipe!")
+            .then((message) => setTimeout(() => message.delete(), 15000))
+            .then(message.delete);
+        }
+        const singleSnipe = sniped[num];
+        const embed = new MessageEmbed()
+          .setAuthor(
+            `${singleSnipe.author.username}#${singleSnipe.author.discriminator}`,
+            singleSnipe.author.displayAvatarURL({ dynamic: true })
+          )
+          .setDescription(singleSnipe.content)
+          .setTimestamp(singleSnipe.createdAt)
+          .setColor(message.member!.displayHexColor);
+        if (singleSnipe.channel instanceof TextChannel) {
+          embed.setFooter("#".concat(singleSnipe.channel.name));
+        }
+        return await message.reply({ embeds: [embed] });
       }
-
-      const embed = new MessageEmbed()
-        .setDescription(content)
-        .setColor(message.member!.displayHexColor!);
-      return await message.reply({ embeds: [embed] });
     }
-    num--;
-    if (!sniped[num]) {
-      return await message
-        .reply("There's nothing to snipe!")
-        .then((message) => setTimeout(() => message.delete(), 15000))
-        .then(message.delete);
-    }
-    const singleSnipe = sniped[num];
-    const embed = new MessageEmbed()
-      .setAuthor(
-        `${singleSnipe.author.username}#${singleSnipe.author.discriminator}`,
-        singleSnipe.author.displayAvatarURL({ dynamic: true })
-      )
-      .setDescription(singleSnipe.content)
-      .setTimestamp(singleSnipe.createdAt)
-      .setColor(message.member!.displayHexColor);
-    if (singleSnipe.channel instanceof TextChannel) {
-      embed.setFooter("#".concat(singleSnipe.channel.name));
-    }
-    return await message.reply({ embeds: [embed] });
+    return await message
+      .reply("You don't have the permissions to run this command!")
+      .then((message) => setTimeout(() => message.delete(), 15000));
   }
 
   public override registerApplicationCommands(
