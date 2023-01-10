@@ -31,7 +31,7 @@ export class MessageListener extends Listener {
           // Store values related to the message
           // discussionChannel: '735804432985620521'
           const discussionChannel =
-            client.channels.cache.get("901646890817445948");
+            client.channels.cache.get("735804432985620521");
           const guildId = message.guild.id;
           const channelId = message.channel.id;
           const authorId = message.author.id;
