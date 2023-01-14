@@ -36,7 +36,7 @@ const transports = [
   new winston.transports.Console(),
   new winston.transports.DailyRotateFile({
     dirname: './logs',
-    filename: 'Master-Bot-%DATE%.log',
+    filename: 'BBC-Bot-%DATE%.log',
     datePattern: 'MM-DD-YYYY',
     zippedArchive: true,
     maxSize: '20m',
