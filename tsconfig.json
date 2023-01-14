@@ -1,14 +1,18 @@
 {
-  "extends": "@sapphire/ts-config",
   "compilerOptions": {
-    "target": "ES6",
-    "rootDir": "src",
     "incremental": true,
-    "outDir": "dist",
-    "tsBuildInfoFile": "dist/.tsbuildinfo",
-    "resolveJsonModule": true,
-    "noUnusedParameters": false,
-    "skipLibCheck": true
-  },
-  "include": ["src"]
+    "target": "es2019",
+    "module": "commonjs",
+    "declaration": true,
+    "sourceMap": true,
+    "composite": true,
+    "jsx": "react",
+    "strict": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
 }
