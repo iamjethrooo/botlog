@@ -2,6 +2,8 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Listener, ListenerOptions, container } from "@sapphire/framework";
 import { Message, MessageEmbed, Util } from "discord.js";
+import { trpcNode } from "../trpc";
+
 const picsOnlyChannels = [
   "669514957938753558",
   "800543054221541376",
@@ -18,6 +20,28 @@ const picsOnlyChannels = [
 export class MessageListener extends Listener {
   public override async run(message: Message): Promise<void> {
     if (message.guild === null) return;
+
+    try {
+      let user = await trpcNode.user.getUserById.query({
+        id: message.author.id,
+      });
+      console.log(user);
+      if (user.user == null) {
+        await trpcNode.user.create.mutate({
+          id: message.author.id,
+          name: message.author.username,
+        });
+      } else {
+        await trpcNode.user.addCoins.mutate({
+          id: message.author.id,
+          coins: 5,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      return;
+    }
+
     const { client } = container;
     const isBot = message.author.bot;
     if (isBot) return;
