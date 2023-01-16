@@ -4,6 +4,11 @@ import { Listener, ListenerOptions, container } from "@sapphire/framework";
 import { Message, MessageEmbed, Util } from "discord.js";
 import { trpcNode } from "../trpc";
 
+import dotenv from 'dotenv';
+dotenv.config({
+  path: path.resolve(__dirname, '../../../../.env')
+});
+
 const picsOnlyChannels = [
   "669514957938753558",
   "800543054221541376",
@@ -34,7 +39,7 @@ export class MessageListener extends Listener {
       } else {
         await trpcNode.user.addCoins.mutate({
           id: message.author.id,
-          coins: 5,
+          coins: process.env.COINS_PER_CHAT,
         });
       }
     } catch (error) {
