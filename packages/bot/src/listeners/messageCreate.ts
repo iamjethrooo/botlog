@@ -26,6 +26,7 @@ const picsOnlyChannels = [
 export class MessageListener extends Listener {
   public override async run(message: Message): Promise<void> {
     if (message.guild === null) return;
+    if (message.author.bot) return;
 
     try {
       let user = await trpcNode.user.getUserById.query({
