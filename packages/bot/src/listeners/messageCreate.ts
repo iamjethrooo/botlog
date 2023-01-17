@@ -4,10 +4,10 @@ import { Listener, ListenerOptions, container } from "@sapphire/framework";
 import { Message, MessageEmbed, Util } from "discord.js";
 import { trpcNode } from "../trpc";
 
-import path from 'path';
-import dotenv from 'dotenv';
+import path from "path";
+import dotenv from "dotenv";
 dotenv.config({
-  path: path.resolve(__dirname, '../../../../.env')
+  path: path.resolve(__dirname, "../../../../.env"),
 });
 
 const picsOnlyChannels = [
@@ -39,15 +39,19 @@ export class MessageListener extends Listener {
           name: message.author.username,
         });
       } else {
-        await trpcNode.user.addCash.mutate({
-          id: message.author.id,
-          cash: parseInt(process.env.CASH_PER_CHAT),
-        });
+        if ((Date.now() - Number(user.user.lastMessageDate)) / 1000 < process.env.INTERVAL) {
+          console.log("too soon!");
+        } else {
+          await trpcNode.user.addCash.mutate({
+            id: message.author.id,
+            cash: parseInt(process.env.CASH_PER_CHAT),
+          });
 
-        await trpcNode.user.updateLastMessageDate.mutate({
-          id: message.author.id,
-          date: Date.now().toString()
-        });
+          await trpcNode.user.updateLastMessageDate.mutate({
+            id: message.author.id,
+            date: Date.now().toString(),
+          });
+        }
       }
     } catch (error) {
       console.log(error);
