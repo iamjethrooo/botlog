@@ -43,7 +43,6 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  playlists     Playlist[]
   guilds        Guild[]
   reminders     Reminder[]
   timeOffset    Int?
@@ -55,33 +54,6 @@ model VerificationToken {
   token      String   @unique
   expires    DateTime
   @@unique([identifier, token])
-}
-
-model Song {
-  id         Int      @id @default(autoincrement())
-  length     Int
-  track      String
-  identifier String
-  author     String
-  isStream   Boolean
-  position   Int
-  title      String
-  uri        String
-  isSeekable Boolean
-  sourceName String
-  thumbnail  String
-  added      Int
-  playlistId Int
-  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
-}
-
-model Playlist {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  name      String
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
-  songs     Song[]
 }
 
 model Guild {
@@ -109,14 +81,6 @@ model TempChannel {
   guildId String
   guild   Guild  @relation(fields: [guildId], references: [id])
   ownerId String @unique
-}
-
-model TwitchNotify {
-  twitchId   String   @id
-  logo       String
-  live       Boolean  @default(false)
-  channelIds String[]
-  sent       Boolean
 }
 
 model Reminder {

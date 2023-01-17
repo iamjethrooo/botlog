@@ -26,7 +26,7 @@ export const trpcNode = createTRPCProxyClient<AppRouter>({
         client: wsClient
       }),
       false: httpLink({
-        url: 'http://localhost:3000/api/trpc'
+        url: 'http://localhost:3001/api/trpc'
       })
     })
   ]
