@@ -76,15 +76,15 @@ export const userRouter = t.router({
 
       return { userTime };
     }),
-  addCoins: t.procedure
+  addCash: t.procedure
     .input(
       z.object({
         id: z.string(),
-        coins: z.number(),
+        cash: z.number(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, coins } = input;
+      const { id, cash } = input;
 
       const user = await ctx.prisma.user.findUnique({
         where: {
@@ -92,13 +92,13 @@ export const userRouter = t.router({
         },
       });
 
-      const userCoins = await ctx.prisma.user.update({
+      const userCash = await ctx.prisma.user.update({
         where: {
           discordId: id,
         },
-        data: { coins: user!.coins + coins }
+        data: { cash: user!.cash+ cash }
       });
 
-      return { userCoins };
+      return { userCash};
     }),
 });

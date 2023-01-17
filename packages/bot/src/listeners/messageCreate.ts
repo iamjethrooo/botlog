@@ -39,9 +39,9 @@ export class MessageListener extends Listener {
           name: message.author.username,
         });
       } else {
-        await trpcNode.user.addCoins.mutate({
+        await trpcNode.user.addCash.mutate({
           id: message.author.id,
-          coins: parseInt(process.env.COINS_PER_CHAT),
+          cash: parseInt(process.env.CASH_PER_CHAT),
         });
       }
     } catch (error) {

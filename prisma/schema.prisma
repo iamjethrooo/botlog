@@ -46,7 +46,9 @@ model User {
   guilds        Guild[]
   reminders     Reminder[]
   timeOffset    Int?
-  coins         Int         @default(0)
+  lastMessageDate   DateTime   @default(now())
+  cash          Int        @default(0)
+  bank          Int        @default(0)
 }
 
 model VerificationToken {
