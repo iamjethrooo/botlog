@@ -46,7 +46,7 @@ model User {
   guilds        Guild[]
   reminders     Reminder[]
   timeOffset    Int?
-  lastMessageDate   DateTime   @default(now())
+  lastMessageDate   String   @default("0")
   cash          Int        @default(0)
   bank          Int        @default(0)
 }

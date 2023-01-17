@@ -43,6 +43,11 @@ export class MessageListener extends Listener {
           id: message.author.id,
           cash: parseInt(process.env.CASH_PER_CHAT),
         });
+
+        await trpcNode.user.updateLastMessageDate.mutate({
+          id: message.author.id,
+          date: Date.now().toString()
+        });
       }
     } catch (error) {
       console.log(error);
