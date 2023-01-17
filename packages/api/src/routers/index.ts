@@ -2,8 +2,6 @@ import { t } from '../trpc';
 
 import { userRouter } from './user';
 import { guildRouter } from './guild';
-import { playlistRouter } from './playlist';
-import { songRouter } from './song';
 import { channelRouter } from './channel';
 import { welcomeRouter } from './welcome';
 import { commandRouter } from './command';
@@ -20,8 +18,6 @@ import { reminderRouter } from './reminder';
 export const appRouter = t.router({
   user: userRouter,
   guild: guildRouter,
-  playlist: playlistRouter,
-  song: songRouter,
   channel: channelRouter,
   welcome: welcomeRouter,
   command: commandRouter,
