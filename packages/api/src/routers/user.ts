@@ -80,7 +80,7 @@ export const userRouter = t.router({
     .input(
       z.object({
         id: z.string(),
-        date: z.string()
+        date: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -90,7 +90,7 @@ export const userRouter = t.router({
         where: {
           discordId: id,
         },
-        data: { lastMessageDate: date }
+        data: { lastMessageDate: date },
       });
 
       return { lastMessageDate };
@@ -115,7 +115,82 @@ export const userRouter = t.router({
         where: {
           discordId: id,
         },
-        data: { cash: user!.cash+ cash }
+        data: { cash: user!.cash + cash },
+      });
+
+      return { userCash };
+    }),
+  subtractCash: t.procedure
+    .input(
+      z.object({
+        id: z.string(),
+        cash: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, cash } = input;
+
+      const user = await ctx.prisma.user.findUnique({
+        where: {
+          discordId: id,
+        },
+      });
+
+      const userCash = await ctx.prisma.user.update({
+        where: {
+          discordId: id,
+        },
+        data: { cash: user!.cash - cash },
+      });
+
+      return { userCash };
+    }),
+  deposit: t.procedure
+    .input(
+      z.object({
+        id: z.string(),
+        cash: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, cash } = input;
+
+      const user = await ctx.prisma.user.findUnique({
+        where: {
+          discordId: id,
+        },
+      });
+
+      const userCash = await ctx.prisma.user.update({
+        where: {
+          discordId: id,
+        },
+        data: { cash: user!.cash - cash, bank: cash },
+      });
+
+      return { userCash };
+    }),
+    withdraw: t.procedure
+    .input(
+      z.object({
+        id: z.string(),
+        cash: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, cash } = input;
+
+      const user = await ctx.prisma.user.findUnique({
+        where: {
+          discordId: id,
+        },
+      });
+
+      const userCash = await ctx.prisma.user.update({
+        where: {
+          discordId: id,
+        },
+        data: { cash: cash, bank: user!.bank - cash },
       });
 
       return { userCash };
