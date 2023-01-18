@@ -10,13 +10,12 @@ import { trpcNode } from "../../trpc";
 @ApplyOptions<CommandOptions>({
   name: "balance",
   aliases: ["bal"],
-  description: "Replies with Pong!",
+  description: "Check your balance.",
 })
 export class BalanceCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
 
   public override async messageRun(message: Message) {
-    console.log(message);
     try {
       let user = await trpcNode.user.getUserById.query({
         id: message.author.id,
