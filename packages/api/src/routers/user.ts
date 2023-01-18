@@ -165,7 +165,7 @@ export const userRouter = t.router({
         where: {
           discordId: id,
         },
-        data: { cash: user!.cash - cash, bank: cash },
+        data: { cash: user!.cash - cash, bank: user!.bank + cash },
       });
 
       return { userCash };
@@ -190,7 +190,7 @@ export const userRouter = t.router({
         where: {
           discordId: id,
         },
-        data: { cash: cash, bank: user!.bank - cash },
+        data: { cash: cash + user!.cash, bank: user!.bank - cash },
       });
 
       return { userCash };
