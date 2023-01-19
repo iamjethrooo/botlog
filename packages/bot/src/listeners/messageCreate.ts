@@ -20,15 +20,25 @@ const picsOnlyChannels = [
   "1044996825754644670",
 ];
 
+const noCashChannels = ["682838969179832423", "1064926572680847490"];
+
 @ApplyOptions<ListenerOptions>({
   event: "messageCreate",
 })
 export class MessageListener extends Listener {
   public override async run(message: Message): Promise<void> {
     if (message.guild === null) return;
-    if (message.author.bot) return;
 
+    const { client } = container;
+    const isBot = message.author.bot;
+    if (isBot) return;
+
+    // Coinz
     try {
+      if (noCashChannels.includes(message.channel.id)) {
+        throw "no cash here";
+      }
+
       let user = await trpcNode.user.getUserById.query({
         id: message.author.id,
       });
@@ -39,7 +49,10 @@ export class MessageListener extends Listener {
           name: message.author.username,
         });
       } else {
-        if ((Date.now() - Number(user.user.lastMessageDate)) / 1000 < process.env.INTERVAL) {
+        if (
+          (Date.now() - Number(user.user.lastMessageDate)) / 1000 <
+          process.env.INTERVAL
+        ) {
           console.log("too soon!");
         } else {
           await trpcNode.user.addCash.mutate({
@@ -54,13 +67,10 @@ export class MessageListener extends Listener {
         }
       }
     } catch (error) {
+      if (error === "no cash here") return;
       console.log(error);
       return;
     }
-
-    const { client } = container;
-    const isBot = message.author.bot;
-    if (isBot) return;
 
     // Removes text messages in media-only channels
     if (picsOnlyChannels.includes(message.channel.id)) {
