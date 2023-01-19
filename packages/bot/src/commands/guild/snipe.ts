@@ -17,6 +17,7 @@ import {
 @ApplyOptions<CommandOptions>({
   name: "snipe",
   description: "Reveal the last deleted message in the channel.",
+  enabled: false,
 })
 export class SnipeCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
