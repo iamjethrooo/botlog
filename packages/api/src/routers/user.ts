@@ -36,6 +36,7 @@ export const userRouter = t.router({
         create: {
           discordId: id,
           name,
+          cash: Number(process.env.STARTING_CASH)
         },
       });
       return { user };
