@@ -35,6 +35,8 @@ export class SnipeCommand extends Command {
         id: message.author.id,
       });
       if (!message.member!.permissions.has("ADMINISTRATOR")) {
+        console.log(user!.user!.cash);
+        console.log(Number(process.env.SNIPE_COST));
         if (user!.user!.cash - Number(process.env.SNIPE_COST) < 0) {
           const embed = new MessageEmbed()
             .setAuthor(

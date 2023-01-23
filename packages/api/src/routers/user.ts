@@ -35,8 +35,7 @@ export const userRouter = t.router({
         update: {},
         create: {
           discordId: id,
-          name,
-          cash: Number(process.env.STARTING_CASH)
+          name
         },
       });
       return { user };
