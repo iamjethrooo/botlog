@@ -14,7 +14,19 @@ const picsOnlyChannels = [
   "1044996825754644670",
 ];
 
-const noCashChannels = ["682838969179832423", "1064926572680847490"];
+const noCashChannels = [
+  "682838969179832423",
+  "1064926572680847490",
+  "794833126270566411",
+  "794833143113973760",
+  "738754900992721028",
+  "993892178893996032",
+  "796684897594769418",
+  "670801689770590208",
+  "674518870211559428",
+  "674860915383992340",
+  "725110364773154896",
+];
 
 @ApplyOptions<ListenerOptions>({
   event: "messageCreate",
@@ -40,7 +52,7 @@ export class MessageListener extends Listener {
       if (user.user == null) {
         await trpcNode.user.create.mutate({
           id: message.author.id,
-          name: message.author.username
+          name: message.author.username,
         });
         await trpcNode.user.addCash.mutate({
           id: message.author.id,
