@@ -12,6 +12,7 @@ import { trpcNode } from "../../trpc";
   name: "deposit",
   aliases: ["dep"],
   description: "Deposit your cash to the bank.",
+  enabled: false
 })
 export class DepositCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
