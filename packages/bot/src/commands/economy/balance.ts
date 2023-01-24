@@ -16,6 +16,12 @@ export class BalanceCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
 
   public override async messageRun(message: Message) {
+    if (
+      message.guildId == "669190303353143306" &&
+      message.channelId != "682838969179832423"
+    ) {
+      return;
+    }
     try {
       let user = await trpcNode.user.getUserById.query({
         id: message.author.id,
@@ -27,9 +33,27 @@ export class BalanceCommand extends Command {
           message.author.displayAvatarURL({ dynamic: true })
         )
         .addFields(
-          { name: "Cash:", value: '<:baguiobenguetchat:854546677897625600>' + String(user!.user!.cash), inline: true },
-          { name: "Bank:", value: '<:baguiobenguetchat:854546677897625600>' + String(user!.user!.bank), inline: true },
-          { name: "Total:", value: '<:baguiobenguetchat:854546677897625600>' + String(user!.user!.cash + user!.user!.bank), inline: true }
+          {
+            name: "Cash:",
+            value:
+              "<:baguiobenguetchat:854546677897625600>" +
+              String(user!.user!.cash),
+            inline: true,
+          },
+          {
+            name: "Bank:",
+            value:
+              "<:baguiobenguetchat:854546677897625600>" +
+              String(user!.user!.bank),
+            inline: true,
+          },
+          {
+            name: "Total:",
+            value:
+              "<:baguiobenguetchat:854546677897625600>" +
+              String(user!.user!.cash + user!.user!.bank),
+            inline: true,
+          }
         )
         .setTimestamp(message.createdAt)
         .setColor(message.member!.displayHexColor);
