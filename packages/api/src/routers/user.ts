@@ -35,7 +35,7 @@ export const userRouter = t.router({
         update: {},
         create: {
           discordId: id,
-          name
+          name,
         },
       });
       return { user };
@@ -170,7 +170,7 @@ export const userRouter = t.router({
 
       return { userCash };
     }),
-    withdraw: t.procedure
+  withdraw: t.procedure
     .input(
       z.object({
         id: z.string(),
@@ -195,4 +195,18 @@ export const userRouter = t.router({
 
       return { userCash };
     }),
+  getLeaderboard: t.procedure.query(async ({ ctx }) => {
+    const leaderboard = await ctx.prisma.user.findMany({
+      orderBy: [
+        {
+          cash: "desc",
+        },
+        {
+          name: "desc",
+        },
+      ],
+    });
+
+    return { leaderboard };
+  }),
 });
