@@ -32,8 +32,11 @@ export class BalanceCommand extends Command {
           `${message.author.username}#${message.author.discriminator}`,
           message.author.displayAvatarURL({ dynamic: true })
         )
-        .setDescription("You currently have <:baguiobenguetchat:854546677897625600>" +
-        String(user!.user!.cash))
+        .setDescription(
+          `You currently have <:baguiobenguetchat:854546677897625600>${String(
+            user!.user!.cash
+          )}.`
+        )
         .setTimestamp(message.createdAt)
         .setColor(message.member!.displayHexColor);
       return await message.reply({ embeds: [embed] });
