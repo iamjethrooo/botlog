@@ -93,6 +93,8 @@ export class SnipeCommand extends Command {
           .then(message.delete);
       }
       const singleSnipe = sniped[num];
+      console.log(singleSnipe);
+      
       const embed = new MessageEmbed()
         .setAuthor(
           `${singleSnipe.author.username}#${singleSnipe.author.discriminator}`,
@@ -103,6 +105,9 @@ export class SnipeCommand extends Command {
         .setColor(message.member!.displayHexColor);
       if (singleSnipe.channel instanceof TextChannel) {
         embed.setFooter("#".concat(singleSnipe.channel.name));
+      }
+      if (singleSnipe.attachments) {
+        embed.setImage(singleSnipe.attachments.first()!.url);
       }
       return await message.reply({ embeds: [embed] });
     }
