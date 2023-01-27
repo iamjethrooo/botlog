@@ -14,6 +14,8 @@ import {
 } from "discord.js";
 import { trpcNode } from "../../trpc";
 
+let download = require("download-file");
+
 @ApplyOptions<CommandOptions>({
   name: "snipe",
   description: "Reveal the last deleted message in the channel.",
@@ -29,22 +31,25 @@ export class SnipeCommand extends Command {
     }
 
     const { client } = container;
-
+    const sniped = client.snipes.get(message.channel.id);
+    let num = await args.pick("integer").catch(() => -1);
     try {
       let user = await trpcNode.user.getUserById.query({
         id: message.author.id,
       });
+      let snipeCost = Number(process.env.SNIPE_COST);
+      if (num > 0) {
+        snipeCost = Number(process.env.SINGLE_SNIPE_COST);
+      }
       if (!message.member!.permissions.has("ADMINISTRATOR")) {
-        console.log(user!.user!.cash);
-        console.log(Number(process.env.SNIPE_COST));
-        if (user!.user!.cash - Number(process.env.SNIPE_COST) < 0) {
+        if (user!.user!.cash - snipeCost < 0) {
           const embed = new MessageEmbed()
             .setAuthor(
               `${message.author.username}#${message.author.discriminator}`,
               message.author.displayAvatarURL({ dynamic: true })
             )
             .setDescription(
-              `❌ You do not have enough money to snipe. You currently have <:baguiobenguetchat:854546677897625600>${String(
+              `❌ You do not have enough money to snipe. You currently have ${process.env.COIN_EMOJI}${String(
                 user!.user!.cash
               )} on hand.`
             )
@@ -53,9 +58,10 @@ export class SnipeCommand extends Command {
             .reply({ embeds: [embed] })
             .then((message) => setTimeout(() => message.delete(), 15000));
         }
+        
         await trpcNode.user.subtractCash.mutate({
           id: message.author.id,
-          cash: Number(process.env.SNIPE_COST),
+          cash: snipeCost,
         });
       }
     } catch (error) {
@@ -63,14 +69,12 @@ export class SnipeCommand extends Command {
       return;
     }
 
-    const sniped = client.snipes.get(message.channel.id);
     if (!sniped) {
       return await message
         .reply("There's nothing to snipe!")
         .then((message) => setTimeout(() => message.delete(), 15000))
         .then(message.delete);
     }
-    let num = await args.pick("integer").catch(() => -1);
 
     if (num <= 0) {
       let content = `**${sniped[0].author}**: ${sniped[0].content}`;
@@ -93,8 +97,7 @@ export class SnipeCommand extends Command {
           .then(message.delete);
       }
       const singleSnipe = sniped[num];
-      console.log(singleSnipe);
-      
+
       const embed = new MessageEmbed()
         .setAuthor(
           `${singleSnipe.author.username}#${singleSnipe.author.discriminator}`,
@@ -107,7 +110,16 @@ export class SnipeCommand extends Command {
         embed.setFooter("#".concat(singleSnipe.channel.name));
       }
       if (singleSnipe.attachments.size != 0) {
+        // Download image
+        let url = singleSnipe.attachments.first()!.url;
         embed.setImage(singleSnipe.attachments.first()!.url);
+        let options = {
+          directory: "./images",
+        };
+
+        download(url, options, (err: any) => {
+          if (err) throw err;
+        });
       }
       return await message.reply({ embeds: [embed] });
     }

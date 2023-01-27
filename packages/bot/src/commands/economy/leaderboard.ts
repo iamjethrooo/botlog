@@ -27,7 +27,7 @@ export class LeaderboardCommand extends Command {
         rank = index;
       }
       leaderboardFormatted.push(
-        `**${index}.** <@${user.discordId}> ・ <:baguiobenguetchat:854546677897625600>${user.cash}`
+        `**${index}.** <@${user.discordId}> ・ ${process.env.COIN_EMOJI}${user.cash}`
       );
       index++;
     });

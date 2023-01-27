@@ -33,7 +33,7 @@ export class BalanceCommand extends Command {
           message.author.displayAvatarURL({ dynamic: true })
         )
         .setDescription(
-          `You currently have <:baguiobenguetchat:854546677897625600>${String(
+          `You currently have ${process.env.COIN_EMOJI}${String(
             user!.user!.cash
           )}.`
         )
