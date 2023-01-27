@@ -106,7 +106,7 @@ export class SnipeCommand extends Command {
       if (singleSnipe.channel instanceof TextChannel) {
         embed.setFooter("#".concat(singleSnipe.channel.name));
       }
-      if (singleSnipe.attachments) {
+      if (singleSnipe.attachments.size != 0) {
         embed.setImage(singleSnipe.attachments.first()!.url);
       }
       return await message.reply({ embeds: [embed] });
