@@ -11,6 +11,7 @@
 # Production
 build
 dist
+packages/bot/images/
 
 # next.js
 .next
