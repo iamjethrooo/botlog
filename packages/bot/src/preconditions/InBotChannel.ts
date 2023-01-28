@@ -32,6 +32,8 @@ export class inBotChannel extends Precondition {
   public override async messageRun(message: Message): Promise<any> {
     if (!botChannels.includes(message.channel.id)) {
         return this.error({ message: 'Not a bot channel!' });
+      } else {
+        return this.ok();
       }
   }
 }
