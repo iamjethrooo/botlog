@@ -12,6 +12,9 @@ import { trpcNode } from "../../trpc";
   name: "withdraw",
   aliases: ["with"],
   description: "Deposit your cash to the bank.",
+  preconditions: [
+    'inBotChannel'
+  ],
   enabled: false
 })
 export class WithdrawCommand extends Command {

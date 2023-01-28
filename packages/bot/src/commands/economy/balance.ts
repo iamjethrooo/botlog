@@ -11,17 +11,14 @@ import { trpcNode } from "../../trpc";
   name: "balance",
   aliases: ["bal"],
   description: "Check your balance.",
+  preconditions: [
+    'inBotChannel'
+  ]
 })
 export class BalanceCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
 
   public override async messageRun(message: Message) {
-    if (
-      message.guildId == "669190303353143306" &&
-      message.channelId != "682838969179832423"
-    ) {
-      return;
-    }
     try {
       let user = await trpcNode.user.getUserById.query({
         id: message.author.id,

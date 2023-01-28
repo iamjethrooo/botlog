@@ -12,11 +12,15 @@ import { trpcNode } from "../../trpc";
 @ApplyOptions<CommandOptions>({
   name: "take",
   description: "Take coins from a user.",
+  preconditions: [
+    'inBotChannel'
+  ]
 })
 export class TakeCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
 
   public override async messageRun(message: Message, args: Args) {
+    console.log("ran");
     if (!message.member!.permissions.has("ADMINISTRATOR")) {
       return;
     }

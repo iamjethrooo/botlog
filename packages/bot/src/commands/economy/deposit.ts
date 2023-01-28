@@ -12,6 +12,9 @@ import { trpcNode } from "../../trpc";
   name: "deposit",
   aliases: ["dep"],
   description: "Deposit your cash to the bank.",
+  preconditions: [
+    'inBotChannel'
+  ],
   enabled: false
 })
 export class DepositCommand extends Command {
@@ -20,7 +23,6 @@ export class DepositCommand extends Command {
   }
 
   public override async messageRun(message: Message, args: Args) {
-    console.log("hello");
     const amount = (await args.rest("string")).trim();
     console.log(amount);
     try {

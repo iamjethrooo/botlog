@@ -12,6 +12,9 @@ import { trpcNode } from "../../trpc";
   name: "leaderboard",
   aliases: ["lb"],
   description: "Replies with Pong!",
+  preconditions: [
+    'inBotChannel'
+  ]
 })
 export class LeaderboardCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}

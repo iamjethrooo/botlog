@@ -12,6 +12,9 @@ import { trpcNode } from "../../trpc";
 @ApplyOptions<CommandOptions>({
   name: "give",
   description: "Give coins to a user.",
+  preconditions: [
+    'inBotChannel'
+  ]
 })
 export class GiveCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
