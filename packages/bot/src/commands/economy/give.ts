@@ -55,7 +55,7 @@ export class GiveCommand extends Command {
             message.author.displayAvatarURL({ dynamic: true })
           )
           .setDescription(
-            `Gave <@${id}> <:baguiobenguetchat:854546677897625600>${String(
+            `Gave <@${id}> ${process.env.COIN_EMOJI}${String(
               amount
             )}.`
           )
