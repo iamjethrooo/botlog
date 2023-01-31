@@ -14,7 +14,7 @@ import {
 } from "discord.js";
 import { trpcNode } from "../../trpc";
 
-let download = require("download-file");
+// let download = require("download-file");
 
 @ApplyOptions<CommandOptions>({
   name: "snipe",
@@ -111,15 +111,15 @@ export class SnipeCommand extends Command {
       }
       if (singleSnipe.attachments.size != 0) {
         // Download image
-        let url = singleSnipe.attachments.first()!.url;
-        embed.setImage(singleSnipe.attachments.first()!.url);
-        let options = {
-          directory: "./images",
-        };
+        // let url = singleSnipe.attachments.first()!.url;
+        // embed.setImage(singleSnipe.attachments.first()!.url);
+        // let options = {
+        //   directory: "./images",
+        // };
 
-        download(url, options, (err: any) => {
-          if (err) throw err;
-        });
+        // download(url, options, (err: any) => {
+        //   if (err) throw err;
+        // });
       }
       return await message.reply({ embeds: [embed] });
     }
