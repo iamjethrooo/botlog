@@ -67,7 +67,7 @@ export class MessageListener extends Listener {
         } else {
           await trpcNode.user.addCash.mutate({
             id: message.author.id,
-            cash: parseInt(process.env.CASH_PER_CHAT),
+            cash: parseInt(getRandomInt(process.env.MIN_CASH_PER_CHAT, process.env.MAX_CASH_PER_CHAT)),
           });
 
           await trpcNode.user.updateLastMessageDate.mutate({
@@ -137,4 +137,10 @@ export class MessageListener extends Listener {
       }
     }
   }
+}
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
