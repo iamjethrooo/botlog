@@ -27,6 +27,8 @@ export class RobCommand extends Command {
         id: suspectId,
       });
 
+      let suspectCash = suspect.user!.cash;
+
       let lastRobDate = Number(suspect.user!.lastRobDate);
       let robCooldown = Number(process.env.ROB_COOLDOWN);
       const embed = new MessageEmbed().setAuthor(
@@ -68,13 +70,20 @@ export class RobCommand extends Command {
         );
         embed.setColor(`#${process.env.GREEN_COLOR}`);
       } else {
+        let amountToBeSubtracted = suspectCash > tenPercent ? tenPercent : suspectCash;
+
         await trpcNode.user.subtractCash.mutate({
           id: suspectId,
-          cash: tenPercent,
+          cash: amountToBeSubtracted,
+        });
+
+        await trpcNode.guild.addToBank.mutate({
+          id: message!.guildId!,
+          amount: amountToBeSubtracted,
         });
 
         embed.setDescription(
-          `❌ You were caught attempting to rob <@${victimId}> and have been fined ${process.env.COIN_EMOJI}${tenPercent}.`
+          `❌ You were caught attempting to rob <@${victimId}> and have been fined ${process.env.COIN_EMOJI}${amountToBeSubtracted}.`
         );
         embed.setColor(`#${process.env.RED_COLOR}`);
       }
