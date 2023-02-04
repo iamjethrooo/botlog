@@ -1,8 +1,8 @@
-import { t } from '../trpc';
-import { z } from 'zod';
-import { APIGuild, APIRole } from 'discord-api-types/v10';
-import { TRPCError } from '@trpc/server';
-import { getFetch } from '@trpc/client';
+import { t } from "../trpc";
+import { z } from "zod";
+import { APIGuild, APIRole } from "discord-api-types/v10";
+import { TRPCError } from "@trpc/server";
+import { getFetch } from "@trpc/client";
 
 const fetch = getFetch();
 
@@ -10,7 +10,7 @@ export const guildRouter = t.router({
   getGuild: t.procedure
     .input(
       z.object({
-        id: z.string()
+        id: z.string(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -18,8 +18,8 @@ export const guildRouter = t.router({
 
       const guild = await ctx.prisma.guild.findUnique({
         where: {
-          id
-        }
+          id,
+        },
       });
 
       return { guild };
@@ -27,7 +27,7 @@ export const guildRouter = t.router({
   getGuildFromAPI: t.procedure
     .input(
       z.object({
-        guildId: z.string()
+        guildId: z.string(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -35,8 +35,8 @@ export const guildRouter = t.router({
       const { guildId } = input;
       if (!ctx.session) {
         throw new TRPCError({
-          message: 'Not Authenticated',
-          code: 'UNAUTHORIZED'
+          message: "Not Authenticated",
+          code: "UNAUTHORIZED",
         });
       }
 
@@ -45,8 +45,8 @@ export const guildRouter = t.router({
           `https://discord.com/api/guilds/${guildId}`,
           {
             headers: {
-              Authorization: `Bot ${token}`
-            }
+              Authorization: `Bot ${token}`,
+            },
           }
         );
 
@@ -55,15 +55,15 @@ export const guildRouter = t.router({
         return { guild };
       } catch {
         throw new TRPCError({
-          message: 'Not Found',
-          code: 'NOT_FOUND'
+          message: "Not Found",
+          code: "NOT_FOUND",
         });
       }
     }),
   getGuildAndUser: t.procedure
     .input(
       z.object({
-        id: z.string()
+        id: z.string(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -71,21 +71,21 @@ export const guildRouter = t.router({
 
       const guild = await ctx.prisma.guild.findUnique({
         where: {
-          id
-        }
+          id,
+        },
       });
 
       const user = await ctx.prisma.user.findUnique({
         where: {
           // @ts-ignore
-          id: ctx.session?.user?.id
-        }
+          id: ctx.session?.user?.id,
+        },
       });
 
       if (guild?.ownerId !== user?.discordId) {
         throw new TRPCError({
-          message: 'UNAUTHORIZED',
-          code: 'UNAUTHORIZED'
+          message: "UNAUTHORIZED",
+          code: "UNAUTHORIZED",
         });
       }
 
@@ -96,7 +96,7 @@ export const guildRouter = t.router({
       z.object({
         id: z.string(),
         ownerId: z.string(),
-        name: z.string()
+        name: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -104,15 +104,15 @@ export const guildRouter = t.router({
 
       const guild = await ctx.prisma.guild.upsert({
         where: {
-          id: id
+          id: id,
         },
         update: {},
         create: {
           id: id,
           ownerId: ownerId,
           volume: 100,
-          name: name
-        }
+          name: name,
+        },
       });
 
       return { guild };
@@ -124,7 +124,7 @@ export const guildRouter = t.router({
         userId: z.string(),
         ownerId: z.string(),
         name: z.string(),
-        notifyList: z.array(z.string())
+        notifyList: z.array(z.string()),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -135,19 +135,19 @@ export const guildRouter = t.router({
           notifyList: [userId],
           volume: 100,
           ownerId: ownerId,
-          name: name
+          name: name,
         },
         select: { notifyList: true },
         update: {
-          notifyList
+          notifyList,
         },
-        where: { id: guildId }
+        where: { id: guildId },
       });
     }),
   delete: t.procedure
     .input(
       z.object({
-        id: z.string()
+        id: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -155,8 +155,8 @@ export const guildRouter = t.router({
 
       const guild = await ctx.prisma.guild.delete({
         where: {
-          id: id
-        }
+          id: id,
+        },
       });
 
       return { guild };
@@ -166,7 +166,7 @@ export const guildRouter = t.router({
       z.object({
         guildId: z.string(),
         welcomeMessage: z.string().nullable(),
-        welcomeMessageEnabled: z.boolean().nullable()
+        welcomeMessageEnabled: z.boolean().nullable(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -174,15 +174,15 @@ export const guildRouter = t.router({
 
       const guild = await ctx.prisma.guild.update({
         where: {
-          id: guildId
+          id: guildId,
         },
         data: {
           // undefined means do nothing, null will set the value to null
           welcomeMessage: welcomeMessage ? welcomeMessage : undefined,
           welcomeMessageEnabled: welcomeMessageEnabled
             ? welcomeMessageEnabled
-            : undefined
-        }
+            : undefined,
+        },
       });
 
       return { guild };
@@ -191,7 +191,7 @@ export const guildRouter = t.router({
     .input(
       z.object({
         status: z.boolean(),
-        guildId: z.string()
+        guildId: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -199,11 +199,11 @@ export const guildRouter = t.router({
 
       const guild = await ctx.prisma.guild.update({
         where: {
-          id: guildId
+          id: guildId,
         },
         data: {
-          welcomeMessageEnabled: status
-        }
+          welcomeMessageEnabled: status,
+        },
       });
 
       return { guild };
@@ -212,7 +212,7 @@ export const guildRouter = t.router({
     .input(
       z.object({
         guildId: z.string(),
-        channelId: z.string()
+        channelId: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -220,11 +220,11 @@ export const guildRouter = t.router({
 
       const guild = await ctx.prisma.guild.update({
         where: {
-          id: guildId
+          id: guildId,
         },
         data: {
-          welcomeMessageChannel: channelId
-        }
+          welcomeMessageChannel: channelId,
+        },
       });
 
       return { guild };
@@ -232,7 +232,7 @@ export const guildRouter = t.router({
   getAllFromLocal: t.procedure
     .input(
       z.object({
-        ownerId: z.string()
+        ownerId: z.string(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -240,8 +240,8 @@ export const guildRouter = t.router({
 
       const guilds = await ctx.prisma.guild.findMany({
         where: {
-          ownerId: ownerId as string
-        }
+          ownerId: ownerId as string,
+        },
       });
 
       return { guilds };
@@ -249,92 +249,92 @@ export const guildRouter = t.router({
   getAll: t.procedure.query(async ({ ctx }) => {
     if (!ctx.session) {
       throw new TRPCError({
-        message: 'Not Authenticated',
-        code: 'UNAUTHORIZED'
+        message: "Not Authenticated",
+        code: "UNAUTHORIZED",
       });
     }
 
     const account = await ctx.prisma.account.findFirst({
       where: {
         // @ts-ignore
-        userId: ctx.session?.user?.id
+        userId: ctx.session?.user?.id,
       },
       select: {
         access_token: true,
-        providerAccountId: true
-      }
+        providerAccountId: true,
+      },
     });
 
     if (!account || !account.access_token) {
       throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Account not found'
+        code: "NOT_FOUND",
+        message: "Account not found",
       });
     }
 
     const dbGuilds = await ctx.prisma.guild.findMany({
       where: {
-        ownerId: account.providerAccountId
-      }
+        ownerId: account.providerAccountId,
+      },
     });
 
     // fetch guilds the user is owner in from discord api using the ownerId and token
     try {
       const response = await fetch(`https://discord.com/api/users/@me/guilds`, {
         headers: {
-          Authorization: `Bearer ${account.access_token}`
-        }
+          Authorization: `Bearer ${account.access_token}`,
+        },
       });
 
       const userGuilds: APIGuild[] = await response.json();
       if (!userGuilds.length) {
         return { guilds: dbGuilds };
       }
-      const guildsUserOwns = userGuilds.filter(guild => guild.owner);
+      const guildsUserOwns = userGuilds.filter((guild) => guild.owner);
       return { apiGuilds: guildsUserOwns, dbGuilds };
     } catch (e) {
       console.error(e);
       throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Something went wrong when trying to fetch guilds'
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Something went wrong when trying to fetch guilds",
       });
     }
   }),
   getAllFromDiscordAPI: t.procedure.query(async ({ ctx }) => {
     if (!ctx.session) {
       throw new TRPCError({
-        message: 'Not Authenticated',
-        code: 'UNAUTHORIZED'
+        message: "Not Authenticated",
+        code: "UNAUTHORIZED",
       });
     }
 
     const account = await ctx.prisma.account.findFirst({
       where: {
         // @ts-ignore
-        userId: ctx.session?.user?.id
+        userId: ctx.session?.user?.id,
       },
       select: {
         access_token: true,
         providerAccountId: true,
         user: {
           select: {
-            discordId: true
-          }
-        }
-      }
+            discordId: true,
+          },
+        },
+      },
     });
 
     if (!account || !account.access_token) {
       throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Account not found'
+        code: "NOT_FOUND",
+        message: "Account not found",
       });
     }
 
     const response = await fetch(`https://discord.com/api/users/@me/guilds`, {
       headers: {
-        Authorization: `Bearer ${account.access_token}`
-      }
+        Authorization: `Bearer ${account.access_token}`,
+      },
     });
 
     const userGuilds: APIGuild[] = await response.json();
@@ -345,7 +345,7 @@ export const guildRouter = t.router({
     .input(
       z.object({
         guildId: z.string(),
-        notifyList: z.array(z.string())
+        notifyList: z.array(z.string()),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -353,14 +353,14 @@ export const guildRouter = t.router({
 
       await ctx.prisma.guild.update({
         where: { id: guildId },
-        data: { notifyList }
+        data: { notifyList },
       });
     }),
   updateVolume: t.procedure
     .input(
       z.object({
         guildId: z.string(),
-        volume: z.number()
+        volume: z.number(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -368,13 +368,13 @@ export const guildRouter = t.router({
 
       await ctx.prisma.guild.update({
         where: { id: guildId },
-        data: { volume }
+        data: { volume },
       });
     }),
   getRoles: t.procedure
     .input(
       z.object({
-        guildId: z.string()
+        guildId: z.string(),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -383,8 +383,8 @@ export const guildRouter = t.router({
 
       if (!ctx.session) {
         throw new TRPCError({
-          message: 'Not Authenticated',
-          code: 'UNAUTHORIZED'
+          message: "Not Authenticated",
+          code: "UNAUTHORIZED",
         });
       }
 
@@ -392,13 +392,82 @@ export const guildRouter = t.router({
         `https://discord.com/api/guilds/${guildId}/roles`,
         {
           headers: {
-            Authorization: `Bot ${token}`
-          }
+            Authorization: `Bot ${token}`,
+          },
         }
       );
 
       const roles: APIRole[] = await response.json();
 
       return { roles };
-    })
+    }),
+  addToBank: t.procedure
+    .input(
+      z.object({
+        id: z.string(),
+        amount: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, amount } = input;
+
+      const guild = await ctx.prisma.guild.findUnique({
+        where: {
+          id: id,
+        },
+      });
+
+      const guildMoney = await ctx.prisma.guild.update({
+        where: {
+          id: id,
+        },
+        data: { bank: guild!.bank + amount },
+      });
+
+      return { guildMoney };
+    }),
+  subtractFromBank: t.procedure
+    .input(
+      z.object({
+        id: z.string(),
+        amount: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, amount } = input;
+
+      const guild = await ctx.prisma.guild.findUnique({
+        where: {
+          id: id,
+        },
+      });
+
+      const guildMoney = await ctx.prisma.guild.update({
+        where: {
+          id: id,
+        },
+        data: { bank: guild!.bank - amount },
+      });
+
+      return { guildMoney };
+    }),
+  setBankBalance: t.procedure
+    .input(
+      z.object({
+        id: z.string(),
+        amount: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, amount } = input;
+
+      const guildMoney = await ctx.prisma.guild.update({
+        where: {
+          id: id,
+        },
+        data: { bank: amount },
+      });
+
+      return { guildMoney };
+    }),
 });

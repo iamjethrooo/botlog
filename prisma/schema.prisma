@@ -49,7 +49,6 @@ model User {
   lastMessageDate   String   @default("0")
   lastRobDate String  @default("0")
   cash          Int        @default(0)
-  bank          Int        @default(0)
 }
 
 model VerificationToken {
@@ -67,6 +66,7 @@ model Guild {
   notifyList            String[]
   ownerId               String
   owner                 User          @relation(fields: [ownerId], references: [discordId])
+  bank                  Int           @default(0)
   // Settings
   disabledCommands      String[]      @map("disabled_commands")
   logChannel            String?       @map("log_channel")
