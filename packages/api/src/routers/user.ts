@@ -164,56 +164,6 @@ export const userRouter = t.router({
 
       return { userCash };
     }),
-  deposit: t.procedure
-    .input(
-      z.object({
-        id: z.string(),
-        cash: z.number(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { id, cash } = input;
-
-      const user = await ctx.prisma.user.findUnique({
-        where: {
-          discordId: id,
-        },
-      });
-
-      const userCash = await ctx.prisma.user.update({
-        where: {
-          discordId: id,
-        },
-        data: { cash: user!.cash - cash, bank: user!.bank + cash },
-      });
-
-      return { userCash };
-    }),
-  withdraw: t.procedure
-    .input(
-      z.object({
-        id: z.string(),
-        cash: z.number(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { id, cash } = input;
-
-      const user = await ctx.prisma.user.findUnique({
-        where: {
-          discordId: id,
-        },
-      });
-
-      const userCash = await ctx.prisma.user.update({
-        where: {
-          discordId: id,
-        },
-        data: { cash: cash + user!.cash, bank: user!.bank - cash },
-      });
-
-      return { userCash };
-    }),
   getLeaderboard: t.procedure.query(async ({ ctx }) => {
     const leaderboard = await ctx.prisma.user.findMany({
       orderBy: [
