@@ -35,10 +35,10 @@ model Session {
 }
 
 model User {
-  id            String     @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String?
-  discordId     String     @unique
-  email         String?    @unique
+  discordId     String        @unique
+  email         String?       @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
@@ -46,9 +46,10 @@ model User {
   guilds        Guild[]
   reminders     Reminder[]
   timeOffset    Int?
-  lastMessageDate   String   @default("0")
-  lastRobDate String  @default("0")
-  cash          Int        @default(0)
+  lastMessageDate   String    @default("0")
+  lastRobDate String          @default("0")
+  cash          Int           @default(0)
+  birthday      String        @default("0")
 }
 
 model VerificationToken {
@@ -67,6 +68,7 @@ model Guild {
   ownerId               String
   owner                 User          @relation(fields: [ownerId], references: [discordId])
   bank                  Int           @default(0)
+  thievesBank      Int                @default(0)
   // Settings
   disabledCommands      String[]      @map("disabled_commands")
   logChannel            String?       @map("log_channel")
