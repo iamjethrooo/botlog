@@ -470,4 +470,29 @@ export const guildRouter = t.router({
 
       return { guildMoney };
     }),
+    addToThievesBank: t.procedure
+    .input(
+      z.object({
+        id: z.string(),
+        amount: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, amount } = input;
+
+      const guild = await ctx.prisma.guild.findUnique({
+        where: {
+          id: id,
+        },
+      });
+
+      const guildMoney = await ctx.prisma.guild.update({
+        where: {
+          id: id,
+        },
+        data: { thievesBank: guild!.thievesBank + amount },
+      });
+
+      return { guildMoney };
+    }),
 });
