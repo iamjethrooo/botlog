@@ -43,7 +43,7 @@ export class CooldownCommand extends Command {
         `⏲️ You can attempt to rob another member ${
           canRob
             ? "`now`"
-            : `in <t:${Math.round(lastRobDate / 1000) + robCooldown}:R>`
+            : `<t:${Math.round(lastRobDate / 1000) + robCooldown}:R>`
         }.`
       );
       embed.setColor(`#${process.env.RED_COLOR}`);
