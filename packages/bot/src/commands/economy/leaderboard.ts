@@ -12,9 +12,7 @@ import { trpcNode } from "../../trpc";
   name: "leaderboard",
   aliases: ["lb"],
   description: "Replies with Pong!",
-  preconditions: [
-    'inBotChannel'
-  ]
+  preconditions: ["inBotChannel"],
 })
 export class LeaderboardCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
@@ -25,7 +23,16 @@ export class LeaderboardCommand extends Command {
     let rank = 0;
     let index = 1;
 
+    await message.guild!.members.fetch();
+
     leaderboard.leaderboard.forEach((user) => {
+      let member = message.guild!.members.cache.get(user!.discordId!);
+      let isMod = member!.permissions.has("ADMINISTRATOR");
+
+      if (isMod) {
+        return;
+      }
+
       if (message.author.id == user.discordId) {
         rank = index;
       }
