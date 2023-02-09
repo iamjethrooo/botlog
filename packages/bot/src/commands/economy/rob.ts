@@ -16,13 +16,17 @@ export class RobCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
 
   public override async messageRun(message: Message) {
-    if (message.mentions.users.size < 1) {
-      return;
-    }
+    let hasNoMention = message.mentions.users.size < 1;
+    if (hasNoMention) return;
+
     let victimId = message.mentions.users!.first()!.id;
     let suspectId = message.author.id;
+    let isMod = message.member!.permissions.has("ADMINISTRATOR");
+    let isThief = message.member!.roles.cache.has(
+      `${process.env.ROLE_ID_THIEF}`
+    );
+
     try {
-      // Check if user exists in database
       let suspect = await trpcNode.user.getUserById.query({
         id: suspectId,
       });
@@ -30,7 +34,10 @@ export class RobCommand extends Command {
       let suspectCash = suspect.user!.cash;
 
       let lastRobDate = Number(suspect.user!.lastRobDate);
-      let robCooldown = Number(process.env.ROB_COOLDOWN);
+      let robCooldown = isThief
+        ? Number(process.env.ROB_COOLDOWN_THIEF)
+        : Number(process.env.ROB_COOLDOWN);
+
       const embed = new MessageEmbed().setAuthor(
         `${message.author.username}#${message.author.discriminator}`,
         message.author.displayAvatarURL({ dynamic: true })
@@ -38,7 +45,9 @@ export class RobCommand extends Command {
 
       if ((Date.now() - lastRobDate) / 1000 < robCooldown) {
         embed.setDescription(
-          `⏲️ Too soon. You can attempt to rob another member in <t:${Math.round((lastRobDate / 1000)) + robCooldown}:R>`
+          `⏲️ Too soon. You can attempt to rob another member in <t:${
+            Math.round(lastRobDate / 1000) + robCooldown
+          }:R>`
         );
         embed.setColor(`#${process.env.RED_COLOR}`);
 
@@ -51,26 +60,52 @@ export class RobCommand extends Command {
 
       let victimCash = victim.user!.cash;
 
-      let tenPercent = Math.round(victimCash * 0.1);
+      let robRate = isThief
+        ? Number(process.env.ROB_RATE_THIEF)
+        : Number(process.env.ROB_RATE);
 
-      let success = Math.random() <= Number(process.env.ROB_CHANCE);
+      let robChance = isMod
+        ? Number(process.env.ROB_CHANCE_MOD)
+        : isThief
+        ? Number(process.env.ROB_CHANCE_THIEF)
+        : Number(process.env.ROB_CHANCE);
+        
+      let robAmount = Math.round(victimCash * robRate);
+
+      let success = Math.random() <= robChance;
 
       if (success) {
-        await trpcNode.user.addCash.mutate({
-          id: suspectId,
-          cash: tenPercent,
-        });
+        let extraMessage = "";
+        if (isMod) {
+          await trpcNode.guild.addToBank.mutate({
+            id: message!.guildId!,
+            amount: robAmount,
+          });
+          extraMessage = ` ${process.env.COIN_EMOJI}${robAmount} was added to the server bank.`;
+        } else if (isThief) {
+          await trpcNode.guild.addToThievesBank.mutate({
+            id: message!.guildId!,
+            amount: robAmount,
+          });
+          extraMessage = ` ${process.env.COIN_EMOJI}${robAmount} was added to the Thieves Guild's bank.`;
+        } else {
+          await trpcNode.user.addCash.mutate({
+            id: suspectId,
+            cash: robAmount,
+          });
+        }
 
         await trpcNode.user.subtractCash.mutate({
           id: victimId,
-          cash: tenPercent,
+          cash: robAmount,
         });
         embed.setDescription(
-          `✅ You robbed ${process.env.COIN_EMOJI}${tenPercent} from <@${victimId}>.`
+          `✅ You robbed ${process.env.COIN_EMOJI}${robAmount} from <@${victimId}>.${extraMessage}`
         );
         embed.setColor(`#${process.env.GREEN_COLOR}`);
       } else {
-        let amountToBeSubtracted = suspectCash > tenPercent ? tenPercent : suspectCash;
+        let amountToBeSubtracted =
+          suspectCash > robAmount ? robAmount : suspectCash;
 
         await trpcNode.user.subtractCash.mutate({
           id: suspectId,
