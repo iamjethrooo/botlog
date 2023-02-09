@@ -27,8 +27,8 @@ export class LeaderboardCommand extends Command {
 
     leaderboard.leaderboard.forEach((user) => {
       let member = message.guild!.members.cache.get(user!.discordId!);
-      let isMod = member!.permissions.has("ADMINISTRATOR");
-
+      let isMod = member ? member!.permissions.has("ADMINISTRATOR") : false;
+      console.log(isMod);
       if (isMod) {
         return;
       }
