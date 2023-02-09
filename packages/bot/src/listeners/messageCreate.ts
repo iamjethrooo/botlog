@@ -60,14 +60,19 @@ export class MessageListener extends Listener {
         });
       } else {
         if (
-          (Date.now() - Number(user.user.lastMessageDate)) / 1000 <
-          process.env.INTERVAL
+          !(
+            (Date.now() - Number(user.user.lastMessageDate)) / 1000 <
+            process.env.INTERVAL
+          )
         ) {
-          console.log("too soon!");
-        } else {
           await trpcNode.user.addCash.mutate({
             id: message.author.id,
-            cash: parseInt(getRandomInt(process.env.MIN_CASH_PER_CHAT, process.env.MAX_CASH_PER_CHAT)),
+            cash: parseInt(
+              getRandomInt(
+                process.env.MIN_CASH_PER_CHAT,
+                process.env.MAX_CASH_PER_CHAT
+              )
+            ),
           });
 
           await trpcNode.user.updateLastMessageDate.mutate({
