@@ -18,6 +18,8 @@ export class ExtendedClient extends SapphireClient {
   public constructor() {
     super({
       defaultPrefix: process.env.PREFIX,
+      caseInsensitivePrefixes: true,
+      caseInsensitiveCommands: true,
       loadMessageCommandListeners: true,
       intents: [
         Intents.FLAGS.GUILDS,
