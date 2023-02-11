@@ -11,7 +11,7 @@ import { trpcNode } from "../../trpc";
 @ApplyOptions<CommandOptions>({
   name: "leaderboard",
   aliases: ["lb"],
-  description: "Replies with Pong!",
+  description: "View the leaderboard.",
   preconditions: ["inBotChannel"],
 })
 export class LeaderboardCommand extends Command {
