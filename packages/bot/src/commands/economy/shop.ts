@@ -20,15 +20,16 @@ export class ShopCommand extends Command {
     let shop = await trpcNode.item.getAll.query();
     let shopFormatted: String[] = [];
 
-    await message.guild!.members.fetch();
+    shopFormatted.push(`Buy an item with the command \`buy <name>\`\n`);
 
+    await message.guild!.members.fetch();
     shop.allItems.forEach((item) => {
       shopFormatted.push(
         `${item.emoji} **${item.name}** | ${process.env.COIN_EMOJI}**\`${item.buyPrice}\`**\n${item.description}\n`
       );
     });
 
-    const baseEmbed = new MessageEmbed().setColor("#FF0000").setAuthor({
+    const baseEmbed = new MessageEmbed().setColor(`#${process.env.GREEN_COLOR}`).setAuthor({
       name: message!.guild!.name,
       iconURL: message!.guild!.iconURL()!,
     });
