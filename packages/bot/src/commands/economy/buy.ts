@@ -54,6 +54,7 @@ export class BuyCommand extends Command {
         embed.setColor(`#${process.env.RED_COLOR}`);
         return await message.channel.send({ embeds: [embed] });
       }
+
       if (item!.name.toLowerCase() == "refresher orb") {
         if (canRob) {
           embed.setDescription(
@@ -68,9 +69,19 @@ export class BuyCommand extends Command {
           date: "0",
         });
       }
+
       await trpcNode.user.subtractCash.mutate({
         id: message.author.id,
         cash: item!.buyPrice,
+      });
+
+      await trpcNode.item.buyItem.mutate({
+        id: item!.id,
+      });
+
+      await trpcNode.guild.addToBank.mutate({
+        id: message!.guildId!,
+        amount: item!.buyPrice,
       });
       embed.setDescription(`✅ You bought a **${item!.name!}**!`);
       embed.setColor(`#${process.env.GREEN_COLOR}`);

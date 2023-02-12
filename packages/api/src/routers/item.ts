@@ -55,4 +55,28 @@ export const itemRouter = t.router({
 
       return { item };
     }),
+  buyItem: t.procedure
+    .input(
+      z.object({
+        id: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id } = input;
+
+      const item = await ctx.prisma.item.findUnique({
+        where: {
+          id: id,
+        },
+      });
+
+      const stock = await ctx.prisma.item.update({
+        where: {
+          id: id,
+        },
+        data: { stock: item!.stock - 1 },
+      });
+
+      return { stock };
+    }),
 });
