@@ -45,6 +45,7 @@ model User {
   sessions      Session[]
   guilds        Guild[]
   reminders     Reminder[]
+  items         Inventory[]
   timeOffset    Int?
   lastMessageDate   String    @default("0")
   lastRobDate String          @default("0")
@@ -98,4 +99,23 @@ model Reminder {
   userId      String
   user        User?    @relation(fields: [userId], references: [discordId])
   timeOffset  Int
+}
+
+model Item {
+  id                Int       @id @default(autoincrement())
+  name              String    @unique
+  emoji             String?
+  description       String?
+  buyPrice          Int
+  stock             Int       @default(0)
+  holders           Inventory[]
+}
+
+model Inventory {
+  userId    String
+  itemId    Int
+  amount    Int
+  user      User    @relation(fields: [userId], references: [discordId], onDelete: Cascade)
+  item      Item    @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  @@id([userId, itemId])
 }
