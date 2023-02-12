@@ -46,7 +46,9 @@ export class CooldownCommand extends Command {
             : `<t:${Math.round(lastRobDate / 1000) + robCooldown}:R>`
         }.`
       );
-      embed.setColor(`#${process.env.RED_COLOR}`);
+      embed.setColor(
+        `#${canRob ? process.env.GREEN_COLOR : process.env.RED_COLOR}`
+      );
 
       return await message.channel.send({ embeds: [embed] });
     } catch (error) {
