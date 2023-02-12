@@ -43,7 +43,8 @@ export class RobCommand extends Command {
         message.author.displayAvatarURL({ dynamic: true })
       );
 
-      if ((Date.now() - lastRobDate) / 1000 < robCooldown) {
+      let tooSoon = (Date.now() - lastRobDate) / 1000 < robCooldown;
+      if (tooSoon) {
         embed.setDescription(
           `⏲️ Too soon. You can attempt to rob another member in <t:${
             Math.round(lastRobDate / 1000) + robCooldown
