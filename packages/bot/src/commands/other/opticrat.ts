@@ -11,7 +11,7 @@ import { CommandInteraction, Message, MessageEmbed } from 'discord.js';
   aliases: ['opticrat'],
   description: 'THE FIBR OPTIC RAT'
 })
-export class PingCommand extends Command {
+export class OpticRatCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
   }
 
