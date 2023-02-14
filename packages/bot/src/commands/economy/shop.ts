@@ -29,12 +29,14 @@ export class ShopCommand extends Command {
       );
     });
 
-    const baseEmbed = new MessageEmbed().setColor(`#${process.env.GREEN_COLOR}`).setAuthor({
-      name: message!.guild!.name,
-      iconURL: message!.guild!.iconURL()!,
-    });
+    const baseEmbed = new MessageEmbed()
+      .setColor(`#${process.env.GREEN_COLOR}`)
+      .setAuthor({
+        name: message!.guild!.name,
+        iconURL: message!.guild!.iconURL()!,
+      });
     new PaginatedFieldMessageEmbed()
-      .setTitleField("Shop")
+      .setTitleField(`Botlog Shop`)
       .setTemplate(baseEmbed)
       .setItems(shopFormatted)
       .setItemsPerPage(10)
