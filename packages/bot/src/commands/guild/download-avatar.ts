@@ -28,7 +28,7 @@ export class PingCommand extends Command {
           filename: `${user.user.username}.png`,
         };
         download(user.displayAvatarURL(), options, function (err: any) {
-          if (err) throw err;
+          if (err) console.log(`Cannot download ${user.user.username}'s avatar!`);
         });
         console.log(`Downloaded ${user.user.username}'s avatar!`);
       }
