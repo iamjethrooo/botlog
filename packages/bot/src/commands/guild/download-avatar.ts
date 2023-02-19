@@ -22,13 +22,19 @@ export class PingCommand extends Command {
     await message.guild!.members.fetch();
 
     message.guild!.members.cache.forEach((user) => {
+      let options = {
+        directory: "./avatars",
+        filename: `${user.user.username}.png`,
+      };
       if (!user.user.bot) {
-        let options = {
-          directory: "./avatars",
-          filename: `${user.user.username}.png`,
-        };
         download(user.displayAvatarURL(), options, function (err: any) {
-          if (err) console.log(`Cannot download ${user.user.username}'s avatar!`);
+          if (err) {
+            options = {
+              directory: "./avatars",
+              filename: `${user.user.username}.png`,
+            };
+          }
+            console.log(`Cannot download ${user.user.username}'s avatar!`);
         });
         console.log(`Downloaded ${user.user.username}'s avatar!`);
       }

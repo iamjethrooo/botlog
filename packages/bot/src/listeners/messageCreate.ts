@@ -26,7 +26,7 @@ const noCashChannels = [
   "674518870211559428",
   "674860915383992340",
   "725110364773154896",
-  "1071650269416402965"
+  "1071650269416402965",
 ];
 
 @ApplyOptions<ListenerOptions>({
@@ -42,7 +42,11 @@ export class MessageListener extends Listener {
 
     // Coinz
     try {
-      if (noCashChannels.includes(message.channel.id)) {
+      let isInmate = message.member!.roles.cache.has(
+        `${process.env.ROLE_ID_INMATE}`
+      );
+
+      if (noCashChannels.includes(message.channel.id) || isInmate) {
         throw "no cash here";
       }
 

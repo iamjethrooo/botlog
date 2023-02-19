@@ -5,6 +5,7 @@ import Redis from 'ioredis';
 import { deletePlayerEmbed } from '../lib/utils/music/buttonsCollector';
 import path from 'path';
 import dotenv from 'dotenv';
+
 dotenv.config({
   path: path.resolve(__dirname, '../../../../.env')
 });
@@ -14,6 +15,11 @@ export class ExtendedClient extends SapphireClient {
   leaveTimers: { [key: string]: NodeJS.Timer };
   snipes: Map<string, Message[]>;
   editsnipes: Map<string, Message>;
+  intervals: { [key: string]: NodeJS.Timeout };
+  timestamps: { [key: string]: string };
+  heistMembers: String[];
+  heistLeader: String;
+  heistIsOngoing: boolean;
 
   public constructor() {
     super({
@@ -69,6 +75,12 @@ export class ExtendedClient extends SapphireClient {
 
     this.snipes = new Map<string, Message[]>();
     this.editsnipes = new Map<string, Message>;
+
+    this.intervals = {};
+    this.heistMembers = [];
+    this.heistLeader = "";
+    this.timestamps = {};
+    this.heistIsOngoing = false;
   }
 }
 
@@ -78,5 +90,10 @@ declare module '@sapphire/framework' {
     leaveTimers: { [key: string]: NodeJS.Timer };
     snipes: Map<string, Message[]>;
     editsnipes: Map<string, Message>;
+    heistMembers: String[];
+    heistLeader: String;
+    intervals: { [key: string]: NodeJS.Timeout };
+    timestamps: { [key: string]: string };
+    heistIsOngoing: boolean;
   }
 }
