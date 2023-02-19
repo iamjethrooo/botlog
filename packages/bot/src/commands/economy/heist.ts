@@ -27,6 +27,25 @@ export class HeistCommand extends Command {
     let robChance = Number(process.env.HEIST_BASE_CHANCE);
     let success;
     try {
+      let suspect = await trpcNode.user.getUserById.query({
+        id: message.member!.id,
+      });
+
+      let lastRobDate = Number(suspect.user!.lastHeistDate);
+      let heistCooldown = Number(process.env.HEIST_COOLDOWN);
+      let tooSoon = (Date.now() - lastRobDate) / 1000 < heistCooldown;
+
+      if (tooSoon) {
+        embed.setDescription(
+          `⏲️ Too soon. You can attempt another bank heist <t:${
+            Math.round(lastRobDate / 1000) + heistCooldown
+          }:R>`
+        );
+        embed.setColor(`#${process.env.RED_COLOR}`);
+
+        return await message.channel.send({ embeds: [embed] });
+      }
+
       if (!client.intervals["heist"]) {
         // Reset variables
         client.heistLeader = "";
@@ -40,7 +59,7 @@ export class HeistCommand extends Command {
         client.heistLeader = message.member!.id;
         embed
           .setDescription(
-            `A bank heist has begun!\n\nTo start the heist, use the command \`bbc heist start\`.\nTo join the heist, use the command \`bbc heist join\`.`
+            `A bank heist is starting!\n\nTo start the heist, use the command \`bbc heist start\`.\nTo join the heist, use the command \`bbc heist join\`.`
           )
           .setAuthor(
             `${message.author.username}#${message.author.discriminator}`,
@@ -54,7 +73,8 @@ export class HeistCommand extends Command {
           console.log(client.heistIsOngoing);
           if (
             client.heistIsOngoing ||
-            (Date.now() - Number(client.timestamps["heist"])) / 1000 > Number(process.env.HEIST_WAITING_TIME) ||
+            (Date.now() - Number(client.timestamps["heist"])) / 1000 >
+              Number(process.env.HEIST_WAITING_TIME) ||
             client.heistMembers.length >= Number(process.env.HEIST_MAX_MEMBERS)
           ) {
             // Reset variables
@@ -90,6 +110,11 @@ export class HeistCommand extends Command {
                 await trpcNode.user.addCash.mutate({
                   id: String(member),
                   cash: splitAmount,
+                });
+
+                await trpcNode.user.updateLastHeistDate.mutate({
+                  id: String(member),
+                  date: Date.now().toString(),
                 });
               });
               await trpcNode.guild.subtractFromBank.mutate({
