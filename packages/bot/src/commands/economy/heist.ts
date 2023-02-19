@@ -54,7 +54,7 @@ export class HeistCommand extends Command {
           console.log(client.heistIsOngoing);
           if (
             client.heistIsOngoing ||
-            (Date.now() - Number(client.timestamps["heist"])) / 1000 > 500 ||
+            (Date.now() - Number(client.timestamps["heist"])) / 1000 > Number(process.env.HEIST_WAITING_TIME) ||
             client.heistMembers.length >= Number(process.env.HEIST_MAX_MEMBERS)
           ) {
             // Reset variables
