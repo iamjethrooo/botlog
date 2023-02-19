@@ -5,11 +5,13 @@ import {
   CommandOptions,
 } from "@sapphire/framework";
 import type { CommandInteraction, Message } from "discord.js";
-let download = require("download-file");
+const fs = require("fs");
+const download = require("download");
 
 @ApplyOptions<CommandOptions>({
   name: "downloadavatar",
   description: "Pak u gwyn",
+  enabled: false,
 })
 export class PingCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
@@ -21,25 +23,24 @@ export class PingCommand extends Command {
 
     await message.guild!.members.fetch();
 
-    message.guild!.members.cache.forEach((user) => {
-      let options = {
-        directory: "./avatars",
-        filename: `${user.user.username}.png`,
-      };
+    let regex = /[\\\/:*?"<>|]/g;
+    // let illegalCharacters = `\\/:*?"<>|`;
+    message.guild!.members.cache.forEach(async (user) => {
+      let filename = `${user.user.username}.gif`;
       if (!user.user.bot) {
-        download(user.displayAvatarURL(), options, function (err: any) {
-          if (err) {
-            options = {
-              directory: "./avatars",
-              filename: `${user.user.username}.png`,
-            };
-          }
-            console.log(`Cannot download ${user.user.username}'s avatar!`);
-        });
+        // filename = filename.replace(regex, "");
+        // filename = "./avatars/" + filename;
+        console.log(filename);
+        fs.writeFileSync(
+          "./avatars/" + filename.replaceAll(regex, ""),
+          await download(user.displayAvatarURL())
+        );
         console.log(`Downloaded ${user.user.username}'s avatar!`);
       }
     });
-
+    console.log(
+      "Ashii | Kerbal's デリヘル.gif".replaceAll(`/[\\\/:*?"<>|]/`, "")
+    );
     return await message.reply("Downloaded!");
   }
 
