@@ -11,6 +11,7 @@ import { trpcNode } from "../../trpc";
 @ApplyOptions<CommandOptions>({
   name: "buy",
   description: "Buy an item from the shop.",
+  preconditions: ["inBotChannel", "isNotInmate"],
 })
 export class BuyCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}

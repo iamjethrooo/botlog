@@ -87,9 +87,7 @@ export class MessageListener extends Listener {
         }
       }
     } catch (error) {
-      if (error === "no cash here") return;
       console.log(error);
-      return;
     }
 
     // Removes text messages in media-only channels

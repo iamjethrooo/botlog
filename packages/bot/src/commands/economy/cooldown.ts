@@ -44,7 +44,7 @@ export class CooldownCommand extends Command {
       let canHeist = (Date.now() - lastHeistDate) / 1000 > heistCooldown;
 
       embed
-        .setTitle("⏲️Cooldowns")
+        .setTitle("⏲️ Cooldowns")
         .setDescription(
           `• Rob: ${
             canRob

@@ -17,9 +17,9 @@ export class ReadyListener extends Listener {
     let inmateRole = guild.roles.cache.find(
       (role) => role.id == process.env.ROLE_ID_INMATE
     );
-
+    
+    await guild.members.fetch();
     setInterval(async () => {
-      await guild.members.fetch();
       let inmates = guild.roles.cache
         .get(String(process.env.ROLE_ID_INMATE))
         ?.members.map((member) => member.id);
@@ -30,7 +30,7 @@ export class ReadyListener extends Listener {
         let lastHeistDate = Number(user.user?.lastHeistDate);
         if (
           (Date.now() - lastHeistDate) / 1000 >
-          Number(process.env.HEIST_COOLDOWN)
+          Number(process.env.HEIST_JAIL_TIME)
         ) {
           let member = guild.members.cache.get(inmate);
           member?.roles.remove(inmateRole!);

@@ -10,7 +10,7 @@ import { trpcNode } from "../../trpc";
 @ApplyOptions<CommandOptions>({
   name: "rob",
   description: "Rob another user.",
-  preconditions: ["inBotChannel"],
+  preconditions: ["inBotChannel", "isNotInmate"],
 })
 export class RobCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
