@@ -97,7 +97,7 @@ export class HeistCommand extends Command {
             });
 
             let robAmount = Math.round(guild!.guild!.bank * robRate);
-
+            // let robAmount = client.heistMembers.length * 1000;
             if (success) {
               embed
                 .setDescription(`✅ The bank heist was a success!`)
@@ -134,8 +134,27 @@ export class HeistCommand extends Command {
               await message.channel.send({ embeds: [embed] });
               let splitMessage = ``;
 
+              // Serve jail time for x hours
+              await message.guild!.roles.fetch();
+              await message.guild!.members.fetch();
+              let inmateRole = message!.guild!.roles.cache.find(
+                (role) => role.id == process.env.ROLE_ID_INMATE
+              );
               client.heistMembers.forEach(async (member) => {
                 splitMessage += `<@${member}> got caught.\n`;
+                let user = message.guild!.members.cache.get(String(member));
+                if (user) {
+                  user.roles.add(inmateRole!);
+                }
+
+                await trpcNode.user.setJailTime.mutate({
+                  id: String(member),
+                  jailTime: String(
+                    Number(process.env.HEIST_JAIL_TIME) -
+                      Number(process.env.HEIST_REDUCED_JAIL_TIME) *
+                        (client.heistMembers.length - 1)
+                  ),
+                });
               });
               embed
                 .setAuthor(null)
@@ -144,18 +163,6 @@ export class HeistCommand extends Command {
                   `${splitMessage}\nThey will serve jail time for 12 hours and will not be able to earn coins for the duration.`
                 );
               await message.channel.send({ embeds: [embed] });
-              // Serve jail time for x hours
-              await message.guild!.roles.fetch();
-              await message.guild!.members.fetch();
-              let inmateRole = message!.guild!.roles.cache.find(
-                (role) => role.id == process.env.ROLE_ID_INMATE
-              );
-              client.heistMembers.forEach((member) => {
-                let user = message.guild!.members.cache.get(String(member));
-                if (user) {
-                  user.roles.add(inmateRole!);
-                }
-              });
             }
 
             client.heistMembers.forEach(async (member) => {
@@ -164,7 +171,6 @@ export class HeistCommand extends Command {
                 date: Date.now().toString(),
               });
             });
-
           }
         }, 1000);
         return;

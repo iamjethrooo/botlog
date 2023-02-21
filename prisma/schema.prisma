@@ -50,6 +50,7 @@ model User {
   lastMessageDate   String        @default("0")
   lastRobDate       String        @default("0")
   lastHeistDate     String        @default("0")
+  jailTime          String        @default("0")
   cash              Int           @default(0)
   birthday          String        @default("0")
 }
