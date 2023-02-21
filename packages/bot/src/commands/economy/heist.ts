@@ -49,12 +49,11 @@ export class HeistCommand extends Command {
         return await message.channel.send({ embeds: [embed] });
       }
       // If no heist is ongoing, start a new heist
-      let noOngoingHeist = !client.intervals["heist"];
+      let noOngoingHeist = !client.heistIsOngoing;
       if (noOngoingHeist) {
         // Reset variables
         client.heistLeader = "";
         client.heistMembers = [];
-        client.heistIsOngoing = false;
 
         // Check for heist cooldown
         // Start heist
@@ -143,9 +142,7 @@ export class HeistCommand extends Command {
               client.heistMembers.forEach(async (member) => {
                 splitMessage += `<@${member}> got caught.\n`;
                 let user = message.guild!.members.cache.get(String(member));
-                if (user) {
-                  user.roles.add(inmateRole!);
-                }
+                user!.roles.add(inmateRole!);
 
                 await trpcNode.user.setJailTime.mutate({
                   id: String(member),
@@ -171,6 +168,7 @@ export class HeistCommand extends Command {
                 date: Date.now().toString(),
               });
             });
+            client.heistIsOngoing = false;
           }
         }, 1000);
         return;
