@@ -49,7 +49,7 @@ export class HeistCommand extends Command {
         return await message.channel.send({ embeds: [embed] });
       }
       // If no heist is ongoing, start a new heist
-      let noOngoingHeist = !client.heistIsOngoing;
+      let noOngoingHeist = !client.intervals["heist"];
       if (noOngoingHeist) {
         // Reset variables
         client.heistLeader = "";
@@ -81,7 +81,6 @@ export class HeistCommand extends Command {
           ) {
             // Reset variables
             clearTimeout(client.intervals["heist"]);
-            delete client.intervals["heist"];
             // Start heist
             robRate +=
               Number(process.env.HEIST_ADDITIONAL_RATE) *
@@ -169,6 +168,7 @@ export class HeistCommand extends Command {
               });
             });
             client.heistIsOngoing = false;
+            delete client.intervals["heist"];
           }
         }, 1000);
         return;
