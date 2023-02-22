@@ -140,9 +140,6 @@ export class HeistCommand extends Command {
               );
               client.heistMembers.forEach(async (member) => {
                 splitMessage += `<@${member}> got caught.\n`;
-                let user = message.guild!.members.cache.get(String(member));
-                user!.roles.add(inmateRole!);
-
                 await trpcNode.user.setJailTime.mutate({
                   id: String(member),
                   jailTime: String(
@@ -151,6 +148,8 @@ export class HeistCommand extends Command {
                         (client.heistMembers.length - 1)
                   ),
                 });
+                let user = message.guild!.members.cache.get(String(member));
+                user!.roles.add(inmateRole!);
               });
               embed
                 .setAuthor(null)
