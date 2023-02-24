@@ -155,7 +155,7 @@ export class HeistCommand extends Command {
                 .setAuthor(null)
                 .setTitle(`Bank Heist Results`)
                 .setDescription(
-                  `${splitMessage}\nThey will serve jail time for 12 hours and will not be able to earn coins for the duration.`
+                  `${splitMessage}\nThey will serve jail time for ${24 - (2 * (client.heistMembers.length == 1 ? 0 : client.heistMembers.length - 1))} hours and will not be able to earn coins for the duration.`
                 );
               await message.channel.send({ embeds: [embed] });
             }
