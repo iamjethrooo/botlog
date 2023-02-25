@@ -12,18 +12,12 @@ import { trpcNode } from "../../trpc";
 @ApplyOptions<CommandOptions>({
   name: "give",
   description: "Give coins to a user.",
-  preconditions: [
-    'inBotChannel'
-  ]
+  preconditions: ["inBotChannel", "userIsAdmin"],
 })
 export class GiveCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
 
   public override async messageRun(message: Message, args: Args) {
-    if (!message.member!.permissions.has("ADMINISTRATOR")) {
-      return;
-    }
-
     let amount = await args.pick("integer").catch(() => 0);
 
     // Give cash to a user
@@ -58,9 +52,7 @@ export class GiveCommand extends Command {
             message.author.displayAvatarURL({ dynamic: true })
           )
           .setDescription(
-            `Gave <@${id}> ${process.env.COIN_EMOJI}${String(
-              amount
-            )}.`
+            `Gave <@${id}> ${process.env.COIN_EMOJI}${String(amount)}.`
           )
           .setTimestamp(message.createdAt)
           .setColor(message.member!.displayHexColor);
@@ -112,9 +104,7 @@ export class GiveCommand extends Command {
             message.author.displayAvatarURL({ dynamic: true })
           )
           .setDescription(
-            `Gave <@&${id}> ${process.env.COIN_EMOJI}${String(
-              amount
-            )}.`
+            `Gave <@&${id}> ${process.env.COIN_EMOJI}${String(amount)}.`
           )
           .setTimestamp(message.createdAt)
           .setColor(message.member!.displayHexColor);

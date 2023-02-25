@@ -10,6 +10,7 @@ import { trpcNode } from "../../trpc";
 @ApplyOptions<CommandOptions>({
   name: "create-item",
   description: "Creates a new item.",
+  preconditions: ["userIsAdmin"],
 })
 export class CreateItemCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
@@ -65,7 +66,7 @@ export class CreateItemCommand extends Command {
           type: "STRING",
           name: "emoji",
           description: "An emoji to use as the icon",
-          required: true
+          required: true,
         },
         {
           type: "INTEGER",
@@ -77,7 +78,7 @@ export class CreateItemCommand extends Command {
           type: "INTEGER",
           name: "stock",
           description: "The amount of stock available.",
-          required: true
+          required: true,
         },
       ],
     });
