@@ -9,23 +9,18 @@ import { CommandInteraction, Message, MessageEmbed } from "discord.js";
 import { trpcNode } from "../../trpc";
 
 @ApplyOptions<CommandOptions>({
-  name: "withdraw",
-  aliases: ["with"],
-  description: "Withdraw from the server bank.",
-  preconditions: ["inBotChannel"],
+  name: "add-bank",
+  description: "Add money to the server bank.",
+  preconditions: ["inBotChannel", "userIsAdmin"],
 })
-export class WithdrawCommand extends Command {
+export class AddBankCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
 
   public override async messageRun(message: Message, args: Args) {
-    if (!message.member!.permissions.has("ADMINISTRATOR")) {
-      return;
-    }
-
     try {
       let amount = await args.pick("integer").catch(() => 0);
 
-      await trpcNode.guild.subtractFromBank.mutate({
+      await trpcNode.guild.addToBank.mutate({
         id: message!.guildId!,
         amount: amount,
       });
@@ -36,9 +31,7 @@ export class WithdrawCommand extends Command {
           message.author.displayAvatarURL({ dynamic: true })
         )
         .setDescription(
-          `✅ Withdrew ${process.env.COIN_EMOJI}${String(
-            amount
-          )} from the bank.`
+          `✅ Added ${process.env.COIN_EMOJI}${String(amount)} to the bank.`
         )
         .setTimestamp(message.createdAt)
         .setColor(`#${process.env.GREEN_COLOR}`);
