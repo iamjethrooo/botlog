@@ -24,6 +24,12 @@ export class GamesCommand extends Command {
     const playerMap = new Map();
     const player1 = <GuildMember>interaction.member;
     const bet = interaction.options.getInteger("bet", true);
+    if (bet < 0) {
+      return await interaction.reply({
+        content: ":x: Bet must not be less than 0!",
+        ephemeral: true,
+      });
+    }
     let insufficientFunds = user!.user!.cash < bet;
     if (insufficientFunds) {
       return await interaction.reply({
