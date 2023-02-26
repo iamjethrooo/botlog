@@ -53,6 +53,17 @@ export class CoinFlipGame {
         id: loser.user.id,
         cash: Number(bet),
       });
+
+      await trpcNode.user.updateLastCoinFlipDate.mutate({
+        id: player1.user.id,
+        date: Date.now().toString(),
+      });
+
+      await trpcNode.user.updateLastCoinFlipDate.mutate({
+        id: player2.user.id,
+        date: Date.now().toString(),
+      });
+      
       let betString = `${process.env.COIN_EMOJI}${bet}`;
       embed
         .setAuthor(

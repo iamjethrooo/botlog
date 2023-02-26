@@ -20,6 +20,27 @@ export class GamesCommand extends Command {
     let user = await trpcNode.user.getUserById.query({
       id: interaction.user.id,
     });
+    let lastGameDate = Number(user.user!.lastCoinFlipDate);
+    let gameCooldown = Number(process.env.COINFLIP_COOLDOWN);
+
+    let tooSoon = (Date.now() - lastGameDate) / 1000 < gameCooldown;
+    console.log(tooSoon);
+    if (tooSoon) {
+      const embed = new MessageEmbed()
+        .setAuthor(
+          `${interaction.user.username}#${interaction.user.discriminator}`,
+          interaction.user.displayAvatarURL({ dynamic: true })
+        )
+        .setDescription(
+          `⏲️ Too soon. You can start another game in <t:${
+            Math.round(lastGameDate / 1000) + gameCooldown
+          }:R>`
+        );
+      embed.setColor(`#${process.env.RED_COLOR}`);
+
+      return await interaction.reply({ embeds: [embed] });
+    }
+
     let maxPlayers = 2;
     const playerMap = new Map();
     const player1 = <GuildMember>interaction.member;
@@ -54,7 +75,6 @@ export class GamesCommand extends Command {
     }
     playersInGame.set(player1.id, player1);
     playerMap.set(player1.id, player1);
-    let deleteEmbed = false;
     if (subCommand == "coinflip") {
       gameTitle = "Coin Flip";
       const tempEmbed = new MessageEmbed()
@@ -81,7 +101,6 @@ export class GamesCommand extends Command {
           setTimeout(() => {
             embed.delete();
           }, 6000);
-          embed.delete();
         });
     } else {
       gameTitle = "";
@@ -120,6 +139,23 @@ export class GamesCommand extends Command {
               let player = await trpcNode.user.getUserById.query({
                 id: response.user.id,
               });
+              let lastGameDate = Number(player.user!.lastCoinFlipDate);
+              let tooSoon = (Date.now() - lastGameDate) / 1000 < gameCooldown;
+              if (tooSoon) {
+                const embed = new MessageEmbed()
+                  .setAuthor(
+                    `${(<GuildMember>response.member).user.username}#${(<GuildMember>response.member).user.discriminator}`,
+                    (<GuildMember>response.member).user.displayAvatarURL({ dynamic: true })
+                  )
+                  .setDescription(
+                    `⏲️ Too soon. You can join another game in <t:${
+                      Math.round(lastGameDate / 1000) + gameCooldown
+                    }:R>`
+                  );
+                embed.setColor(`#${process.env.RED_COLOR}`);
+
+                return await response.reply({ embeds: [embed] });
+              }
               insufficientFunds = player!.user!.cash < bet;
               if (insufficientFunds) {
                 await response.reply({
@@ -132,7 +168,6 @@ export class GamesCommand extends Command {
               }
             }
             if (playerMap.size == maxPlayers) {
-              deleteEmbed = true;
               return inviteCollector.stop("start-game");
             }
           }
@@ -145,7 +180,6 @@ export class GamesCommand extends Command {
             playerMap.forEach((player) => playersInGame.delete(player.id));
           }
           if (reason === "time") {
-            deleteEmbed = true;
             await interaction.followUp({
               content: `:x: No one responded to your invitation.`,
               ephemeral: true,
@@ -159,7 +193,6 @@ export class GamesCommand extends Command {
             }
           }
           if (reason === "start-game") {
-            deleteEmbed = true;
             return startGame(subCommand);
           }
         });
@@ -173,9 +206,9 @@ export class GamesCommand extends Command {
               new CoinFlipGame()
                 .coinFlip(interaction, playerMap, bet, prediction)
                 .then(() => {
-                  playerMap.forEach((player) =>
-                    playersInGame.delete(player.id)
-                  );
+                  playerMap.forEach(async (player) => {
+                    playersInGame.delete(player.id);
+                  });
                 });
               break;
           }

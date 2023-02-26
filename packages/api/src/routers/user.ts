@@ -133,6 +133,25 @@ export const userRouter = t.router({
 
       return { lastHeistDate };
     }),
+  updateLastCoinFlipDate: t.procedure
+    .input(
+      z.object({
+        id: z.string(),
+        date: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, date } = input;
+
+      const lastCoinFlipDate = await ctx.prisma.user.update({
+        where: {
+          discordId: id,
+        },
+        data: { lastCoinFlipDate: date },
+      });
+
+      return { lastCoinFlipDate };
+    }),
   setJailTime: t.procedure
     .input(
       z.object({
