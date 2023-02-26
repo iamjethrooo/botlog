@@ -78,13 +78,9 @@ export class GamesCommand extends Command {
         })
         .then((embed) => {
           console.log(embed);
-          let secondsPassed = 0;
-          setInterval(() => {
-            secondsPassed++;
-            console.log(deleteEmbed);
-            if (secondsPassed >= 60) embed.delete();
-            if (deleteEmbed) embed.delete();
-          }, 1000);
+          setTimeout(() => {
+            embed.delete();
+          }, 6000);
           embed.delete();
         });
     } else {
