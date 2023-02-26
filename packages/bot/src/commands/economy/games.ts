@@ -29,6 +29,11 @@ export class GamesCommand extends Command {
         content: ":x: Bet must not be less than 0!",
         ephemeral: true,
       });
+    } else if (bet > 200) {
+      return await interaction.reply({
+        content: ":x: Bet must be less than or equal to 200!",
+        ephemeral: true,
+      });
     }
     let insufficientFunds = user!.user!.cash < bet;
     if (insufficientFunds) {
@@ -49,6 +54,7 @@ export class GamesCommand extends Command {
     }
     playersInGame.set(player1.id, player1);
     playerMap.set(player1.id, player1);
+    let deleteEmbed = false;
     if (subCommand == "coinflip") {
       gameTitle = "Coin Flip";
       const tempEmbed = new MessageEmbed()
@@ -66,9 +72,21 @@ export class GamesCommand extends Command {
           )}**.`
         )
         .setColor((<GuildMember>interaction.member)!.displayHexColor);
-      await interaction.channel?.send({
-        embeds: [tempEmbed],
-      });
+      await interaction.channel
+        ?.send({
+          embeds: [tempEmbed],
+        })
+        .then((embed) => {
+          console.log(embed);
+          let secondsPassed = 0;
+          setInterval(() => {
+            secondsPassed++;
+            console.log(deleteEmbed);
+            if (secondsPassed >= 60) embed.delete();
+            if (deleteEmbed) embed.delete();
+          }, 1000);
+          embed.delete();
+        });
     } else {
       gameTitle = "";
     }
@@ -117,8 +135,10 @@ export class GamesCommand extends Command {
                 playerMap.set(response.user.id, <GuildMember>response.member);
               }
             }
-            if (playerMap.size == maxPlayers)
+            if (playerMap.size == maxPlayers) {
+              deleteEmbed = true;
               return inviteCollector.stop("start-game");
+            }
           }
           const accepted: GuildMember[] = [];
           playerMap.forEach((player) => accepted.push(player));
@@ -129,6 +149,7 @@ export class GamesCommand extends Command {
             playerMap.forEach((player) => playersInGame.delete(player.id));
           }
           if (reason === "time") {
+            deleteEmbed = true;
             await interaction.followUp({
               content: `:x: No one responded to your invitation.`,
               ephemeral: true,
@@ -142,6 +163,7 @@ export class GamesCommand extends Command {
             }
           }
           if (reason === "start-game") {
+            deleteEmbed = true;
             return startGame(subCommand);
           }
         });
