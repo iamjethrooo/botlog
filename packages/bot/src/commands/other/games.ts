@@ -1,127 +1,158 @@
-import { TicTacToeGame } from '../../lib/utils/games/tic-tac-toe';
-import { GameInvite } from '../../lib/utils/games/inviteEmbed';
-import { ApplyOptions } from '@sapphire/decorators';
+import { GameInvite } from "../../lib/utils/games/inviteEmbed";
+import { ApplyOptions } from "@sapphire/decorators";
 import {
   ApplicationCommandRegistry,
   Command,
-  CommandOptions
-} from '@sapphire/framework';
-import type { CommandInteraction, User } from 'discord.js';
-import { Connect4Game } from '../../lib/utils/games/connect-4';
+  CommandOptions,
+} from "@sapphire/framework";
+import { CommandInteraction, GuildMember, MessageEmbed } from "discord.js";
+import { CoinFlipGame } from "../../lib/utils/games/coinflip";
+import { trpcNode } from "../../trpc";
 
-export const playersInGame: Map<string, User> = new Map();
+export const playersInGame: Map<string, GuildMember> = new Map();
 @ApplyOptions<CommandOptions>({
-  name: 'games',
-  description: 'Play a game with another person',
-  preconditions: ['isCommandDisabled']
+  name: "games",
+  description: "Play a game with another person",
+  preconditions: ["isCommandDisabled", "inBotChannel", "isNotInmate"],
 })
 export class GamesCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
+    let user = await trpcNode.user.getUserById.query({
+      id: interaction.user.id,
+    });
     let maxPlayers = 2;
     const playerMap = new Map();
-    const player1 = interaction.user;
+    const player1 = <GuildMember>interaction.member;
+    const bet = interaction.options.getInteger("bet", true);
+    let insufficientFunds = user!.user!.cash < bet;
+    if (insufficientFunds) {
+      return await interaction.reply({
+        content: ":x: You don't have enough money for this bet.",
+        ephemeral: true,
+      });
+    }
 
     const subCommand = interaction.options.getSubcommand();
     let gameTitle: string;
+
     if (playersInGame.has(player1.id)) {
-      await interaction.reply({
+      return await interaction.reply({
         content: ":x: You can't play more than 1 game at a time",
-        ephemeral: true
+        ephemeral: true,
       });
-      return;
     }
+    playersInGame.set(player1.id, player1);
     playerMap.set(player1.id, player1);
-    if (subCommand == 'connect-4') {
-      gameTitle = 'Connect 4';
+    if (subCommand == "coinflip") {
+      gameTitle = "Coin Flip";
+      const tempEmbed = new MessageEmbed()
+        .setTitle("Coin Flip")
+        .setAuthor(
+          `${interaction.user.username}#${interaction.user.discriminator}`,
+          interaction.user.displayAvatarURL({ dynamic: true })
+        )
+        .setDescription(
+          `<@${
+            interaction.user.id
+          }> bet that the coin would land **${interaction.options.getString(
+            "prediction",
+            true
+          )}**.`
+        )
+        .setColor((<GuildMember>interaction.member)!.displayHexColor);
+      await interaction.channel?.send({
+        embeds: [tempEmbed],
+      });
     } else {
-      gameTitle = 'Tic-Tac-Toe';
+      gameTitle = "";
     }
 
-    const invite = new GameInvite(gameTitle!, [player1], interaction);
+    const invite = new GameInvite(gameTitle!, [player1], interaction, bet);
 
     await interaction
       .reply({
         embeds: [invite.gameInviteEmbed()],
-        components: [invite.gameInviteButtons()]
+        components: [invite.gameInviteButtons()],
       })
-      .then(async i => {
+      .then(async (i) => {
         const inviteCollector =
           interaction.channel?.createMessageComponentCollector({
-            time: 60 * 1000
+            time: 60 * 1000,
           });
-        inviteCollector?.on('collect', async response => {
-          if (response.customId === `${interaction.id}${player1.id}-No`) {
-            if (response.user.id !== player1.id) {
-              playerMap.delete(response.user.id);
-            } else {
+        inviteCollector?.on("collect", async (response) => {
+          if (response.customId === `${interaction.id}${player1.id}-Join`) {
+            if (response.user.id === player1.id) {
               await interaction.followUp({
-                content: ':x: You started the invite.',
-                ephemeral: true
+                content: ":x: You started the invite.",
+                ephemeral: true,
               });
-            }
-          }
-
-          if (response.customId === `${interaction.id}${player1.id}-Yes`) {
-            if (playersInGame.has(response.user.id)) {
-              await interaction.followUp({
-                content: `:x: You are already playing a game.`,
-                ephemeral: true
-              });
+            } else if (playersInGame.has(response.user.id)) {
+              if (response.user.id !== player1.id) {
+                await interaction.followUp({
+                  content: `:x: You are already playing a game.`,
+                  ephemeral: true,
+                });
+              }
             }
 
             if (!playerMap.has(response.user.id)) {
-              playerMap.set(response.user.id, response.user);
-            }
-            if (playerMap.size == maxPlayers)
-              return inviteCollector.stop('start-game');
-          }
-          const accepted: User[] = [];
-          playerMap.forEach(player => accepted.push(player));
-          const invite = new GameInvite(gameTitle, accepted, interaction);
-          await response.update({
-            embeds: [invite.gameInviteEmbed()]
-          });
-          if (response.customId === `${interaction.id}${player1.id}-Start`) {
-            if (playerMap.has(response.user.id)) {
-              if (accepted.length > 1) {
-                playerMap.forEach((player: User) =>
-                  playersInGame.set(player.id, player)
-                );
-                return inviteCollector.stop('start-game');
+              // Check for balance
+              let player = await trpcNode.user.getUserById.query({
+                id: response.user.id,
+              });
+              insufficientFunds = player!.user!.cash < bet;
+              if (insufficientFunds) {
+                await response.reply({
+                  content: ":x: You don't have enough money for this bet.",
+                  ephemeral: true,
+                  // target: <GuildMember>response.member,
+                });
+              } else {
+                playerMap.set(response.user.id, <GuildMember>response.member);
               }
             }
+            if (playerMap.size == maxPlayers)
+              return inviteCollector.stop("start-game");
           }
+          const accepted: GuildMember[] = [];
+          playerMap.forEach((player) => accepted.push(player));
         });
-        inviteCollector?.on('end', async (collected, reason) => {
+        inviteCollector?.on("end", async (collected, reason) => {
           await interaction.deleteReply()!;
-          if (playerMap.size === 1 || reason === 'declined') {
-            playerMap.forEach(player => playersInGame.delete(player.id));
+          if (playerMap.size === 1 || reason === "declined") {
+            playerMap.forEach((player) => playersInGame.delete(player.id));
           }
-          if (reason === 'time') {
+          if (reason === "time") {
             await interaction.followUp({
               content: `:x: No one responded to your invitation.`,
               ephemeral: true,
-              target: player1
+              target: player1,
             });
             if (playerMap.size > 1) {
-              playerMap.forEach((player: User) =>
+              playerMap.forEach((player: GuildMember) =>
                 playersInGame.set(player.id, player)
               );
               return startGame(subCommand);
             }
           }
-          if (reason === 'start-game') {
+          if (reason === "start-game") {
             return startGame(subCommand);
           }
         });
         function startGame(subCommand: string) {
           switch (subCommand) {
-            case 'connect-4':
-              new Connect4Game().connect4(interaction, playerMap);
-              break;
-
-            case 'tic-tac-toe':
-              new TicTacToeGame().ticTacToe(interaction, playerMap);
+            case "coinflip":
+              const prediction = interaction.options.getString(
+                "prediction",
+                true
+              );
+              new CoinFlipGame()
+                .coinFlip(interaction, playerMap, bet, prediction)
+                .then(() => {
+                  playerMap.forEach((player) =>
+                    playersInGame.delete(player.id)
+                  );
+                });
               break;
           }
         }
@@ -136,16 +167,35 @@ export class GamesCommand extends Command {
       description: this.description,
       options: [
         {
-          type: 'SUB_COMMAND',
-          name: 'connect-4',
-          description: 'Play a game of Connect-4 with another Person.'
+          type: "SUB_COMMAND",
+          name: "coinflip",
+          description: "Play a game of Coin Flip with another Person.",
+          options: [
+            {
+              type: "INTEGER",
+              required: true,
+              name: "bet",
+              description: "How much do you want to bet?",
+            },
+            {
+              type: "STRING",
+              required: true,
+              name: "prediction",
+              description: "Which side do you think the coin would land with?",
+              choices: [
+                {
+                  name: "Heads",
+                  value: "heads",
+                },
+                {
+                  name: "Tails",
+                  value: "tails",
+                },
+              ],
+            },
+          ],
         },
-        {
-          type: 'SUB_COMMAND',
-          name: 'tic-tac-toe',
-          description: 'Play a game of Tic-Tac-Toe with another Person.'
-        }
-      ]
+      ],
     });
   }
 }
