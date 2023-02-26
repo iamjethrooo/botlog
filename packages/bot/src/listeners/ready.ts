@@ -17,6 +17,7 @@ export class ReadyListener extends Listener {
     let inmateRole = guild.roles.cache.find(
       (role) => role.id == process.env.ROLE_ID_INMATE
     );
+    client.application?.commands.set([], String(process.env.GUILD_ID));
 
     await guild.members.fetch();
     setInterval(async () => {
