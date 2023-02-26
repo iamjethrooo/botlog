@@ -17,6 +17,32 @@ export const playersInGame: Map<string, GuildMember> = new Map();
 })
 export class GamesCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
+    let canPlay = !(
+      (<GuildMember>interaction.member)!.roles.cache.has(
+        "742226368213024839"
+      ) ||
+      (<GuildMember>interaction.member)!.roles.cache.has(
+        "742226368091389983"
+      ) ||
+      (<GuildMember>interaction.member)!.roles.cache.has(
+        "889470124422201364"
+      ) ||
+      (<GuildMember>interaction.member)!.roles.cache.has("1079460013308919830")
+    );
+
+    if (!canPlay) {
+      const embed = new MessageEmbed()
+        .setAuthor(
+          `${interaction.user.username}#${interaction.user.discriminator}`,
+          interaction.user.displayAvatarURL({ dynamic: true })
+        )
+        .setDescription(
+          `❌ Your level is not high enough to use this command. Required level is 15.`
+        );
+      embed.setColor(`#${process.env.RED_COLOR}`);
+
+      return await interaction.reply({ embeds: [embed] });
+    }
     let user = await trpcNode.user.getUserById.query({
       id: interaction.user.id,
     });
@@ -135,6 +161,37 @@ export class GamesCommand extends Command {
             }
 
             if (!playerMap.has(response.user.id)) {
+              let canPlay = !(
+                (<GuildMember>response.member)!.roles.cache.has(
+                  "742226368213024839"
+                ) ||
+                (<GuildMember>response.member)!.roles.cache.has(
+                  "742226368091389983"
+                ) ||
+                (<GuildMember>response.member)!.roles.cache.has(
+                  "889470124422201364"
+                ) ||
+                (<GuildMember>response.member)!.roles.cache.has(
+                  "1079460013308919830"
+                )
+              );
+              if (!canPlay) {
+                const embed = new MessageEmbed()
+                  .setAuthor(
+                    `${(<GuildMember>response.member).user.username}#${
+                      (<GuildMember>response.member).user.discriminator
+                    }`,
+                    (<GuildMember>response.member).user.displayAvatarURL({
+                      dynamic: true,
+                    })
+                  )
+                  .setDescription(
+                    `❌ Your level is not high enough to use this command. Required level is 15.`
+                  );
+                embed.setColor(`#${process.env.RED_COLOR}`);
+
+                return await response.reply({ embeds: [embed] });
+              }
               // Check for balance
               let player = await trpcNode.user.getUserById.query({
                 id: response.user.id,
@@ -144,8 +201,12 @@ export class GamesCommand extends Command {
               if (tooSoon) {
                 const embed = new MessageEmbed()
                   .setAuthor(
-                    `${(<GuildMember>response.member).user.username}#${(<GuildMember>response.member).user.discriminator}`,
-                    (<GuildMember>response.member).user.displayAvatarURL({ dynamic: true })
+                    `${(<GuildMember>response.member).user.username}#${
+                      (<GuildMember>response.member).user.discriminator
+                    }`,
+                    (<GuildMember>response.member).user.displayAvatarURL({
+                      dynamic: true,
+                    })
                   )
                   .setDescription(
                     `⏲️ Too soon. You can join another game in <t:${
