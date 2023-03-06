@@ -147,9 +147,10 @@ export class HeistCommand extends Command {
                       Number(process.env.HEIST_REDUCED_JAIL_TIME) *
                         (client.heistMembers.length - 1)
                   ),
-                });
-                let user = message.guild!.members.cache.get(String(member));
-                user!.roles.add(inmateRole!);
+                }).then(() => {
+                  let user = message.guild!.members.cache.get(String(member));
+                  user!.roles.add(inmateRole!);
+                })
               });
               embed
                 .setAuthor(null)
