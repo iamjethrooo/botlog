@@ -42,8 +42,9 @@ export class CooldownCommand extends Command {
 
       let canRob = (Date.now() - lastRobDate) / 1000 > robCooldown;
       let canHeist = (Date.now() - lastHeistDate) / 1000 > heistCooldown;
-      let inJail = (Date.now() - lastHeistDate) / 1000 < Number(suspect.user?.jailTime);
-
+      let isInmate = message.member!.roles.cache.has(
+        `${process.env.ROLE_ID_INMATE}`
+      );
       embed
         .setTitle("⏲️ Cooldowns")
         .setDescription(
@@ -55,7 +56,14 @@ export class CooldownCommand extends Command {
             canHeist
               ? "`now`"
               : `<t:${Math.round(lastHeistDate / 1000) + heistCooldown}:R>`
-          }${inJail ? `\n\nYou will be released from jail <t:${Math.round(lastHeistDate / 1000) + Number(suspect.user?.jailTime)}:R>` : ""}`
+          }${
+            isInmate
+              ? `\n\nYou will be released from jail <t:${
+                  Math.round(lastHeistDate / 1000) +
+                  Number(suspect.user?.jailTime)
+                }:R>`
+              : ""
+          }`
         )
         .setColor(message.member!.displayHexColor);
 
