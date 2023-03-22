@@ -138,25 +138,29 @@ export class HeistCommand extends Command {
               let inmateRole = message!.guild!.roles.cache.find(
                 (role) => role.id == process.env.ROLE_ID_INMATE
               );
+              let jailTime =
+                Number(process.env.HEIST_JAIL_TIME) -
+                Number(process.env.HEIST_REDUCED_JAIL_TIME) *
+                  (client.heistMembers.length - 1);
               client.heistMembers.forEach(async (member) => {
                 splitMessage += `<@${member}> got caught.\n`;
-                await trpcNode.user.setJailTime.mutate({
-                  id: String(member),
-                  jailTime: String(
-                    Number(process.env.HEIST_JAIL_TIME) -
-                      Number(process.env.HEIST_REDUCED_JAIL_TIME) *
-                        (client.heistMembers.length - 1)
-                  ),
-                }).then(() => {
-                  let user = message.guild!.members.cache.get(String(member));
-                  user!.roles.add(inmateRole!);
-                })
+                await trpcNode.user.setJailTime
+                  .mutate({
+                    id: String(member),
+                    jailTime: String(jailTime),
+                  })
+                  .then(() => {
+                    let user = message.guild!.members.cache.get(String(member));
+                    user!.roles.add(inmateRole!);
+                  });
               });
               embed
                 .setAuthor(null)
                 .setTitle(`Bank Heist Results`)
                 .setDescription(
-                  `${splitMessage}\nThey will serve jail time for ${24 - (2 * (client.heistMembers.length == 1 ? 0 : client.heistMembers.length - 1))} hours and will not be able to earn coins for the duration.`
+                  `${splitMessage}\nThey will serve jail time for ${
+                    jailTime / 3600
+                  } hours and will not be able to earn coins for the duration.`
                 );
               await message.channel.send({ embeds: [embed] });
             }
