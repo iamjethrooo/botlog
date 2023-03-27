@@ -44,8 +44,8 @@ Note: if you are not hosting postgres on Heroku you do not need the SHADOW_DB_UR
 
 ```env
 # DB URL
-DATABASE_URL="postgresql://john:doe@localhost:5432/master-bot?schema=public"
-SHADOW_DB_URL="postgresql://john:doe@localhost:5432/master-bot?schema=public"
+DATABASE_URL="postgresql://john:doe@localhost:5432/botlog?schema=public"
+SHADOW_DB_URL="postgresql://john:doe@localhost:5432/botlog?schema=public"
 
 GUILD_ID=
 
@@ -71,17 +71,15 @@ ROB_CHANCE_MOD=0.x
 ROB_RATE=0.x
 ROB_RATE_THIEF=0.x
 
-# 6 hours
-ROB_COOLDOWN=21600
-# 3 hours
-ROB_COOLDOWN_THIEF=10800
+ROB_COOLDOWN=
+ROB_COOLDOWN_THIEF=1
 
 ROLE_ID_THIEF=
 ROLE_ID_INMATE=
 
-HEIST_WAITING_TIME=180
-HEIST_JAIL_TIME=86400
-HEIST_REDUCED_JAIL_TIME=7200
+HEIST_WAITING_TIME=
+HEIST_JAIL_TIME=
+HEIST_REDUCED_JAIL_TIME=
 
 HEIST_BASE_CHANCE=0.x
 HEIST_ADDITIONAL_CHANCE=0.x
