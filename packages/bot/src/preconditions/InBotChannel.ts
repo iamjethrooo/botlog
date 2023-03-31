@@ -33,7 +33,7 @@ export class inBotChannel extends Precondition {
   public override chatInputRun(
     interaction: CommandInteraction
   ): PreconditionResult {
-    if (!botChannels.includes(interaction.channel!.id)) {
+    if (interaction.guildId == '669190303353143306' && !botChannels.includes(interaction.channel!.id)) {
       return this.error({
         message: "You cannot use this command in this channel!",
       });
@@ -42,7 +42,7 @@ export class inBotChannel extends Precondition {
   }
 
   public override async messageRun(message: Message): Promise<any> {
-    if (!botChannels.includes(message.channel.id)) {
+    if (message.guildId == '669190303353143306' && !botChannels.includes(message.channel.id)) {
       return this.error({ message: "You cannot use this command in this channel!" });
     } else {
       return this.ok();
