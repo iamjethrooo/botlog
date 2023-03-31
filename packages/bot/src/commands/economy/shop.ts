@@ -14,7 +14,32 @@ import { trpcNode } from "../../trpc";
   preconditions: ["inBotChannel"],
 })
 export class ShopCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {}
+  public override async chatInputRun(interaction: CommandInteraction) {
+    let shop = await trpcNode.item.getAll.query();
+    let shopFormatted: String[] = [];
+
+    shopFormatted.push(`Buy an item with the command \`buy <name>\`\n`);
+
+    shop.allItems.forEach((item) => {
+      shopFormatted.push(
+        `${item.emoji} **${item.name}** | ${process.env.COIN_EMOJI}**\`${item.buyPrice}\`**\n${item.description}\n`
+      );
+    });
+
+    const baseEmbed = new MessageEmbed()
+      .setColor(`#${process.env.GREEN_COLOR}`)
+      .setAuthor({
+        name: interaction!.guild!.name,
+        iconURL: interaction!.guild!.iconURL()!,
+      });
+    new PaginatedFieldMessageEmbed()
+      .setTitleField(`Botlog Shop`)
+      .setTemplate(baseEmbed)
+      .setItems(shopFormatted)
+      .setItemsPerPage(10)
+      .make()
+      .run(interaction);
+  }
 
   public override async messageRun(message: Message) {
     let shop = await trpcNode.item.getAll.query();
@@ -22,7 +47,6 @@ export class ShopCommand extends Command {
 
     shopFormatted.push(`Buy an item with the command \`buy <name>\`\n`);
 
-    await message.guild!.members.fetch();
     shop.allItems.forEach((item) => {
       shopFormatted.push(
         `${item.emoji} **${item.name}** | ${process.env.COIN_EMOJI}**\`${item.buyPrice}\`**\n${item.description}\n`

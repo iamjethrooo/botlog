@@ -6,15 +6,22 @@ import {
   CommandOptions,
   container,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, MessageEmbed } from "discord.js";
+import {
+  CommandInteraction,
+  GuildMember,
+  Message,
+  MessageEmbed,
+} from "discord.js";
 import { trpcNode } from "../../trpc";
+
+export const playersInGames: Map<string, GuildMember> = new Map();
 
 @ApplyOptions<CommandOptions>({
   name: "prisonbreak",
   description: "Attempt a prison break.",
   preconditions: ["inBotChannel", "isInmate"],
 })
-export class HeistCommand extends Command {
+export class PrisonBreakCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
 
   public override async messageRun(message: Message, args: Args) {
@@ -154,7 +161,13 @@ export class HeistCommand extends Command {
                 .setAuthor(null)
                 .setTitle(`Bank Heist Results`)
                 .setDescription(
-                  `${splitMessage}\nThey will serve jail time for ${24 - (2 * (client.heistMembers.length == 1 ? 0 : client.heistMembers.length - 1))} hours and will not be able to earn coins for the duration.`
+                  `${splitMessage}\nThey will serve jail time for ${
+                    24 -
+                    2 *
+                      (client.heistMembers.length == 1
+                        ? 0
+                        : client.heistMembers.length - 1)
+                  } hours and will not be able to earn coins for the duration.`
                 );
               await message.channel.send({ embeds: [embed] });
             }
