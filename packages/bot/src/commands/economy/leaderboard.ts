@@ -2,6 +2,7 @@ import { ApplyOptions } from "@sapphire/decorators";
 import { PaginatedFieldMessageEmbed } from "@sapphire/discord.js-utilities";
 import {
   ApplicationCommandRegistry,
+  Args,
   Command,
   CommandOptions,
 } from "@sapphire/framework";
@@ -56,7 +57,8 @@ export class LeaderboardCommand extends Command {
       .run(interaction);
   }
 
-  public override async messageRun(message: Message) {
+  public override async messageRun(message: Message, args: Args) {
+    let showAll = (await args.pick("string").catch(() => 0)) == "all";
     let leaderboard = await trpcNode.user.getLeaderboard.query();
     let leaderboardFormatted: String[] = [];
     let rank = 0;
@@ -68,7 +70,7 @@ export class LeaderboardCommand extends Command {
       let member = message.guild!.members.cache.get(user!.discordId!);
       let isMod = member ? member!.permissions.has("ADMINISTRATOR") : false;
 
-      if (isMod) {
+      if (isMod && !showAll) {
         return;
       }
 
