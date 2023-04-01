@@ -21,7 +21,7 @@ export class EconStatsCommand extends Command {
       .addFields(
         {
           name: "Coins per chat",
-          value: `${process.env.MIN_CASH_PER_CHAT} to ${process.env.MAX_CASH_PER_CHAT}`,
+          value: `${process.env.COIN_EMOJI}${process.env.MIN_CASH_PER_CHAT} to ${process.env.COIN_EMOJI}${process.env.MAX_CASH_PER_CHAT}`,
           inline: true,
         },
         {
@@ -32,23 +32,23 @@ export class EconStatsCommand extends Command {
         { name: " ", value: ` `, inline: false },
         {
           name: "Snipe Cost",
-          value: `${process.env.SNIPE_COST}`,
+          value: `${process.env.COIN_EMOJI}${process.env.SNIPE_COST}`,
           inline: true,
         },
         {
           name: "Single Snipe Cost",
-          value: `${process.env.SINGLE_SNIPE_COST}`,
+          value: `${process.env.COIN_EMOJI}${process.env.SINGLE_SNIPE_COST}`,
           inline: true,
         },
         { name: " ", value: ` `, inline: false },
         {
           name: "Rob Success Rate",
-          value: `${process.env.ROB_CHANCE}`,
+          value: `${Number(process.env.ROB_CHANCE) * 100}%`,
           inline: true,
         },
         {
           name: "Rob Earnings",
-          value: `${process.env.ROB_RATE}`,
+          value: `${Number(process.env.ROB_RATE)}%`,
           inline: true,
         },
         {
