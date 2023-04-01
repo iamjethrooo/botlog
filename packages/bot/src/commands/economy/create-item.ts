@@ -32,7 +32,7 @@ export class CreateItemCommand extends Command {
       const embed = new MessageEmbed()
         .setTitle("New item created!")
         .setDescription(
-          `${emoji}**${itemName}**\nDescription: ${itemDescription}\nPrice: ${price}\nStock: ${stock}`
+          `${emoji}**${itemName}**\n\nDescription: ${itemDescription}\n\nPrice: ${price}\n\nStock: ${stock}`
         )
         .setColor(`#${process.env.GREEN_COLOR}`);
 
