@@ -53,7 +53,7 @@ export class EconStatsCommand extends Command {
         },
         {
           name: "Rob Cooldown",
-          value: `${process.env.ROB_COOLDOWN} hours`,
+          value: `${Number(process.env.ROB_COOLDOWN) / 3600} hours`,
           inline: true,
         },
         { name: " ", value: ` `, inline: false },
