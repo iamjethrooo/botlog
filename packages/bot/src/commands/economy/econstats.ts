@@ -66,7 +66,7 @@ export class EconStatsCommand extends Command {
         },
         {
           name: "Heist Earnings",
-          value: `${Number(process.env.HEIST_BASE_RATE) * 100}% + ${
+          value: `${Math.round(Number(process.env.HEIST_BASE_RATE) * 100)}% + ${
             Number(process.env.HEIST_ADDITIONAL_RATE) * 100
           }% per additional member`,
           inline: true,
