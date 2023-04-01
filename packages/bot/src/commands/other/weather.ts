@@ -70,7 +70,6 @@ export class PingCommand extends Command {
 
         return await message.channel.send({ embeds: [embed] });
       });
-      return await message.channel.send("Failed!");
   }
 
   public override registerApplicationCommands(
