@@ -48,7 +48,7 @@ export class EconStatsCommand extends Command {
         },
         {
           name: "Rob Earnings",
-          value: `${Number(process.env.ROB_RATE)}%`,
+          value: `${Number(process.env.ROB_RATE) * 100}%`,
           inline: true,
         },
         {
