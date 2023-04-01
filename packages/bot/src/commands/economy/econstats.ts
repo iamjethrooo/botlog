@@ -9,7 +9,7 @@ import { CommandInteraction, Message, MessageEmbed } from "discord.js";
 @ApplyOptions<CommandOptions>({
   name: "econstats",
   description: "Displays current economy system statistics.",
-  preconditions: ["inBotChannel"],
+  preconditions: ["inBotChannel", "userIsAdmin"],
 })
 export class EconStatsCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
