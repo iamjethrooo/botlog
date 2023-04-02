@@ -46,7 +46,7 @@ export class InventoryCommand extends Command {
     new PaginatedFieldMessageEmbed()
       .setTitleField(" ")
       .setTemplate(baseEmbed)
-      .setItems(inventoryFormatted)
+      .setItems(inventoryFormatted.length == 0 ? ["Your inventory is empty! :("] : inventoryFormatted)
       .setItemsPerPage(10)
       .make()
       .run(interaction);
@@ -78,7 +78,7 @@ export class InventoryCommand extends Command {
     new PaginatedFieldMessageEmbed()
       .setTitleField(" ")
       .setTemplate(baseEmbed)
-      .setItems(inventoryFormatted)
+      .setItems(inventoryFormatted.length == 0 ? ["Your inventory is empty! :("] : inventoryFormatted)
       .setItemsPerPage(10)
       .make()
       .run(message);
