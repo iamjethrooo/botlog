@@ -18,9 +18,10 @@ export class BuyCommand extends Command {
 
   public override async messageRun(message: Message, args: Args) {
     let itemName = await args.rest("string");
+    let userId = message.author.id;
     let shop = await trpcNode.item.getAll.query();
     let user = await trpcNode.user.getUserById.query({
-      id: message.author.id,
+      id: userId,
     });
     let item;
 
@@ -47,6 +48,7 @@ export class BuyCommand extends Command {
     let canRob = (Date.now() - lastRobDate) / 1000 > robCooldown;
 
     if (item) {
+      let itemId = item!.id;
       let insufficientFunds = user!.user!.cash < item!.buyPrice;
       if (insufficientFunds) {
         embed.setDescription(
@@ -66,18 +68,43 @@ export class BuyCommand extends Command {
         }
 
         await trpcNode.user.updateLastRobDate.mutate({
-          id: message.author.id,
+          id: userId,
           date: "0",
         });
+      } else {
+        let userInventory = await trpcNode.inventory.getByUserId.mutate({
+          userId: userId,
+        });
+        let userHasItem = userInventory.inventory.some(
+          (e) => e.itemId == itemId
+        );
+
+        if (item!.name.toLowerCase() == "lucky charm") {
+          if (!userHasItem) {
+            await trpcNode.inventory.create.mutate({
+              userId: userId,
+              itemId: itemId,
+              amount: 1,
+            });
+            // await trpcNode.inventory.incrementUserItemAmount.mutate({
+            //   userId: userId,
+            //   itemId: itemId,
+            // });
+          } else {
+            embed.setDescription(`❌ You already have a **${item!.name}**!`);
+            embed.setColor(`#${process.env.RED_COLOR}`);
+            return await message.channel.send({ embeds: [embed] });
+          }
+        }
       }
 
       await trpcNode.user.subtractCash.mutate({
-        id: message.author.id,
+        id: userId,
         cash: item!.buyPrice,
       });
 
       await trpcNode.item.buyItem.mutate({
-        id: item!.id,
+        id: itemId,
       });
 
       await trpcNode.guild.addToBank.mutate({
