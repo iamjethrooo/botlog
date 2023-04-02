@@ -154,6 +154,14 @@ export class RobCommand extends Command {
         embed.setColor(`#${process.env.RED_COLOR}`);
       }
 
+      // Remove luck potion from inventory
+      if (userHasLuckPotion) {
+        await trpcNode.inventory.delete.mutate({
+          userId: suspectId,
+          itemId: luckPotion!.id
+        });
+      }
+
       await trpcNode.user.updateLastRobDate.mutate({
         id: interaction.user.id,
         date: Date.now().toString(),
@@ -299,6 +307,14 @@ export class RobCommand extends Command {
           `❌ You were caught attempting to rob <@${victimId}> and have been fined ${process.env.COIN_EMOJI}${amountToBeSubtracted}.`
         );
         embed.setColor(`#${process.env.RED_COLOR}`);
+      }
+
+      // Remove luck potion from inventory
+      if (userHasLuckPotion) {
+        await trpcNode.inventory.delete.mutate({
+          userId: suspectId,
+          itemId: luckPotion!.id
+        });
       }
 
       await trpcNode.user.updateLastRobDate.mutate({
