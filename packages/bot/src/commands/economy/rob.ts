@@ -4,7 +4,12 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, GuildMember, Message, MessageEmbed } from "discord.js";
+import {
+  CommandInteraction,
+  GuildMember,
+  Message,
+  MessageEmbed,
+} from "discord.js";
 import { trpcNode } from "../../trpc";
 
 @ApplyOptions<CommandOptions>({
@@ -18,15 +23,38 @@ export class RobCommand extends Command {
 
     let victimId = user.id;
     let suspectId = interaction.user.id;
-    let isMod = (<GuildMember>interaction.member)!.permissions.has("ADMINISTRATOR");
+    let isMod = (<GuildMember>interaction.member)!.permissions.has(
+      "ADMINISTRATOR"
+    );
     let isThief = (<GuildMember>interaction.member)!.roles.cache.has(
       `${process.env.ROLE_ID_THIEF}`
     );
 
     try {
+      let allItems = await trpcNode.item.getAll.query();
+
       let suspect = await trpcNode.user.getUserById.query({
         id: suspectId,
       });
+
+      let luckPotion = allItems.allItems.find(
+        (i) => i.name.toLowerCase() == "luck potion"
+      );
+      let fortuneAmulet = allItems.allItems.find(
+        (i) => i.name.toLowerCase() == "fortune amulet"
+      );
+
+      let userInventory = await trpcNode.inventory.getByUserId.mutate({
+        userId: suspectId,
+      });
+
+      let userHasLuckPotion = userInventory.inventory.some(
+        (e) => e.itemId == luckPotion!.id
+      );
+      // Number of fortune amulets of the user
+      let fortuneAmuletCount = userInventory.inventory.filter(
+        (i) => i.itemId == fortuneAmulet!.id
+      ).length;
 
       let suspectCash = suspect.user!.cash;
 
@@ -70,7 +98,12 @@ export class RobCommand extends Command {
 
       let robAmount = Math.round(victimCash * robRate);
 
-      let success = Math.random() <= robChance;
+      let successChance =
+        robChance +
+        (userHasLuckPotion ? Number(process.env.LUCKY_CHARM_INCREASE) : 0) +
+        fortuneAmuletCount * Number(process.env.FORTUNE_AMULET_INCREASE);
+
+      let success = Math.random() <= successChance;
 
       if (success) {
         let extraMessage = "";
@@ -145,9 +178,30 @@ export class RobCommand extends Command {
     );
 
     try {
+      let allItems = await trpcNode.item.getAll.query();
+
       let suspect = await trpcNode.user.getUserById.query({
         id: suspectId,
       });
+
+      let luckPotion = allItems.allItems.find(
+        (i) => i.name.toLowerCase() == "luck potion"
+      );
+      let fortuneAmulet = allItems.allItems.find(
+        (i) => i.name.toLowerCase() == "fortune amulet"
+      );
+
+      let userInventory = await trpcNode.inventory.getByUserId.mutate({
+        userId: suspectId,
+      });
+
+      let userHasLuckPotion = userInventory.inventory.some(
+        (e) => e.itemId == luckPotion!.id
+      );
+      // Number of fortune amulets of the user
+      let fortuneAmuletCount = userInventory.inventory.filter(
+        (i) => i.itemId == fortuneAmulet!.id
+      ).length;
 
       let suspectCash = suspect.user!.cash;
 
@@ -191,7 +245,12 @@ export class RobCommand extends Command {
 
       let robAmount = Math.round(victimCash * robRate);
 
-      let success = Math.random() <= robChance;
+      let successChance =
+        robChance +
+        (userHasLuckPotion ? Number(process.env.LUCKY_CHARM_INCREASE) : 0) +
+        fortuneAmuletCount * Number(process.env.FORTUNE_AMULET_INCREASE);
+
+      let success = Math.random() <= successChance;
 
       if (success) {
         let extraMessage = "";

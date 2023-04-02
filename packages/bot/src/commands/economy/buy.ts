@@ -79,7 +79,7 @@ export class BuyCommand extends Command {
           (e) => e.itemId == itemId
         );
 
-        if (item!.name.toLowerCase() == "lucky charm") {
+        if (item!.name.toLowerCase() == "luck potion") {
           if (!userHasItem) {
             await trpcNode.inventory.create.mutate({
               userId: userId,
@@ -94,6 +94,21 @@ export class BuyCommand extends Command {
             embed.setDescription(`❌ You already have a **${item!.name}**!`);
             embed.setColor(`#${process.env.RED_COLOR}`);
             return await message.channel.send({ embeds: [embed] });
+          }
+        }
+        // If item is stackable
+        else {
+          if (!userHasItem) {
+            await trpcNode.inventory.create.mutate({
+              userId: userId,
+              itemId: itemId,
+              amount: 1,
+            });
+          } else {
+            await trpcNode.inventory.incrementUserItemAmount.mutate({
+              userId: userId,
+              itemId: itemId,
+            });
           }
         }
       }
