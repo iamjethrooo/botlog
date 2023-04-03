@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed, Message } from 'discord.js';
+import { CommandInteraction, EmbedBuilder, Message } from 'discord.js';
 import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
@@ -17,7 +17,7 @@ export class KanyeCommand extends Command {
       .get('https://api.kanye.rest/?format=json')
       .then(async response => {
         const quote: string = response.data.quote;
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
           .setColor('#F4D190')
           .setAuthor({
             name: 'Kanye West',
@@ -39,7 +39,7 @@ export class KanyeCommand extends Command {
       .get('https://api.kanye.rest/?format=json')
       .then(async response => {
         const quote: string = response.data.quote;
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
           .setColor('#F4D190')
           .setAuthor({
             name: 'Kanye West',

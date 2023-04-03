@@ -13,7 +13,7 @@ export class UserIsAdmin extends Precondition {
   public override chatInputRun(
     interaction: CommandInteraction
   ): PreconditionResult {
-    if (!(<GuildMember>interaction.member)!.permissions.has("ADMINISTRATOR")) {
+    if (!(<GuildMember>interaction.member)!.permissions.has("Administrator")) {
       return this.error({
         message: "You don't have permissions to use this command.",
       });
@@ -22,7 +22,7 @@ export class UserIsAdmin extends Precondition {
   }
 
   public override async messageRun(message: Message): Promise<any> {
-    if (!message.member!.permissions.has("ADMINISTRATOR")) {
+    if (!message.member!.permissions.has("Administrator")) {
       return this.error({
         message: "You don't have permissions to use this command.",
       });

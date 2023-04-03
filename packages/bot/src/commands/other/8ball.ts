@@ -5,7 +5,7 @@ import {
   CommandOptions,
   Args
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed, Message } from 'discord.js';
+import { EmbedBuilder, Message, ChatInputCommandInteraction, ApplicationCommandOptionType } from 'discord.js';
 import * as fs from 'fs';
 
 @ApplyOptions<CommandOptions>({
@@ -13,7 +13,7 @@ import * as fs from 'fs';
   description: 'Get the answer to anything!',
 })
 export class EightBallCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const question = interaction.options.getString('question', true);
 
     if (question.length > 255) {
@@ -29,7 +29,7 @@ export class EightBallCommand extends Command {
     const randomAnswer =
       answersArray[Math.floor(Math.random() * answersArray.length)];
 
-    const answerEmbed = new MessageEmbed()
+    const answerEmbed = new EmbedBuilder()
       .setTitle(question)
       .setAuthor({
         name: 'Magic 8 Ball',
@@ -57,7 +57,7 @@ export class EightBallCommand extends Command {
       const randomAnswer =
         answersArray[Math.floor(Math.random() * answersArray.length)];
 
-      const answerEmbed = new MessageEmbed()
+      const answerEmbed = new EmbedBuilder()
         .setTitle(question)
         .setAuthor({
           name: 'Magic 8 Ball',
@@ -77,7 +77,7 @@ export class EightBallCommand extends Command {
       description: this.description,
       options: [
         {
-          type: 'STRING',
+          type: ApplicationCommandOptionType.String,
           required: true,
           name: 'question',
           description: 'What question do you want to ask the magic ball?'

@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import type { CommandInteraction } from 'discord.js';
+import { ApplicationCommandOptionType, ChatInputCommandInteraction } from 'discord.js';
 import { container } from '@sapphire/framework';
 
 @ApplyOptions<CommandOptions>({
@@ -19,7 +19,7 @@ import { container } from '@sapphire/framework';
   ]
 })
 export class RemoveCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const { client } = container;
     const position = interaction.options.getInteger('position', true);
 
@@ -46,7 +46,7 @@ export class RemoveCommand extends Command {
           name: 'position',
           description:
             'What is the position of the song you want to remove from the queue?',
-          type: 'INTEGER',
+          type: ApplicationCommandOptionType.Integer,
           required: true
         }
       ]

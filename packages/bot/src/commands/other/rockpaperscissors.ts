@@ -5,22 +5,22 @@ import {
   CommandOptions,
   RegisterBehavior
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed } from 'discord.js';
+import { ApplicationCommandOptionType, ChatInputCommandInteraction, EmbedBuilder, GuildMember } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
   name: 'rockpaperscissors',
   description: 'Play rock paper scissors with me!'
 })
 export class RockPaperScissorsCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const move = interaction.options.getString('move', true) as
       | 'rock'
       | 'paper'
       | 'scissors';
     const resultMessage = this.rpsLogic(move);
 
-    const embed = new MessageEmbed()
-      .setColor('RANDOM')
+    const embed = new EmbedBuilder()
+      .setColor((<GuildMember>interaction.member)!.displayHexColor)
       .setTitle('Rock, Paper, Scissors')
       .setDescription(`**${resultMessage[0]}**, I formed ${resultMessage[1]}`);
 
@@ -37,7 +37,7 @@ export class RockPaperScissorsCommand extends Command {
         options: [
           {
             name: 'move',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
             required: true,
             description: 'What is your move?',
             choices: [

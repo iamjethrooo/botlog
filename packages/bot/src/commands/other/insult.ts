@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed, Message } from 'discord.js';
+import { CommandInteraction, EmbedBuilder, Message } from 'discord.js';
 import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
@@ -17,7 +17,7 @@ export class InsultCommand extends Command {
       .get('https://evilinsult.com/generate_insult.php?lang=en&type=json')
       .then(async response => {
         const insult: string = response.data.insult;
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
           .setColor('#E41032')
           .setAuthor({
             name: 'Evil Insult',
@@ -44,7 +44,7 @@ export class InsultCommand extends Command {
       .get('https://evilinsult.com/generate_insult.php?lang=en&type=json')
       .then(async response => {
         const insult: string = response.data.insult;
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
           .setColor('#E41032')
           .setAuthor({
             name: 'Evil Insult',

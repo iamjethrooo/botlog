@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, MessageEmbed } from "discord.js";
+import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
 
 @ApplyOptions<CommandOptions>({
   name: "econstats",
@@ -16,8 +16,11 @@ export class EconStatsCommand extends Command {
 
   public override async messageRun(message: Message) {
     // process.env.
-    const embed = new MessageEmbed()
-      .setAuthor(message.guild!.name, message.guild!.iconURL()!)
+    const embed = new EmbedBuilder()
+      .setAuthor({
+        name: message.guild!.name,
+        iconURL: message.guild!.iconURL()!,
+      })
       .addFields(
         {
           name: "Coins per chat",

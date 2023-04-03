@@ -1,4 +1,4 @@
-import { CommandInteraction, GuildMember, MessageEmbed } from "discord.js";
+import { CommandInteraction, GuildMember, EmbedBuilder } from "discord.js";
 import { trpcNode } from "../../../trpc";
 
 export class CoinFlipGame {
@@ -23,7 +23,7 @@ export class CoinFlipGame {
     ) {
       let heads = Math.random() < 0.5;
       console.log(heads);
-      const embed = new MessageEmbed().setTitle("Coin Flip");
+      const embed = new EmbedBuilder().setTitle("Coin Flip");
       let winner;
       let loser;
       if (prediction == "heads") {
@@ -63,13 +63,13 @@ export class CoinFlipGame {
         id: player2.user.id,
         date: Date.now().toString(),
       });
-      
+
       let betString = `${process.env.COIN_EMOJI}${bet}`;
       embed
-        .setAuthor(
-          `${interaction.user.username}#${interaction.user.discriminator}`,
-          interaction.user.displayAvatarURL({ dynamic: true })
-        )
+        .setAuthor({
+          name: `${interaction.user.username}#${interaction.user.discriminator}`,
+          iconURL: interaction.user.displayAvatarURL(),
+        })
         .setDescription(
           `Bet: ${betString}\n\n**<@${
             prediction == "heads" ? player1.user.id : player2.user.id

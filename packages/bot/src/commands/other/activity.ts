@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import type { CommandInteraction, GuildMember } from 'discord.js';
+import { ApplicationCommandOptionType, ChatInputCommandInteraction, GuildMember } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
   name: 'activity',
@@ -12,7 +12,7 @@ import type { CommandInteraction, GuildMember } from 'discord.js';
   preconditions: ['GuildOnly', 'inVoiceChannel']
 })
 export class ActivityCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const channel = interaction.options.getChannel('channel', true);
     const activity = interaction.options.getString('activity', true);
 
@@ -52,13 +52,13 @@ export class ActivityCommand extends Command {
       description: this.description,
       options: [
         {
-          type: 'CHANNEL',
+          type: ApplicationCommandOptionType.Channel,
           required: true,
           name: 'channel',
           description: 'Channel to invite to'
         },
         {
-          type: 'STRING',
+          type: ApplicationCommandOptionType.String,
           required: true,
           name: 'activity',
           description: 'Activity description'

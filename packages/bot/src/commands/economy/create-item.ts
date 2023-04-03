@@ -4,7 +4,11 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, MessageEmbed } from "discord.js";
+import {
+  ApplicationCommandOptionType,
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+} from "discord.js";
 import { trpcNode } from "../../trpc";
 
 @ApplyOptions<CommandOptions>({
@@ -13,12 +17,12 @@ import { trpcNode } from "../../trpc";
   preconditions: ["userIsAdmin"],
 })
 export class CreateItemCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const itemName = interaction.options.getString("name", true);
     const itemDescription = interaction.options.getString("description", true);
     const emoji = interaction.options.getString("emoji", true);
-    const price = interaction.options.getInteger("price", true);
-    const stock = interaction.options.getInteger("stock", true);
+    const price = interaction.options.getNumber("price", true);
+    const stock = interaction.options.getNumber("stock", true);
 
     try {
       await trpcNode.item.create.mutate({
@@ -29,7 +33,7 @@ export class CreateItemCommand extends Command {
         stock: stock ? stock : 0,
       });
 
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setTitle("New item created!")
         .setDescription(
           `${emoji}**${itemName}**\n\nDescription: ${itemDescription}\n\nPrice: ${price}\n\nStock: ${stock}`
@@ -51,31 +55,31 @@ export class CreateItemCommand extends Command {
       description: this.description,
       options: [
         {
-          type: "STRING",
+          type: ApplicationCommandOptionType.String,
           name: "name",
           description: "The name of the item.",
           required: true,
         },
         {
-          type: "STRING",
+          type: ApplicationCommandOptionType.String,
           name: "description",
           description: "The item's description",
           required: true,
         },
         {
-          type: "STRING",
+          type: ApplicationCommandOptionType.String,
           name: "emoji",
           description: "An emoji to use as the icon",
           required: true,
         },
         {
-          type: "INTEGER",
+          type: ApplicationCommandOptionType.Integer,
           name: "price",
           description: "The price of the item.",
           required: true,
         },
         {
-          type: "INTEGER",
+          type: ApplicationCommandOptionType.Integer,
           name: "stock",
           description: "The amount of stock available.",
           required: true,

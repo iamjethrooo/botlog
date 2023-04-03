@@ -10,14 +10,14 @@ const download = require("download");
 
 @ApplyOptions<CommandOptions>({
   name: "downloadavatar",
-  description: "Pak u gwyn",
+  description: "Yes",
   enabled: false,
 })
 export class PingCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
 
   public override async messageRun(message: Message) {
-    if (!message.member!.permissions.has("ADMINISTRATOR")) {
+    if (!message.member!.permissions.has("Administrator")) {
       return;
     }
 

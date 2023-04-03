@@ -1,18 +1,18 @@
-import { PaginatedMessage } from '@sapphire/discord.js-utilities';
-import { ApplyOptions } from '@sapphire/decorators';
+import { PaginatedMessage } from "@sapphire/discord.js-utilities";
+import { ApplyOptions } from "@sapphire/decorators";
 import {
   ApplicationCommandRegistry,
   Command,
-  CommandOptions
-} from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed } from 'discord.js';
-import * as os from 'os';
+  CommandOptions,
+} from "@sapphire/framework";
+import { CommandInteraction, EmbedBuilder } from "discord.js";
+import * as os from "os";
 // @ts-ignore
-import pkg from '../../../package.json';
+import pkg from "../../../package.json";
 
 @ApplyOptions<CommandOptions>({
-  name: 'bot-status',
-  description: `Shows the current system status`
+  name: "bot-status",
+  description: `Shows the current system status`,
 })
 export class BotStatusCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
@@ -48,7 +48,7 @@ export class BotStatusCommand extends Command {
       //Return the average Idle and Tick times
       return {
         idle: totalIdle / cpus.length,
-        total: totalTick / cpus.length
+        total: totalTick / cpus.length,
       };
     }
 
@@ -66,7 +66,7 @@ export class BotStatusCommand extends Command {
       return new Promise((resolve, reject) => {
         const n = ~~(avgTime / delay);
         if (n <= 1) {
-          reject('Error: interval to small');
+          reject("Error: interval to small");
         }
 
         let i = 0;
@@ -93,17 +93,17 @@ export class BotStatusCommand extends Command {
     const commandTotal = interaction.client.application?.commands.cache.size;
     const platform = os
       .platform()
-      .replace(/win32/, 'Windows')
-      .replace(/darwin/, 'MacOS')
-      .replace(/linux/, 'Linux');
+      .replace(/win32/, "Windows")
+      .replace(/darwin/, "MacOS")
+      .replace(/linux/, "Linux");
     const archInfo = os.arch();
     const libList = JSON.stringify(pkg.dependencies)
-      .replace(/,/g, '\n')
-      .replace(/"/g, '')
-      .replace(/{/g, '')
-      .replace(/}/g, '')
-      .replace(/\^/g, '')
-      .replace(/:/g, ': ');
+      .replace(/,/g, "\n")
+      .replace(/"/g, "")
+      .replace(/{/g, "")
+      .replace(/}/g, "")
+      .replace(/\^/g, "")
+      .replace(/:/g, ": ");
 
     const used = process.memoryUsage().heapUsed / 1024 / 1024;
     const duration = process.uptime();
@@ -113,14 +113,14 @@ export class BotStatusCommand extends Command {
       minutes = Math.floor((duration / 60) % 60),
       seconds = Math.floor(duration % 60);
 
-    const upTime = `${days > 0 ? days + ' D ' : ''}${
-      hours > 0 ? hours + ' H ' : ''
-    }${minutes > 0 ? minutes + ' M ' : ''}${seconds} S`;
+    const upTime = `${days > 0 ? days + " D " : ""}${
+      hours > 0 ? hours + " H " : ""
+    }${minutes > 0 ? minutes + " M " : ""}${seconds} S`;
 
     const guildCacheMap = interaction.client.guilds.cache;
     const guildCacheArray = Array.from(guildCacheMap, ([name, value]) => ({
       name,
-      value
+      value,
     }));
     let memberCount = 0;
     for (let i = 0; i < guildCacheArray.length; i++) {
@@ -128,65 +128,93 @@ export class BotStatusCommand extends Command {
     }
     const PaginatedEmbed = new PaginatedMessage();
 
-    const StatusEmbed = new MessageEmbed()
+    const StatusEmbed = new EmbedBuilder()
       .setThumbnail(interaction.client.user?.avatarURL()!)
       .setTitle(`${interaction.client.user?.username} - Status`)
-      .setColor('GREY');
+      .setColor("Grey");
 
-    StatusEmbed.addField(
-      'Ping',
-      `Interaction: ${ping}ms.
+    StatusEmbed.addFields(
+      {
+        name: "Ping",
+        value: `Interaction: ${ping}ms.
       Heartbeat: ${apiPing}ms.
-      Round-trip: ${ping + apiPing}ms.`
+      Round-trip: ${ping + apiPing}ms.`,
+      },
+      { name: `Uptime`, value: `${upTime}` },
+      {
+        name: "Available Commands",
+        value: `${commandTotal} Commands Available`,
+      },
+      {
+        name: "Servers, Users",
+        value: `On ${interaction.client.guilds.cache.size} servers, with a total of ${memberCount} users.`,
+      }
     )
-      .addField(`Uptime`, `${upTime}`)
-      .addField('Available Commands', `${commandTotal} Commands Available`)
-      .addField(
-        'Servers, Users',
-        `On ${interaction.client.guilds.cache.size} servers, with a total of ${memberCount} users.`
-      )
-
-      .setFooter({ text: 'Created', iconURL: interaction.user.avatarURL()! })
+      .setFooter({ text: "Created", iconURL: interaction.user.avatarURL()! })
       .setTimestamp(interaction.client.application?.createdTimestamp);
 
     PaginatedEmbed.addPageEmbed(StatusEmbed);
 
     if (isAdmin && !isOwner) {
-      const adminEmbed = new MessageEmbed();
+      const adminEmbed = new EmbedBuilder();
       adminEmbed
         .setThumbnail(interaction.client.user?.avatarURL()!)
         .setTitle(`Status of ${interaction.client.user?.username} - Info`)
-        .setColor('DARKER_GREY')
-        .addField(`Memory Usage`, `${Math.round(used * 100) / 100}MB`, true)
-        .addField(`Platform`, `${platform} ${archInfo}`, true)
-        .addField(
-          'Dependency List',
-          `node: ${process.version.replace(/v/, '')}
-        ${libList}`
+        .setColor("DarkerGrey")
+        .addFields(
+          {
+            name: `Memory Usage`,
+            value: `${Math.round(used * 100) / 100}MB`,
+            inline: true,
+          },
+          {
+            name: `Platform`,
+            value: `${platform} ${archInfo}`,
+            inline: true,
+          },
+          {
+            name: "Dependency List",
+            value: `node: ${process.version.replace(/v/, "")}
+          ${libList}`,
+          }
         )
-        .setFooter({ text: 'Created', iconURL: interaction.user.avatarURL()! })
+        .setFooter({ text: "Created", iconURL: interaction.user.avatarURL()! })
         .setTimestamp(interaction.client.application?.createdTimestamp);
 
       PaginatedEmbed.addPageEmbed(adminEmbed);
     }
     // Show CPU Info to the Bot Maintainer Only
     if (isOwner) {
-      const adminEmbed = new MessageEmbed();
+      const adminEmbed = new EmbedBuilder();
       adminEmbed
         .setThumbnail(interaction.client.user?.avatarURL()!)
         .setTitle(`${interaction.client.user?.username} - Info`)
-        .setColor('DARKER_GREY')
-        .addField('CPU Load', (await getCPULoadAVG()) + '%', true)
-        .addField(`Memory Usage`, `${Math.round(used * 100) / 100}MB`, true)
-        .addField(`Platform`, `${platform} ${archInfo}`, true)
-        .addField(
-          'Dependency List',
-          `node: ${process.version.replace(/v/, '')}
-        ${libList}`
+        .setColor("DarkerGrey")
+        .addFields(
+          {
+            name: "CPU Load",
+            value: (await getCPULoadAVG()) + "%",
+            inline: true,
+          },
+          {
+            name: `Memory Usage`,
+            value: `${Math.round(used * 100) / 100}MB`,
+            inline: true,
+          },
+          {
+            name: `Platform`,
+            value: `${platform} ${archInfo}`,
+            inline: true,
+          },
+          {
+            name: "Dependency List",
+            value: `node: ${process.version.replace(/v/, "")}
+          ${libList}`,
+          }
         )
         .setFooter({
-          text: 'Created',
-          iconURL: interaction.user.avatarURL()!
+          text: "Created",
+          iconURL: interaction.user.avatarURL()!,
         })
         .setTimestamp(interaction.client.application?.createdTimestamp);
 
@@ -195,7 +223,7 @@ export class BotStatusCommand extends Command {
 
     // Removes the unwanted Menu Selection Row From Embed
     if (PaginatedEmbed.actions.size > 0)
-      PaginatedEmbed.actions.delete('@sapphire/paginated-messages.goToPage');
+      PaginatedEmbed.actions.delete("@sapphire/paginated-messages.goToPage");
 
     PaginatedEmbed.run(interaction);
   }
@@ -205,7 +233,7 @@ export class BotStatusCommand extends Command {
   ): void {
     registery.registerChatInputCommand({
       name: this.name,
-      description: this.description
+      description: this.description,
     });
   }
 }

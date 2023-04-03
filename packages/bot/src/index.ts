@@ -55,10 +55,10 @@ client.on('ready', async () => {
       session_id: voiceState?.sessionId,
       channel_id: voiceState?.channel?.id,
       guild_id: voiceState?.guild.id,
-      user_id: guild.me?.id
+      user_id: guild.members.me?.id
     };
     if (queue) {
-      if (guild.me?.voice) {
+      if (guild.members.me?.voice) {
         if (!customVoiceStateUpdate.channel_id) return;
         queue.createPlayer();
         queue.connect(customVoiceStateUpdate.channel_id);
@@ -70,7 +70,7 @@ client.on('ready', async () => {
             (await queue.getTextChannelID()) as string
           );
           // remake the message collector so buttons will work again after restart
-          if (channel?.isText()) {
+          if (channel?.isTextBased()) {
             const message = await channel.messages.fetch(
               (await queue.getEmbed()) as string
             );

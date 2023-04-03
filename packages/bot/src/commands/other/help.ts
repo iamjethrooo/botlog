@@ -11,9 +11,10 @@ import {
 } from "@sapphire/framework";
 import {
   ApplicationCommandOption,
+  ApplicationCommandOptionType,
   AutocompleteInteraction,
-  CommandInteraction,
-  MessageEmbed,
+  ChatInputCommandInteraction,
+  EmbedBuilder,
   GuildMember,
 } from "discord.js";
 
@@ -35,8 +36,9 @@ export class HelpCommand extends Command {
     interaction;
     return interaction.respond(result!);
   }
-  public override async chatInputRun(interaction: CommandInteraction) {
-    if (!(<GuildMember>interaction.member)!.permissions.has("ADMINISTRATOR")) {
+
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
+    if (!(<GuildMember>interaction.member)!.permissions.has("Administrator")) {
       return;
     }
     const { client } = container;
@@ -79,7 +81,7 @@ export class HelpCommand extends Command {
           page++;
           characters = 0;
           PaginatedEmbed.addPageEmbed(
-            new MessageEmbed()
+            new EmbedBuilder()
               .setTitle(`Command List - Page ${page}`)
               .setThumbnail(app?.iconURL()!)
               .setColor("#9096e6")
@@ -111,7 +113,7 @@ export class HelpCommand extends Command {
         });
         const DetailedPagination = new PaginatedFieldMessageEmbed();
 
-        const commandDetails = new MessageEmbed()
+        const commandDetails = new EmbedBuilder()
           .setAuthor({
             name: interaction.user.username + " - Help Command",
             iconURL: interaction.user.displayAvatarURL(),
@@ -146,6 +148,7 @@ export class HelpCommand extends Command {
       options: ApplicationCommandOption[];
       details: string;
     }
+    return;
   }
 
   public override registerApplicationCommands(
@@ -157,7 +160,7 @@ export class HelpCommand extends Command {
 
       options: [
         {
-          type: "STRING",
+          type: ApplicationCommandOptionType.String,
           required: false,
           name: "command-name",
           description: "Which command would you like to know about?",

@@ -4,7 +4,7 @@ import {
   CommandInteraction,
   GuildMember,
   Message,
-  MessageEmbed,
+  EmbedBuilder,
 } from "discord.js";
 
 @ApplyOptions<PreconditionOptions>({
@@ -18,11 +18,11 @@ export class isNotInmate extends Precondition {
       `${process.env.ROLE_ID_INMATE}`
     );
     if (isInmate) {
-      const embed = new MessageEmbed()
-        .setAuthor(
-          `${interaction.user.username}#${interaction.user.discriminator}`,
-          interaction.user.displayAvatarURL({ dynamic: true })
-        )
+      const embed = new EmbedBuilder()
+        .setAuthor({
+          name: `${interaction.user.username}#${interaction.user.discriminator}`,
+          iconURL: interaction.user.displayAvatarURL(),
+        })
         .setDescription("You cannot use this command while serving jail time!")
         .setColor((<GuildMember>interaction.member)!.displayHexColor);
 
@@ -38,11 +38,11 @@ export class isNotInmate extends Precondition {
       `${process.env.ROLE_ID_INMATE}`
     );
     if (isInmate) {
-      const embed = new MessageEmbed()
-        .setAuthor(
-          `${message.author.username}#${message.author.discriminator}`,
-          message.author.displayAvatarURL({ dynamic: true })
-        )
+      const embed = new EmbedBuilder()
+        .setAuthor({
+          name: `${message.author.username}#${message.author.discriminator}`,
+          iconURL: message.author.displayAvatarURL(),
+        })
         .setDescription("You cannot use this command while serving jail time!")
         .setColor(message.member!.displayHexColor);
 

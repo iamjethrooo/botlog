@@ -6,7 +6,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, MessageEmbed } from "discord.js";
+import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
 import { trpcNode } from "../../trpc";
 
 @ApplyOptions<CommandOptions>({
@@ -17,7 +17,6 @@ import { trpcNode } from "../../trpc";
 })
 export class LeaderboardCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
-  
     let leaderboard = await trpcNode.user.getLeaderboard.query();
     let leaderboardFormatted: String[] = [];
     let rank = 0;
@@ -27,12 +26,12 @@ export class LeaderboardCommand extends Command {
 
     leaderboard.leaderboard.forEach((user) => {
       let member = interaction.guild!.members.cache.get(user!.discordId!);
-      let isMod = member ? member!.permissions.has("ADMINISTRATOR") : false;
+      let isMod = member ? member!.permissions.has("Administrator") : false;
 
       if (isMod) {
         return;
       }
-      
+
       if (interaction.user.id == user.discordId) {
         rank = index;
       }
@@ -41,13 +40,15 @@ export class LeaderboardCommand extends Command {
       );
       index++;
     });
-    const baseEmbed = new MessageEmbed()
+    const baseEmbed = new EmbedBuilder()
       .setColor("#FF0000")
       .setAuthor({
         name: interaction!.guild!.name,
         iconURL: interaction!.guild!.iconURL()!,
       })
-      .setFooter(`Your leaderboard rank: ${rank == 0 ? "N/A" : rank}`);
+      .setFooter({
+        text: `Your leaderboard rank: ${rank == 0 ? "N/A" : rank}`,
+      });
     new PaginatedFieldMessageEmbed()
       .setTitleField("Leaderboard")
       .setTemplate(baseEmbed)
@@ -68,7 +69,7 @@ export class LeaderboardCommand extends Command {
 
     leaderboard.leaderboard.forEach((user) => {
       let member = message.guild!.members.cache.get(user!.discordId!);
-      let isMod = member ? member!.permissions.has("ADMINISTRATOR") : false;
+      let isMod = member ? member!.permissions.has("Administrator") : false;
 
       if (isMod && !showAll) {
         return;
@@ -82,13 +83,15 @@ export class LeaderboardCommand extends Command {
       );
       index++;
     });
-    const baseEmbed = new MessageEmbed()
+    const baseEmbed = new EmbedBuilder()
       .setColor("#FF0000")
       .setAuthor({
         name: message!.guild!.name,
         iconURL: message!.guild!.iconURL()!,
       })
-      .setFooter(`Your leaderboard rank: ${rank == 0 ? "N/A" : rank}`);
+      .setFooter({
+        text: `Your leaderboard rank: ${rank == 0 ? "N/A" : rank}`,
+      });
     new PaginatedFieldMessageEmbed()
       .setTitleField("Leaderboard")
       .setTemplate(baseEmbed)

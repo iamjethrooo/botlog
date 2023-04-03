@@ -9,7 +9,7 @@ import {
   CommandInteraction,
   GuildMember,
   Message,
-  MessageEmbed,
+  EmbedBuilder,
 } from "discord.js";
 import { trpcNode } from "../../trpc";
 
@@ -37,11 +37,11 @@ export class InventoryCommand extends Command {
       );
     }
 
-    const baseEmbed = new MessageEmbed()
+    const baseEmbed = new EmbedBuilder()
       .setColor((<GuildMember>interaction.member)!.displayHexColor)
       .setAuthor({
         name: `${interaction.user.username}'s Inventory`,
-        iconURL: interaction.user.displayAvatarURL({ dynamic: true }),
+        iconURL: interaction.user.displayAvatarURL(),
       });
     new PaginatedFieldMessageEmbed()
       .setTitleField(" ")
@@ -73,11 +73,11 @@ export class InventoryCommand extends Command {
       );
     }
 
-    const baseEmbed = new MessageEmbed()
+    const baseEmbed = new EmbedBuilder()
       .setColor(message.member!.displayHexColor)
       .setAuthor({
         name: `${message.author.username}'s Inventory`,
-        iconURL: message.author.displayAvatarURL({ dynamic: true }),
+        iconURL: message.author.displayAvatarURL(),
       });
     new PaginatedFieldMessageEmbed()
       .setTitleField(" ")

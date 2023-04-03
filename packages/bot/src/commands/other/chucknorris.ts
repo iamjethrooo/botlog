@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed, Message } from 'discord.js';
+import { CommandInteraction, EmbedBuilder, Message } from 'discord.js';
 import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
@@ -16,7 +16,7 @@ export class ChuckNorrisCommand extends Command {
     axios
       .get('https://api.chucknorris.io/jokes/random')
       .then(async response => {
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
           .setColor('#CD7232')
           .setAuthor({
             name: 'Chuck Norris',
@@ -37,7 +37,7 @@ export class ChuckNorrisCommand extends Command {
     axios
       .get('https://api.chucknorris.io/jokes/random')
       .then(async response => {
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
           .setColor('#CD7232')
           .setAuthor({
             name: 'Chuck Norris',

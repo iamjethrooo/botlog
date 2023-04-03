@@ -4,18 +4,18 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed } from 'discord.js';
+import { ApplicationCommandOptionType, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
   name: 'random',
   description: 'Generate a random number between two inputs!'
 })
 export class RandomCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const min = Math.ceil(interaction.options.getInteger('min', true));
     const max = Math.floor(interaction.options.getInteger('max', true));
 
-    const rngEmbed = new MessageEmbed().setTitle(
+    const rngEmbed = new EmbedBuilder().setTitle(
       `${Math.floor(Math.random() * (max - min + 1)) + min}`
     );
 
@@ -30,13 +30,13 @@ export class RandomCommand extends Command {
       description: this.description,
       options: [
         {
-          type: 'INTEGER',
+          type: ApplicationCommandOptionType.Integer,
           required: true,
           name: 'min',
           description: 'What is the minimum number?'
         },
         {
-          type: 'INTEGER',
+          type: ApplicationCommandOptionType.Integer,
           required: true,
           name: 'max',
           description: 'What is the maximum number?'

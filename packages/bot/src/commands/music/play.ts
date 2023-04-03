@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import type { CommandInteraction } from "discord.js";
+import { ApplicationCommandOptionType, ChatInputCommandInteraction } from "discord.js";
 import { container } from "@sapphire/framework";
 import searchSong from "../../lib/utils/music/searchSong";
 import type { Song } from "../../lib/utils/queue/Song";
@@ -21,7 +21,7 @@ import type { Song } from "../../lib/utils/queue/Song";
 })
 export class PlayCommand extends Command {
   public override async chatInputRun(
-    interaction: CommandInteraction
+    interaction: ChatInputCommandInteraction
   ): Promise<any> {
 
     await interaction.deferReply();
@@ -83,7 +83,7 @@ export class PlayCommand extends Command {
         {
           name: "query",
           description: "What song or playlist would you like to listen to?",
-          type: "STRING",
+          type: ApplicationCommandOptionType.String,
           required: true,
         },
       ],

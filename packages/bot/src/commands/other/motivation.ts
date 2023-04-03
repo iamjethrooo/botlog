@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed, Message } from 'discord.js';
+import { CommandInteraction, EmbedBuilder, Message } from 'discord.js';
 import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
@@ -21,7 +21,7 @@ export class MotivationCommand extends Command {
 
         const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
 
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
           .setColor('#FFD77A')
           .setAuthor({
             name: 'Motivational Quote',
@@ -46,7 +46,7 @@ export class MotivationCommand extends Command {
 
         const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
 
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
           .setColor('#FFD77A')
           .setAuthor({
             name: 'Motivational Quote',

@@ -1,6 +1,6 @@
-import { container } from '@sapphire/framework';
-import { MessageEmbed } from 'discord.js';
-import { convertInputsToISO, nextReminder } from './handleReminders';
+import { container } from "@sapphire/framework";
+import { EmbedBuilder } from "discord.js";
+import { convertInputsToISO, nextReminder } from "./handleReminders";
 
 export class RemindEmbed {
   userId: string;
@@ -28,8 +28,8 @@ export class RemindEmbed {
   public RemindEmbed() {
     const { client } = container;
     const user = client.users.cache.get(this.userId);
-    const baseEmbed = new MessageEmbed()
-      .setColor('YELLOW')
+    const baseEmbed = new EmbedBuilder()
+      .setColor("Yellow")
       .setTitle(
         `⏰ Reminder - ${
           this.event.charAt(0).toUpperCase() + this.event.slice(1).toLowerCase()
@@ -37,7 +37,7 @@ export class RemindEmbed {
       )
       .setFooter({
         iconURL: user?.displayAvatarURL(),
-        text: user?.username!
+        text: user?.username!,
       })
       .setTimestamp();
 
@@ -49,7 +49,7 @@ export class RemindEmbed {
       );
       baseEmbed.addFields([
         {
-          name: 'Next Alarm',
+          name: "Next Alarm",
           value: `> <t:${Math.floor(
             new Date(
               convertInputsToISO(
@@ -59,9 +59,9 @@ export class RemindEmbed {
               )
             ).valueOf() / 1000
           )}>`,
-          inline: true
+          inline: true,
         },
-        { name: 'Repeated', value: `> ${this.repeat}`, inline: true }
+        { name: "Repeated", value: `> ${this.repeat}`, inline: true },
       ]);
     }
     if (this.description)

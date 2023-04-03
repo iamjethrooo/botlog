@@ -5,7 +5,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, MessageEmbed } from "discord.js";
+import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
 
 const fetch = require("node-fetch");
 
@@ -42,7 +42,7 @@ export class PingCommand extends Command {
         };
 
         if (json.cod === "404") {
-          embed = new MessageEmbed()
+          embed = new EmbedBuilder()
             .setTitle(`⚠️ Error`)
             .setColor(`#${randomColor}`)
             .setDescription(
@@ -50,27 +50,48 @@ export class PingCommand extends Command {
             )
             .setTimestamp();
         } else {
-          const currentWeather: any= json.weather[0].main;
-          embed = new MessageEmbed()
+          const currentWeather: any = json.weather[0].main;
+          embed = new EmbedBuilder()
             .setTitle(`${json.name}, ${json.sys.country}`)
             .setColor(`#${randomColor}`)
             .setThumbnail(message!.guild!.iconURL()!)
-            .addField(
-              `${weathermoji[currentWeather]} Forecast:`,
-              `${currentWeather}, ${json.weather[0].description}`
+            .addFields(
+              {
+                name: `${weathermoji[currentWeather]} Forecast:`,
+                value: `${currentWeather}, ${json.weather[0].description}`,
+              },
+              {
+                name: `🌡️ Current:`,
+                value: `${json.main.temp} °C`,
+                inline: true,
+              },
+              {
+                name: `🌡️ Feels Like:`,
+                value: `${json.main.feels_like} °C`,
+                inline: true,
+              },
+              {
+                name: `🌬️ Wind:`,
+                value: `${json.wind.speed} km/h`,
+                inline: true,
+              },
+              {
+                name: `🧭 Direction:`,
+                value: `${json.wind.deg}°`,
+                inline: true,
+              },
+              {
+                name: `💧 Humidity`,
+                value: `${json.main.humidity}%`,
+                inline: true,
+              }
             )
-            .addField(`🌡️ Current:`, `${json.main.temp} °C`, true)
-            .addField(`🌡️ Feels Like:`, `${json.main.feels_like} °C`, true)
-            //.addField('\u200B', '\u200B')
-            .addField(`🌬️ Wind:`, `${json.wind.speed} km/h`, true)
-            .addField(`🧭 Direction:`, `${json.wind.deg}°`, true)
-            .addField(`💧 Humidity`, `${json.main.humidity}%`, true)
             .setTimestamp();
         }
 
         return await message.channel.send({ embeds: [embed] });
       });
-      return;
+    return;
   }
 
   public override registerApplicationCommands(

@@ -1,10 +1,15 @@
-import { ApplyOptions } from '@sapphire/decorators';
-import { Listener, ListenerOptions } from '@sapphire/framework';
-import type { VoiceChannel, VoiceState } from 'discord.js';
-import { trpcNode } from '../../trpc';
+import { ApplyOptions } from "@sapphire/decorators";
+import { Listener, ListenerOptions } from "@sapphire/framework";
+import {
+  ChannelType,
+  PermissionFlagsBits,
+  VoiceChannel,
+  VoiceState,
+} from "discord.js";
+import { trpcNode } from "../../trpc";
 
 @ApplyOptions<ListenerOptions>({
-  name: 'voiceStateUpdate'
+  name: "voiceStateUpdate",
 })
 export class VoiceStateUpdateListener extends Listener {
   public override async run(
@@ -12,7 +17,7 @@ export class VoiceStateUpdateListener extends Listener {
     newState: VoiceState
   ): Promise<void> {
     const { guild: guildDB } = await trpcNode.guild.getGuild.query({
-      id: newState.guild.id
+      id: newState.guild.id,
     });
 
     // now user is in hub channel, create him a new voice channel and move him there
@@ -22,7 +27,7 @@ export class VoiceStateUpdateListener extends Listener {
       if (newState.channelId === guildDB?.hubChannel && guildDB.hub) {
         const { tempChannel } = await trpcNode.hub.getTempChannel.query({
           guildId: newState.guild.id,
-          ownerId: newState.member.id
+          ownerId: newState.member.id,
         });
         // user entered hub channel but he already has a temp channel, so move him there
         if (tempChannel) {
@@ -33,37 +38,35 @@ export class VoiceStateUpdateListener extends Listener {
         const guild = newState.guild;
         const channels = guild.channels;
 
-        const channel = await channels.create(
-          `${newState.member.user.username}'s channel`,
-          {
-            type: 'GUILD_VOICE',
-            parent: guildDB?.hub,
-            permissionOverwrites: [
-              {
-                id: newState.member.id,
-                allow: [
-                  'MOVE_MEMBERS',
-                  'MUTE_MEMBERS',
-                  'DEAFEN_MEMBERS',
-                  'MANAGE_CHANNELS',
-                  'STREAM'
-                ]
-              }
-            ]
-          }
-        );
+        const channel = await channels.create({
+          name: `${newState.member.user.username}'s channel`,
+          parent: guildDB?.hub,
+          type: ChannelType.GuildVoice,
+          permissionOverwrites: [
+            {
+              id: newState.member.id,
+              allow: [
+                PermissionFlagsBits.MoveMembers,
+                PermissionFlagsBits.MuteMembers,
+                PermissionFlagsBits.DeafenMembers,
+                PermissionFlagsBits.ManageChannels,
+                PermissionFlagsBits.Stream,
+              ],
+            },
+          ],
+        });
 
         await trpcNode.hub.createTempChannel.mutate({
           guildId: newState.guild.id,
           ownerId: newState.member.id,
-          channelId: channel.id
+          channelId: channel.id,
         });
 
         await newState.member.voice.setChannel(channel);
       } else {
         const { tempChannel } = await trpcNode.hub.getTempChannel.query({
           guildId: newState.guild.id,
-          ownerId: newState.member.id
+          ownerId: newState.member.id,
         });
         if (!tempChannel) return;
 
@@ -77,8 +80,8 @@ export class VoiceStateUpdateListener extends Listener {
         Promise.all([
           channel.delete(),
           trpcNode.hub.deleteTempChannel.mutate({
-            channelId: tempChannel.id
-          })
+            channelId: tempChannel.id,
+          }),
         ]);
       }
     } else if (!newState.channelId) {
@@ -91,15 +94,15 @@ export class VoiceStateUpdateListener extends Listener {
 async function deleteChannel(state: VoiceState) {
   const { tempChannel } = await trpcNode.hub.getTempChannel.query({
     guildId: state.guild.id,
-    ownerId: state.member!.id
+    ownerId: state.member!.id,
   });
 
   if (tempChannel) {
     Promise.all([
       state.channel?.delete(),
       trpcNode.hub.deleteTempChannel.mutate({
-        channelId: tempChannel.id
-      })
+        channelId: tempChannel.id,
+      }),
     ]);
   }
 }

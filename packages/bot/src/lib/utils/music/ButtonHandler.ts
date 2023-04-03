@@ -1,16 +1,17 @@
-import type { Song } from '../queue/Song';
-import { container } from '@sapphire/framework';
-import type { Queue } from '../queue/Queue';
+import type { Song } from "../queue/Song";
+import { container } from "@sapphire/framework";
+import type { Queue } from "../queue/Queue";
 import {
   Message,
-  MessageActionRow,
-  MessageButton,
-  MessageEmbed
-} from 'discord.js';
-import buttonsCollector, { deletePlayerEmbed } from './buttonsCollector';
+  ActionRowBuilder,
+  ButtonBuilder,
+  EmbedBuilder,
+  ButtonStyle,
+} from "discord.js";
+import buttonsCollector, { deletePlayerEmbed } from "./buttonsCollector";
 
 export async function embedButtons(
-  embed: MessageEmbed,
+  embed: EmbedBuilder,
   queue: Queue,
   song: Song,
   message?: string
@@ -19,25 +20,28 @@ export async function embedButtons(
 
   const { client } = container;
   const tracks = await queue.tracks();
-  const row = new MessageActionRow().addComponents(
-    new MessageButton()
-      .setCustomId('playPause')
-      .setLabel('Play/Pause')
-      .setStyle('PRIMARY'),
-    new MessageButton().setCustomId('stop').setLabel('Stop').setStyle('DANGER'),
-    new MessageButton()
-      .setCustomId('next')
-      .setLabel('Next')
-      .setStyle('PRIMARY')
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("playPause")
+      .setLabel("Play/Pause")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId("stop")
+      .setLabel("Stop")
+      .setStyle(ButtonStyle.Danger),
+    new ButtonBuilder()
+      .setCustomId("next")
+      .setLabel("Next")
+      .setStyle(ButtonStyle.Primary)
       .setDisabled(!tracks.length ? true : false),
-    new MessageButton()
-      .setCustomId('volumeUp')
-      .setLabel('Vol+')
-      .setStyle('PRIMARY'),
-    new MessageButton()
-      .setCustomId('volumeDown')
-      .setLabel('Vol-')
-      .setStyle('PRIMARY')
+    new ButtonBuilder()
+      .setCustomId("volumeUp")
+      .setLabel("Vol+")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId("volumeDown")
+      .setLabel("Vol-")
+      .setStyle(ButtonStyle.Primary)
   );
 
   const channel = await queue.getTextChannel();
@@ -47,7 +51,7 @@ export async function embedButtons(
     .send({
       embeds: [embed],
       components: [row],
-      content: message
+      content: message,
     })
     .then(async (message: Message) => {
       const queue = client.music.queues.get(message.guild!.id);

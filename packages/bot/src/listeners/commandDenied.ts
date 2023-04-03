@@ -11,9 +11,9 @@ import {
 })
 export class CommandDeniedListener extends Listener {
   public override async run(
-    { context, message: content }: UserError,
+    { message: content }: UserError,
     { interaction }: ChatInputCommandDeniedPayload
-  ): Promise<void> {
+  ) {
     return await interaction.reply({
       ephemeral: true,
       content: content

@@ -8,7 +8,7 @@ import {
 } from "@sapphire/framework";
 import {
   CommandInteraction,
-  MessageEmbed,
+  EmbedBuilder,
   Message,
   TextChannel,
 } from "discord.js";
@@ -41,24 +41,24 @@ export class SnipeCommand extends Command {
       if (num > 0) {
         snipeCost = Number(process.env.SINGLE_SNIPE_COST);
       }
-      if (!message.member!.permissions.has("ADMINISTRATOR")) {
+      if (!message.member!.permissions.has("Administrator")) {
         if (user!.user!.cash - snipeCost < 0) {
-          const embed = new MessageEmbed()
-            .setAuthor(
-              `${message.author.username}#${message.author.discriminator}`,
-              message.author.displayAvatarURL({ dynamic: true })
-            )
+          const embed = new EmbedBuilder()
+            .setAuthor({
+              name: `${message.author.username}#${message.author.discriminator}`,
+              iconURL: message.author.displayAvatarURL(),
+            })
             .setDescription(
-              `❌ You do not have enough money to snipe. You currently have ${process.env.COIN_EMOJI}${String(
-                user!.user!.cash
-              )} on hand.`
+              `❌ You do not have enough money to snipe. You currently have ${
+                process.env.COIN_EMOJI
+              }${String(user!.user!.cash)} on hand.`
             )
             .setColor("#ad3134");
           return await message
             .reply({ embeds: [embed] })
             .then((message) => setTimeout(() => message.delete(), 15000));
         }
-        
+
         await trpcNode.user.subtractCash.mutate({
           id: message.author.id,
           cash: snipeCost,
@@ -84,7 +84,7 @@ export class SnipeCommand extends Command {
       if (sniped.length > 2) {
         content = `**${sniped[2].author}**: ${sniped[2].content}\n` + content;
       }
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setDescription(content)
         .setColor(message.member!.displayHexColor!);
       return await message.reply({ embeds: [embed] });
@@ -98,16 +98,16 @@ export class SnipeCommand extends Command {
       }
       const singleSnipe = sniped[num];
 
-      const embed = new MessageEmbed()
-        .setAuthor(
-          `${singleSnipe.author.username}#${singleSnipe.author.discriminator}`,
-          singleSnipe.author.displayAvatarURL({ dynamic: true })
-        )
+      const embed = new EmbedBuilder()
+        .setAuthor({
+          name: `${singleSnipe.author.username}#${singleSnipe.author.discriminator}`,
+          iconURL: singleSnipe.author.displayAvatarURL(),
+        })
         .setDescription(singleSnipe.content)
         .setTimestamp(singleSnipe.createdAt)
         .setColor(message.member!.displayHexColor);
       if (singleSnipe.channel instanceof TextChannel) {
-        embed.setFooter("#".concat(singleSnipe.channel.name));
+        embed.setFooter({ text: "#".concat(singleSnipe.channel.name) });
       }
       if (singleSnipe.attachments.size != 0) {
         // Download image
@@ -116,7 +116,6 @@ export class SnipeCommand extends Command {
         // let options = {
         //   directory: "./images",
         // };
-
         // download(url, options, (err: any) => {
         //   if (err) throw err;
         // });

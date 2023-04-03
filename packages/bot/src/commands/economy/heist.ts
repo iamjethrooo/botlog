@@ -6,7 +6,7 @@ import {
   CommandOptions,
   container,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, MessageEmbed } from "discord.js";
+import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
 import { trpcNode } from "../../trpc";
 // import { trpcNode } from "../../trpc";
 
@@ -21,10 +21,10 @@ export class HeistCommand extends Command {
   public override async messageRun(message: Message, args: Args) {
     const { client } = container;
     let argument = await args.pick("string").catch(() => "");
-    const embed = new MessageEmbed().setAuthor(
-      `${message.author.username}#${message.author.discriminator}`,
-      message.author.displayAvatarURL({ dynamic: true })
-    );
+    const embed = new EmbedBuilder().setAuthor({
+      name: `${message.author.username}#${message.author.discriminator}`,
+      iconURL: message.author.displayAvatarURL(),
+    });
 
     let robRate = Number(process.env.HEIST_BASE_RATE);
     let robChance = Number(process.env.HEIST_BASE_CHANCE);
@@ -64,12 +64,12 @@ export class HeistCommand extends Command {
           .setDescription(
             `A bank heist is starting!\n\nTo start the heist, use the command \`bbc heist start\`.\nTo join the heist, use the command \`bbc heist join\`.`
           )
-          .setAuthor(
-            `${message.author.username}#${message.author.discriminator}`,
-            message.author.displayAvatarURL({ dynamic: true })
-          )
+          .setAuthor({
+            name: `${message.author.username}#${message.author.discriminator}`,
+            iconURL: message.author.displayAvatarURL(),
+          })
           .setColor(message.member!.displayHexColor)
-          .setFooter("Time remaining: 3 minutes or 5 members");
+          .setFooter({ text: "Time remaining: 3 minutes or 5 members" });
         await message.channel.send({ embeds: [embed] });
 
         client.intervals["heist"] = setInterval(async () => {
@@ -183,20 +183,20 @@ export class HeistCommand extends Command {
         console.log("Joined heist");
         if (client.heistMembers.includes(message.member!.id)) {
           embed
-            .setAuthor(
-              `${message.author.username}#${message.author.discriminator}`,
-              message.author.displayAvatarURL({ dynamic: true })
-            )
+            .setAuthor({
+              name: `${message.author.username}#${message.author.discriminator}`,
+              iconURL: message.author.displayAvatarURL(),
+            })
             .setDescription(`❌ You have already joined the bank heist.`)
             .setColor(`#${process.env.RED_COLOR}`)
             .setFooter(null);
           await message.channel.send({ embeds: [embed] });
         } else {
           embed
-            .setAuthor(
-              `${message.author.username}#${message.author.discriminator}`,
-              message.author.displayAvatarURL({ dynamic: true })
-            )
+            .setAuthor({
+              name: `${message.author.username}#${message.author.discriminator}`,
+              iconURL: message.author.displayAvatarURL(),
+            })
             .setDescription(`✅ You joined the heist.`)
             .setColor(`#${process.env.GREEN_COLOR}`)
             .setFooter(null);
@@ -209,10 +209,10 @@ export class HeistCommand extends Command {
           client.heistIsOngoing = true;
         } else {
           embed
-            .setAuthor(
-              `${message.author.username}#${message.author.discriminator}`,
-              message.author.displayAvatarURL({ dynamic: true })
-            )
+            .setAuthor({
+              name: `${message.author.username}#${message.author.discriminator}`,
+              iconURL: message.author.displayAvatarURL(),
+            })
             .setDescription(
               `❌ Only <@${client.heistLeader}> can start the heist before 3 minutes is up.`
             )

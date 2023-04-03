@@ -5,7 +5,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, MessageEmbed } from "discord.js";
+import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
 import { trpcNode } from "../../trpc";
 
 @ApplyOptions<CommandOptions>({
@@ -26,7 +26,7 @@ export class ShopCommand extends Command {
       );
     });
 
-    const baseEmbed = new MessageEmbed()
+    const baseEmbed = new EmbedBuilder()
       .setColor(`#${process.env.GREEN_COLOR}`)
       .setAuthor({
         name: interaction!.guild!.name,
@@ -53,7 +53,7 @@ export class ShopCommand extends Command {
       );
     });
 
-    const baseEmbed = new MessageEmbed()
+    const baseEmbed = new EmbedBuilder()
       .setColor(`#${process.env.GREEN_COLOR}`)
       .setAuthor({
         name: message!.guild!.name,

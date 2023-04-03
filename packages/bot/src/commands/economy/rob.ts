@@ -5,10 +5,11 @@ import {
   CommandOptions,
 } from "@sapphire/framework";
 import {
-  CommandInteraction,
   GuildMember,
   Message,
-  MessageEmbed,
+  EmbedBuilder,
+  ApplicationCommandOptionType,
+  ChatInputCommandInteraction,
 } from "discord.js";
 import { trpcNode } from "../../trpc";
 
@@ -18,13 +19,13 @@ import { trpcNode } from "../../trpc";
   preconditions: ["inBotChannel", "isNotInmate"],
 })
 export class RobCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const user = interaction.options.getUser("user", true);
 
     let victimId = user.id;
     let suspectId = interaction.user.id;
     let isMod = (<GuildMember>interaction.member)!.permissions.has(
-      "ADMINISTRATOR"
+      "Administrator"
     );
     let isThief = (<GuildMember>interaction.member)!.roles.cache.has(
       `${process.env.ROLE_ID_THIEF}`
@@ -63,10 +64,10 @@ export class RobCommand extends Command {
         ? Number(process.env.ROB_COOLDOWN_THIEF)
         : Number(process.env.ROB_COOLDOWN);
 
-      const embed = new MessageEmbed().setAuthor(
-        `${interaction.user.username}#${interaction.user.discriminator}`,
-        interaction.user.displayAvatarURL({ dynamic: true })
-      );
+      const embed = new EmbedBuilder().setAuthor({
+        name: `${interaction.user.username}#${interaction.user.discriminator}`,
+        iconURL: interaction.user.displayAvatarURL(),
+      });
 
       let tooSoon = (Date.now() - lastRobDate) / 1000 < robCooldown;
       if (tooSoon) {
@@ -158,7 +159,7 @@ export class RobCommand extends Command {
       if (userHasLuckPotion) {
         await trpcNode.inventory.delete.mutate({
           userId: suspectId,
-          itemId: luckPotion!.id
+          itemId: luckPotion!.id,
         });
       }
 
@@ -180,7 +181,7 @@ export class RobCommand extends Command {
 
     let victimId = message.mentions.users!.first()!.id;
     let suspectId = message.author.id;
-    let isMod = message.member!.permissions.has("ADMINISTRATOR");
+    let isMod = message.member!.permissions.has("Administrator");
     let isThief = message.member!.roles.cache.has(
       `${process.env.ROLE_ID_THIEF}`
     );
@@ -218,10 +219,10 @@ export class RobCommand extends Command {
         ? Number(process.env.ROB_COOLDOWN_THIEF)
         : Number(process.env.ROB_COOLDOWN);
 
-      const embed = new MessageEmbed().setAuthor(
-        `${message.author.username}#${message.author.discriminator}`,
-        message.author.displayAvatarURL({ dynamic: true })
-      );
+      const embed = new EmbedBuilder().setAuthor({
+        name: `${message.author.username}#${message.author.discriminator}`,
+        iconURL: message.author.displayAvatarURL(),
+      });
 
       let tooSoon = (Date.now() - lastRobDate) / 1000 < robCooldown;
       if (tooSoon) {
@@ -313,7 +314,7 @@ export class RobCommand extends Command {
       if (userHasLuckPotion) {
         await trpcNode.inventory.delete.mutate({
           userId: suspectId,
-          itemId: luckPotion!.id
+          itemId: luckPotion!.id,
         });
       }
 
@@ -337,7 +338,7 @@ export class RobCommand extends Command {
       description: this.description,
       options: [
         {
-          type: "USER",
+          type: ApplicationCommandOptionType.User,
           required: true,
           name: "user",
           description: `Who do you want to rob?`,

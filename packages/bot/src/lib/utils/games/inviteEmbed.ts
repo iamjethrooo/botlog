@@ -1,9 +1,10 @@
 import {
   CommandInteraction,
-  MessageEmbed,
-  MessageActionRow,
-  MessageButton,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
   GuildMember,
+  ButtonStyle,
 } from "discord.js";
 
 export class GameInvite {
@@ -24,7 +25,7 @@ export class GameInvite {
     this.bet = bet;
   }
 
-  public gameInviteEmbed(): MessageEmbed {
+  public gameInviteEmbed(): EmbedBuilder {
     let thumbnail: string = "";
     switch (this.title) {
       default:
@@ -33,7 +34,7 @@ export class GameInvite {
         break;
     }
 
-    const gameInvite = new MessageEmbed()
+    const gameInvite = new EmbedBuilder()
       .setAuthor({
         name: this.interaction.user.username,
         iconURL: this.interaction.user.avatar
@@ -55,12 +56,12 @@ export class GameInvite {
       .setTimestamp();
     return gameInvite;
   }
-  public gameInviteButtons(): MessageActionRow {
-    const gameInviteButtons = new MessageActionRow().addComponents(
-      new MessageButton()
+  public gameInviteButtons(): ActionRowBuilder {
+    const gameInviteButtons = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
         .setCustomId(`${this.interaction.id}${this.players.at(0)?.id}-Join`)
         .setLabel("Join")
-        .setStyle("PRIMARY")
+        .setStyle(ButtonStyle.Primary)
     );
     return gameInviteButtons;
   }

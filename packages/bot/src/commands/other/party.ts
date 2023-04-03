@@ -23,8 +23,9 @@ export class PartyCommand extends Command {
     if ((<GuildMember>interaction.member).voice.channel) {
       discordTogether.createTogetherCode((<GuildMember>interaction.member).voice.channel!.id, 'youtube').then(async invite => {
         return await interaction.reply(invite.code);
-      })
+      });
     }
+    return;
   }
 
   public override registerApplicationCommands(

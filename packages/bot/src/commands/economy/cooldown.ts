@@ -4,7 +4,12 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, GuildMember, Message, MessageEmbed } from "discord.js";
+import {
+  CommandInteraction,
+  EmbedBuilder,
+  GuildMember,
+  Message,
+} from "discord.js";
 import { trpcNode } from "../../trpc";
 
 @ApplyOptions<CommandOptions>({
@@ -33,10 +38,10 @@ export class CooldownCommand extends Command {
       let lastHeistDate = Number(user.user!.lastHeistDate);
       let heistCooldown = Number(process.env.HEIST_COOLDOWN);
 
-      const embed = new MessageEmbed().setAuthor(
-        `${interaction.user.username}#${interaction.user.discriminator}`,
-        interaction.user.displayAvatarURL({ dynamic: true })
-      );
+      const embed = new EmbedBuilder().setAuthor({
+        name: `${interaction.user.username}#${interaction.user.discriminator}`,
+        iconURL: interaction.user.displayAvatarURL(),
+      });
 
       let canRob = (Date.now() - lastRobDate) / 1000 > robCooldown;
       let canHeist = (Date.now() - lastHeistDate) / 1000 > heistCooldown;
@@ -57,8 +62,7 @@ export class CooldownCommand extends Command {
           }${
             isInmate
               ? `\n\nYou will be released from jail <t:${
-                  Math.round(lastHeistDate / 1000) +
-                  Number(user.user?.jailTime)
+                  Math.round(lastHeistDate / 1000) + Number(user.user?.jailTime)
                 }:R>`
               : ""
           }`
@@ -91,10 +95,10 @@ export class CooldownCommand extends Command {
       let lastHeistDate = Number(user.user!.lastHeistDate);
       let heistCooldown = Number(process.env.HEIST_COOLDOWN);
 
-      const embed = new MessageEmbed().setAuthor(
-        `${message.author.username}#${message.author.discriminator}`,
-        message.author.displayAvatarURL({ dynamic: true })
-      );
+      const embed = new EmbedBuilder().setAuthor({
+        name: `${message.author.username}#${message.author.discriminator}`,
+        iconURL: message.author.displayAvatarURL(),
+      });
 
       let canRob = (Date.now() - lastRobDate) / 1000 > robCooldown;
       let canHeist = (Date.now() - lastHeistDate) / 1000 > heistCooldown;
@@ -115,8 +119,7 @@ export class CooldownCommand extends Command {
           }${
             isInmate
               ? `\n\nYou will be released from jail <t:${
-                  Math.round(lastHeistDate / 1000) +
-                  Number(user.user?.jailTime)
+                  Math.round(lastHeistDate / 1000) + Number(user.user?.jailTime)
                 }:R>`
               : ""
           }`

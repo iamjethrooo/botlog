@@ -1,32 +1,35 @@
-import { ApplyOptions } from '@sapphire/decorators';
+import { ApplyOptions } from "@sapphire/decorators";
 import {
   ApplicationCommandRegistry,
   Command,
-  CommandOptions
-} from '@sapphire/framework';
-import type { CommandInteraction } from 'discord.js';
-import { container } from '@sapphire/framework';
+  CommandOptions,
+} from "@sapphire/framework";
+import {
+  ApplicationCommandOptionType,
+  ChatInputCommandInteraction,
+} from "discord.js";
+import { container } from "@sapphire/framework";
 
 @ApplyOptions<CommandOptions>({
-  name: 'volume',
-  description: 'Set the Volume',
+  name: "volume",
+  description: "Set the Volume",
   preconditions: [
-    'GuildOnly',
-    'isCommandDisabled',
-    'inVoiceChannel',
-    'playerIsPlaying',
-    'inPlayerVoiceChannel'
-  ]
+    "GuildOnly",
+    "isCommandDisabled",
+    "inVoiceChannel",
+    "playerIsPlaying",
+    "inPlayerVoiceChannel",
+  ],
 })
 export class VolumeCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const { client } = container;
-    const query = interaction.options.getNumber('setting', true);
+    const query = interaction.options.getNumber("setting", true);
 
     const queue = client.music.queues.get(interaction.guildId!);
 
     if (query > 200 || query < 0) {
-      return await interaction.reply(':x: Volume must be between 0 and 200!');
+      return await interaction.reply(":x: Volume must be between 0 and 200!");
     }
 
     await queue.setVolume(query);
@@ -44,12 +47,12 @@ export class VolumeCommand extends Command {
       description: this.description,
       options: [
         {
-          name: 'setting',
-          description: 'What Volume? (0 to 200)',
-          type: 'NUMBER',
-          required: true
-        }
-      ]
+          name: "setting",
+          description: "What Volume? (0 to 200)",
+          type: ApplicationCommandOptionType.Number,
+          required: true,
+        },
+      ],
     });
   }
 }

@@ -5,7 +5,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, GuildMember, MessageEmbed } from "discord.js";
+import { GuildMember, EmbedBuilder, ChatInputCommandInteraction, ApplicationCommandOptionType } from "discord.js";
 import { CoinFlipGame } from "../../lib/utils/games/coinflip";
 import { trpcNode } from "../../trpc";
 
@@ -16,7 +16,7 @@ export const playersInGame: Map<string, GuildMember> = new Map();
   preconditions: ["isCommandDisabled", "inBotChannel", "isNotInmate"],
 })
 export class GamesCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     let canPlay = !(
       (<GuildMember>interaction.member)!.roles.cache.has(
         "742226368213024839"
@@ -31,11 +31,11 @@ export class GamesCommand extends Command {
     );
 
     if (!canPlay) {
-      const embed = new MessageEmbed()
-        .setAuthor(
-          `${interaction.user.username}#${interaction.user.discriminator}`,
-          interaction.user.displayAvatarURL({ dynamic: true })
-        )
+      const embed = new EmbedBuilder()
+        .setAuthor({
+          name: `${interaction.user.username}#${interaction.user.discriminator}`,
+          iconURL: interaction.user.displayAvatarURL(),
+        })
         .setDescription(
           `❌ Your level is not high enough to use this command. Required level is 15.`
         );
@@ -52,11 +52,11 @@ export class GamesCommand extends Command {
     let tooSoon = (Date.now() - lastGameDate) / 1000 < gameCooldown;
     console.log(tooSoon);
     if (tooSoon) {
-      const embed = new MessageEmbed()
-        .setAuthor(
-          `${interaction.user.username}#${interaction.user.discriminator}`,
-          interaction.user.displayAvatarURL({ dynamic: true })
-        )
+      const embed = new EmbedBuilder()
+        .setAuthor({
+          name: `${interaction.user.username}#${interaction.user.discriminator}`,
+          iconURL: interaction.user.displayAvatarURL(),
+        })
         .setDescription(
           `⏲️ Too soon. You can start another game in <t:${
             Math.round(lastGameDate / 1000) + gameCooldown
@@ -70,7 +70,7 @@ export class GamesCommand extends Command {
     let maxPlayers = 2;
     const playerMap = new Map();
     const player1 = <GuildMember>interaction.member;
-    const bet = interaction.options.getInteger("bet", true);
+    const bet = interaction.options.getNumber("bet", true);
     if (bet < 0) {
       return await interaction.reply({
         content: ":x: Bet must not be less than 0!",
@@ -103,16 +103,16 @@ export class GamesCommand extends Command {
     playerMap.set(player1.id, player1);
     if (subCommand == "coinflip") {
       gameTitle = "Coin Flip";
-      const tempEmbed = new MessageEmbed()
+      const tempEmbed = new EmbedBuilder()
         .setTitle("Coin Flip")
-        .setAuthor(
-          `${interaction.user.username}#${interaction.user.discriminator}`,
-          interaction.user.displayAvatarURL({ dynamic: true })
-        )
+        .setAuthor({
+          name: `${interaction.user.username}#${interaction.user.discriminator}`,
+          iconURL: interaction.user.displayAvatarURL(),
+        })
         .setDescription(
           `<@${
             interaction.user.id
-          }> bet that the coin would land **${interaction.options.getString(
+          }> bet that the coin would land **${interaction.options.get(
             "prediction",
             true
           )}**.`
@@ -176,7 +176,7 @@ export class GamesCommand extends Command {
                 )
               );
               if (!canPlay) {
-                const embed = new MessageEmbed()
+                const embed = new EmbedBuilder()
                   .setAuthor(
                     `${(<GuildMember>response.member).user.username}#${
                       (<GuildMember>response.member).user.discriminator
@@ -199,7 +199,7 @@ export class GamesCommand extends Command {
               let lastGameDate = Number(player.user!.lastCoinFlipDate);
               let tooSoon = (Date.now() - lastGameDate) / 1000 < gameCooldown;
               if (tooSoon) {
-                const embed = new MessageEmbed()
+                const embed = new EmbedBuilder()
                   .setAuthor(
                     `${(<GuildMember>response.member).user.username}#${
                       (<GuildMember>response.member).user.discriminator
@@ -285,18 +285,18 @@ export class GamesCommand extends Command {
       description: this.description,
       options: [
         {
-          type: "SUB_COMMAND",
+          type: ApplicationCommandOptionType.Subcommand,
           name: "coinflip",
           description: "Play a game of Coin Flip with another Person.",
           options: [
             {
-              type: "INTEGER",
+              type: ApplicationCommandOptionType.Integer,
               required: true,
               name: "bet",
               description: "How much do you want to bet?",
             },
             {
-              type: "STRING",
+              type: ApplicationCommandOptionType.String,
               required: true,
               name: "prediction",
               description: "Which side do you think the coin would land with?",

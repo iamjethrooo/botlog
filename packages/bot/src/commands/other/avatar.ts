@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed } from 'discord.js';
+import { ApplicationCommandOptionType, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
   name: 'avatar',
@@ -12,11 +12,11 @@ import { CommandInteraction, MessageEmbed } from 'discord.js';
   preconditions: ['GuildOnly']
 })
 export class AvatarCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const user = interaction.options.getUser('user', true);
-    const embed = new MessageEmbed()
+    const embed = new EmbedBuilder()
       .setTitle(user.username)
-      .setImage(user.displayAvatarURL({ dynamic: true }))
+      .setImage(user.displayAvatarURL())
       .setColor('#0x00ae86');
 
     return await interaction.reply({ embeds: [embed] });
@@ -30,7 +30,7 @@ export class AvatarCommand extends Command {
       description: this.description,
       options: [
         {
-          type: 'USER',
+          type: ApplicationCommandOptionType.User,
           required: true,
           name: 'user',
           description: `Which user's avatar do you want to look at?`

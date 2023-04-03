@@ -1,33 +1,36 @@
-import { ApplyOptions } from '@sapphire/decorators';
+import { ApplyOptions } from "@sapphire/decorators";
 import {
   ApplicationCommandRegistry,
   Command,
-  CommandOptions
-} from '@sapphire/framework';
-import type { CommandInteraction } from 'discord.js';
-import { container } from '@sapphire/framework';
+  CommandOptions,
+} from "@sapphire/framework";
+import {
+  ApplicationCommandOptionType,
+  ChatInputCommandInteraction,
+} from "discord.js";
+import { container } from "@sapphire/framework";
 
 @ApplyOptions<CommandOptions>({
-  name: 'skipto',
-  description: 'Skip to a track in queue',
+  name: "skipto",
+  description: "Skip to a track in queue",
   preconditions: [
-    'GuildOnly',
-    'isCommandDisabled',
-    'inVoiceChannel',
-    'playerIsPlaying',
-    'inPlayerVoiceChannel'
-  ]
+    "GuildOnly",
+    "isCommandDisabled",
+    "inVoiceChannel",
+    "playerIsPlaying",
+    "inPlayerVoiceChannel",
+  ],
 })
 export class SkipToCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const { client } = container;
-    const position = interaction.options.getInteger('position', true);
+    const position = interaction.options.getInteger("position", true);
 
     const queue = client.music.queues.get(interaction.guildId!);
     const length = await queue.count();
     if (position > length || position < 1) {
       return await interaction.reply(
-        ':x: Please enter a valid track position.'
+        ":x: Please enter a valid track position."
       );
     }
 
@@ -36,6 +39,7 @@ export class SkipToCommand extends Command {
     await interaction.reply(
       `:white_check_mark: Skipped to track number ${position}!`
     );
+    return;
   }
 
   public override registerApplicationCommands(
@@ -46,13 +50,13 @@ export class SkipToCommand extends Command {
       description: this.description,
       options: [
         {
-          name: 'position',
+          name: "position",
           description:
-            'What is the position of the song you want to skip to in queue?',
-          type: 'INTEGER',
-          required: true
-        }
-      ]
+            "What is the position of the song you want to skip to in queue?",
+          type: ApplicationCommandOptionType.Integer,
+          required: true,
+        },
+      ],
     });
   }
 }

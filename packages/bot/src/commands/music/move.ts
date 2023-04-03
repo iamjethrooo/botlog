@@ -1,31 +1,34 @@
-import { ApplyOptions } from '@sapphire/decorators';
+import { ApplyOptions } from "@sapphire/decorators";
 import {
   ApplicationCommandRegistry,
   Command,
-  CommandOptions
-} from '@sapphire/framework';
-import type { CommandInteraction } from 'discord.js';
-import { container } from '@sapphire/framework';
+  CommandOptions,
+} from "@sapphire/framework";
+import {
+  ApplicationCommandOptionType,
+  ChatInputCommandInteraction,
+} from "discord.js";
+import { container } from "@sapphire/framework";
 
 @ApplyOptions<CommandOptions>({
-  name: 'move',
-  description: 'Move a track to a different position in queue',
+  name: "move",
+  description: "Move a track to a different position in queue",
   preconditions: [
-    'GuildOnly',
-    'isCommandDisabled',
-    'inVoiceChannel',
-    'playerIsPlaying',
-    'inPlayerVoiceChannel'
-  ]
+    "GuildOnly",
+    "isCommandDisabled",
+    "inVoiceChannel",
+    "playerIsPlaying",
+    "inPlayerVoiceChannel",
+  ],
 })
 export class MoveCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const { client } = container;
     const currentPosition = interaction.options.getInteger(
-      'current-position',
+      "current-position",
       true
     );
-    const newPosition = interaction.options.getInteger('new-position', true);
+    const newPosition = interaction.options.getInteger("new-position", true);
 
     const queue = client.music.queues.get(interaction.guildId!);
     const length = await queue.count();
@@ -37,11 +40,12 @@ export class MoveCommand extends Command {
       currentPosition == newPosition
     ) {
       return await interaction.reply(
-        ':x: Please enter valid position numbers!'
+        ":x: Please enter valid position numbers!"
       );
     }
 
     await queue.moveTracks(currentPosition - 1, newPosition - 1);
+    return;
   }
 
   public override registerApplicationCommands(
@@ -52,18 +56,18 @@ export class MoveCommand extends Command {
       description: this.description,
       options: [
         {
-          name: 'current-position',
-          description: 'What is the position of the song you want to move?',
-          type: 'INTEGER',
-          required: true
+          name: "current-position",
+          description: "What is the position of the song you want to move?",
+          type: ApplicationCommandOptionType.Integer,
+          required: true,
         },
         {
-          name: 'new-position',
-          description: 'What is the position you want to move the song to?',
-          type: 'INTEGER',
-          required: true
-        }
-      ]
+          name: "new-position",
+          description: "What is the position you want to move the song to?",
+          type: ApplicationCommandOptionType.Integer,
+          required: true,
+        },
+      ],
     });
   }
 }

@@ -5,7 +5,7 @@ import {
   CommandOptions,
   Args
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed, Message } from 'discord.js';
+import { ApplicationCommandOptionType, ChatInputCommandInteraction, EmbedBuilder, Message } from 'discord.js';
 import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
@@ -14,13 +14,13 @@ import axios from 'axios';
   preconditions: ['GuildOnly']
 })
 export class UrbanCommand extends Command {
-  public override chatInputRun(interaction: CommandInteraction) {
+  public override chatInputRun(interaction: ChatInputCommandInteraction) {
     const query = interaction.options.getString('query', true);
     axios
       .get(`https://api.urbandictionary.com/v0/define?term=${query}`)
       .then(async response => {
         const definition: string = response.data.list[0].definition;
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
           .setColor('#BB7D61')
           .setAuthor({
             name: 'Urban Dictionary',
@@ -47,7 +47,7 @@ export class UrbanCommand extends Command {
         .get(`https://api.urbandictionary.com/v0/define?term=${query}`)
         .then(async response => {
           const definition: string = response.data.list[0].definition;
-          const embed = new MessageEmbed()
+          const embed = new EmbedBuilder()
             .setColor('#BB7D61')
             .setAuthor({
               name: 'Urban Dictionary',
@@ -77,7 +77,7 @@ export class UrbanCommand extends Command {
       options: [
         {
           name: 'query',
-          type: 'STRING',
+          type: ApplicationCommandOptionType.String,
           description: 'What term do you want to look up?',
           required: true
         }

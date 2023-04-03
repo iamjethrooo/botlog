@@ -6,7 +6,7 @@ import {
   Args,
   container,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, MessageEmbed } from "discord.js";
+import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
 import { trpcNode } from "../../trpc";
 
 @ApplyOptions<CommandOptions>({
@@ -46,11 +46,11 @@ export class GiveCommand extends Command {
           });
         }
 
-        const embed = new MessageEmbed()
-          .setAuthor(
-            `${message.author.username}#${message.author.discriminator}`,
-            message.author.displayAvatarURL({ dynamic: true })
-          )
+        const embed = new EmbedBuilder()
+          .setAuthor({
+            name: `${message.author.username}#${message.author.discriminator}`,
+            iconURL: message.author.displayAvatarURL(),
+          })
           .setDescription(
             `Gave <@${id}> ${process.env.COIN_EMOJI}${String(amount)}.`
           )
@@ -98,11 +98,11 @@ export class GiveCommand extends Command {
           })
         );
 
-        const embed = new MessageEmbed()
-          .setAuthor(
-            `${message.author.username}#${message.author.discriminator}`,
-            message.author.displayAvatarURL({ dynamic: true })
-          )
+        const embed = new EmbedBuilder()
+          .setAuthor({
+            name: `${message.author.username}#${message.author.discriminator}`,
+            iconURL: message.author.displayAvatarURL(),
+          })
           .setDescription(
             `Gave <@&${id}> ${process.env.COIN_EMOJI}${String(amount)}.`
           )

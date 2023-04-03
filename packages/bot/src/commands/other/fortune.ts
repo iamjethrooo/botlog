@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, MessageEmbed, Message } from 'discord.js';
+import { CommandInteraction, EmbedBuilder, Message } from 'discord.js';
 import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
@@ -17,7 +17,7 @@ export class FortuneCommand extends Command {
       .get('http://yerkee.com/api/fortune')
       .then(async response => {
         const tip: string = response.data.fortune;
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
           .setColor('#F4D190')
           .setAuthor({
             name: 'Fortune Coookie',
@@ -39,7 +39,7 @@ export class FortuneCommand extends Command {
       .get('http://yerkee.com/api/fortune')
       .then(async response => {
         const tip: string = response.data.fortune;
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
           .setColor('#F4D190')
           .setAuthor({
             name: 'Fortune Coookie',

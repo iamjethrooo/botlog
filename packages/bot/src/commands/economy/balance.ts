@@ -4,16 +4,19 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, GuildMember, Message, MessageEmbed } from "discord.js";
+import {
+  CommandInteraction,
+  GuildMember,
+  Message,
+  EmbedBuilder,
+} from "discord.js";
 import { trpcNode } from "../../trpc";
 
 @ApplyOptions<CommandOptions>({
   name: "balance",
   aliases: ["bal"],
   description: "Check your balance.",
-  preconditions: [
-    'inBotChannel'
-  ]
+  preconditions: ["inBotChannel"],
 })
 export class BalanceCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
@@ -22,11 +25,11 @@ export class BalanceCommand extends Command {
         id: interaction.user.id,
       });
 
-      const embed = new MessageEmbed()
-        .setAuthor(
-          `${interaction.user.username}#${interaction.user.discriminator}`,
-          interaction.user.displayAvatarURL({ dynamic: true })
-        )
+      const embed = new EmbedBuilder()
+        .setAuthor({
+          name: `${interaction.user.username}#${interaction.user.discriminator}`,
+          iconURL: interaction.user.displayAvatarURL(),
+        })
         .setDescription(
           `You currently have ${process.env.COIN_EMOJI}${String(
             user!.user!.cash
@@ -47,11 +50,11 @@ export class BalanceCommand extends Command {
         id: message.author.id,
       });
 
-      const embed = new MessageEmbed()
-        .setAuthor(
-          `${message.author.username}#${message.author.discriminator}`,
-          message.author.displayAvatarURL({ dynamic: true })
-        )
+      const embed = new EmbedBuilder()
+        .setAuthor({
+          name: `${message.author.username}#${message.author.discriminator}`,
+          iconURL: message.author.displayAvatarURL(),
+        })
         .setDescription(
           `You currently have ${process.env.COIN_EMOJI}${String(
             user!.user!.cash
