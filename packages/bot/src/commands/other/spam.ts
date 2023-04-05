@@ -5,9 +5,7 @@ import {
   CommandOptions,
 } from "@sapphire/framework";
 import type { CommandInteraction, Message } from "discord.js";
-const {
-  Util: { splitMessage },
-} = require("discord.js");
+
 import fetch from "node-fetch";
 
 @ApplyOptions<CommandOptions>({
@@ -28,7 +26,7 @@ export class SpamCommand extends Command {
       .then((res) => res.json())
       .then((json) => {
         const rand = Math.floor(Math.random() * json.data.dist);
-        const split = splitMessage(json.data.children[rand].data.selftext);
+        const split = SpamCommand.splitMessage(json.data.children[rand].data.selftext);
         for (let s of split) {
           interaction.channel!.send(s);
         }
@@ -51,7 +49,7 @@ export class SpamCommand extends Command {
       .then((res) => res.json())
       .then((json) => {
         const rand = Math.floor(Math.random() * json.data.dist);
-        const split = splitMessage(json.data.children[rand].data.selftext);
+        const split = SpamCommand.splitMessage(json.data.children[rand].data.selftext);
         for (let s of split) {
           message.channel.send(s);
         }
@@ -61,6 +59,10 @@ export class SpamCommand extends Command {
         message.reply("An error occured!");
         return console.error(err);
       });
+  }
+
+  public static splitMessage(str: String) {
+    return str.match(/[\s\S]{1,3}/g) || [];
   }
 
   public override registerApplicationCommands(
