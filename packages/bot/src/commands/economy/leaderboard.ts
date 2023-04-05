@@ -6,7 +6,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
+import { ChatInputCommandInteraction, Message, EmbedBuilder } from "discord.js";
 import { trpcNode } from "../../trpc";
 
 @ApplyOptions<CommandOptions>({
@@ -16,7 +16,7 @@ import { trpcNode } from "../../trpc";
   preconditions: ["inBotChannel"],
 })
 export class LeaderboardCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     let leaderboard = await trpcNode.user.getLeaderboard.query();
     let leaderboardFormatted: String[] = [];
     let rank = 0;

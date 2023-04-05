@@ -6,7 +6,7 @@ import {
   CommandOptions,
 } from "@sapphire/framework";
 import {
-  CommandInteraction,
+  ChatInputCommandInteraction,
   GuildMember,
   Message,
   EmbedBuilder,
@@ -20,7 +20,7 @@ import { trpcNode } from "../../trpc";
   preconditions: ["inBotChannel"],
 })
 export class InventoryCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     let userId = interaction.user.id;
 
     let userInventory = await trpcNode.inventory.getByUserId.mutate({

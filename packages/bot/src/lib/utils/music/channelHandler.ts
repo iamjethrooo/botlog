@@ -1,13 +1,13 @@
 import type { Queue } from "../queue/Queue";
-import { AnyChannel, GuildMember } from "discord.js";
+import { Channel, ChannelType, GuildMember } from "discord.js";
 import Logger from "../logger";
 
 export async function manageStageChannel(
-  voiceChannel: AnyChannel,
+  voiceChannel: Channel,
   botUser: GuildMember,
   instance: Queue
 ) {
-  if (voiceChannel.type !== "GUILD_STAGE_VOICE") return;
+  if (voiceChannel.type !== ChannelType.GuildStageVoice) return;
   // Stage Channel Permissions From Discord.js Doc's
   if (
     !botUser?.permissions.has(

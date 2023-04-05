@@ -5,7 +5,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, EmbedBuilder } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import * as os from "os";
 // @ts-ignore
 import pkg from "../../../package.json";
@@ -15,7 +15,7 @@ import pkg from "../../../package.json";
   description: `Shows the current system status`,
 })
 export class BotStatusCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const ping = Date.now() - interaction.createdTimestamp;
     const apiPing = Math.round(interaction.client.ws.ping);
 

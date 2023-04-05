@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, EmbedBuilder } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { container } from "@sapphire/framework";
 import { PaginatedFieldMessageEmbed } from "@sapphire/discord.js-utilities";
 
@@ -20,7 +20,7 @@ import { PaginatedFieldMessageEmbed } from "@sapphire/discord.js-utilities";
   ],
 })
 export class QueueCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const { client } = container;
     const queue = client.music.queues.get(interaction.guildId!);
     const baseEmbed = new EmbedBuilder().setColor("#FF0000").setAuthor({

@@ -56,8 +56,8 @@ export class GameInvite {
       .setTimestamp();
     return gameInvite;
   }
-  public gameInviteButtons(): ActionRowBuilder {
-    const gameInviteButtons = new ActionRowBuilder().addComponents(
+  public gameInviteButtons(): ActionRowBuilder<ButtonBuilder> {
+    const gameInviteButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setCustomId(`${this.interaction.id}${this.players.at(0)?.id}-Join`)
         .setLabel("Join")

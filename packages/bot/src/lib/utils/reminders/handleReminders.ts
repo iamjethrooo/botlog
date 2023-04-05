@@ -7,7 +7,6 @@ import {
   ActionRowBuilder,
   EmbedBuilder,
   ModalBuilder,
-  ModalActionRowComponent,
   ModalSubmitInteraction,
   TextInputBuilder,
   TextInputStyle,

@@ -1,4 +1,4 @@
-import Collection from '@discordjs/collection';
+import { Collection } from '@discordjs/collection';
 import { readFileSync } from 'fs';
 import type { Redis, RedisKey } from 'ioredis';
 import { join, resolve } from 'path';

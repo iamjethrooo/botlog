@@ -20,7 +20,7 @@ export async function embedButtons(
 
   const { client } = container;
   const tracks = await queue.tracks();
-  const row = new ActionRowBuilder().addComponents(
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId("playPause")
       .setLabel("Play/Pause")
@@ -34,10 +34,7 @@ export async function embedButtons(
       .setLabel("Next")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(!tracks.length ? true : false),
-    new ButtonBuilder()
-      .setCustomId("volumeUp")
-      .setLabel("Vol+")
-      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId("volumeUp").setLabel("Vol+"),
     new ButtonBuilder()
       .setCustomId("volumeDown")
       .setLabel("Vol-")
@@ -46,8 +43,7 @@ export async function embedButtons(
 
   const channel = await queue.getTextChannel();
   if (!channel) return;
-
-  return await channel
+  await channel
     .send({
       embeds: [embed],
       components: [row],
@@ -61,4 +57,5 @@ export async function embedButtons(
         await buttonsCollector(message, song);
       }
     });
+  return;
 }

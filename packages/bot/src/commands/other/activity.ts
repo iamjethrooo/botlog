@@ -1,24 +1,33 @@
-import { ApplyOptions } from '@sapphire/decorators';
+import { ApplyOptions } from "@sapphire/decorators";
 import {
   ApplicationCommandRegistry,
   Command,
-  CommandOptions
-} from '@sapphire/framework';
-import { ApplicationCommandOptionType, ChatInputCommandInteraction, GuildMember } from 'discord.js';
+  CommandOptions,
+} from "@sapphire/framework";
+import {
+  ApplicationCommandOptionType,
+  ChannelType,
+  ChatInputCommandInteraction,
+  GuildMember,
+  VoiceChannel,
+} from "discord.js";
 
 @ApplyOptions<CommandOptions>({
-  name: 'activity',
+  name: "activity",
   description: "Generate an invite link to your voice channel's activity",
-  preconditions: ['GuildOnly', 'inVoiceChannel']
+  preconditions: ["GuildOnly", "inVoiceChannel"],
 })
 export class ActivityCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
-    const channel = interaction.options.getChannel('channel', true);
-    const activity = interaction.options.getString('activity', true);
+    const channel: VoiceChannel = interaction.options.getChannel(
+      "channel",
+      true
+    );
+    const activity = interaction.options.getString("activity", true);
 
-    if (channel.type !== 'GUILD_VOICE') {
+    if (channel.type !== ChannelType.GuildVoice) {
       return await interaction.reply(
-        'You can only invite someone to a voice channel!'
+        "You can only invite someone to a voice channel!"
       );
     }
 
@@ -26,14 +35,14 @@ export class ActivityCommand extends Command {
 
     if (member.voice.channelId !== channel.id) {
       return await interaction.reply(
-        'You can only invite to the channel you are in!'
+        "You can only invite to the channel you are in!"
       );
     }
 
     let invite;
     try {
       invite = await channel.createInvite({
-        reason: 'Activity command generated invite'
+        reason: "Activity command generated invite",
       });
     } catch (err) {
       return await interaction.reply(`Something went wrong!`);
@@ -54,16 +63,16 @@ export class ActivityCommand extends Command {
         {
           type: ApplicationCommandOptionType.Channel,
           required: true,
-          name: 'channel',
-          description: 'Channel to invite to'
+          name: "channel",
+          description: "Channel to invite to",
         },
         {
           type: ApplicationCommandOptionType.String,
           required: true,
-          name: 'activity',
-          description: 'Activity description'
-        }
-      ]
+          name: "activity",
+          description: "Activity description",
+        },
+      ],
     });
   }
 }

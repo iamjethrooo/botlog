@@ -5,7 +5,12 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { GuildMember, EmbedBuilder, ChatInputCommandInteraction, ApplicationCommandOptionType } from "discord.js";
+import {
+  GuildMember,
+  EmbedBuilder,
+  ChatInputCommandInteraction,
+  ApplicationCommandOptionType,
+} from "discord.js";
 import { CoinFlipGame } from "../../lib/utils/games/coinflip";
 import { trpcNode } from "../../trpc";
 
@@ -133,7 +138,7 @@ export class GamesCommand extends Command {
     }
 
     const invite = new GameInvite(gameTitle!, [player1], interaction, bet);
-
+    
     await interaction
       .reply({
         embeds: [invite.gameInviteEmbed()],
@@ -177,20 +182,21 @@ export class GamesCommand extends Command {
               );
               if (!canPlay) {
                 const embed = new EmbedBuilder()
-                  .setAuthor(
-                    `${(<GuildMember>response.member).user.username}#${
+                  .setAuthor({
+                    name: `${(<GuildMember>response.member).user.username}#${
                       (<GuildMember>response.member).user.discriminator
                     }`,
-                    (<GuildMember>response.member).user.displayAvatarURL({
-                      dynamic: true,
-                    })
-                  )
+                    iconURL: (<GuildMember>(
+                      response.member
+                    )).user.displayAvatarURL(),
+                  })
                   .setDescription(
                     `❌ Your level is not high enough to use this command. Required level is 15.`
                   );
                 embed.setColor(`#${process.env.RED_COLOR}`);
 
-                return await response.reply({ embeds: [embed] });
+                await response.reply({ embeds: [embed] });
+                return;
               }
               // Check for balance
               let player = await trpcNode.user.getUserById.query({
@@ -200,14 +206,14 @@ export class GamesCommand extends Command {
               let tooSoon = (Date.now() - lastGameDate) / 1000 < gameCooldown;
               if (tooSoon) {
                 const embed = new EmbedBuilder()
-                  .setAuthor(
-                    `${(<GuildMember>response.member).user.username}#${
+                  .setAuthor({
+                    name: `${(<GuildMember>response.member).user.username}#${
                       (<GuildMember>response.member).user.discriminator
                     }`,
-                    (<GuildMember>response.member).user.displayAvatarURL({
-                      dynamic: true,
-                    })
-                  )
+                    iconURL: (<GuildMember>(
+                      response.member
+                    )).user.displayAvatarURL(),
+                  })
                   .setDescription(
                     `⏲️ Too soon. You can join another game in <t:${
                       Math.round(lastGameDate / 1000) + gameCooldown
@@ -215,7 +221,8 @@ export class GamesCommand extends Command {
                   );
                 embed.setColor(`#${process.env.RED_COLOR}`);
 
-                return await response.reply({ embeds: [embed] });
+                await response.reply({ embeds: [embed] });
+                return;
               }
               insufficientFunds = player!.user!.cash < bet;
               if (insufficientFunds) {
@@ -275,6 +282,7 @@ export class GamesCommand extends Command {
           }
         }
       });
+    return;
   }
 
   public override registerApplicationCommands(

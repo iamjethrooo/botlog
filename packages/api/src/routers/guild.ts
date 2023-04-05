@@ -50,7 +50,7 @@ export const guildRouter = t.router({
           }
         );
 
-        const guild: APIGuild = await response.json();
+        const guild = await response.json();
 
         return { guild };
       } catch {
@@ -286,7 +286,7 @@ export const guildRouter = t.router({
         },
       });
 
-      const userGuilds: APIGuild[] = await response.json();
+      const userGuilds: APIGuild[] = <APIGuild[]>await response.json();
       if (!userGuilds.length) {
         return { guilds: dbGuilds };
       }
@@ -337,7 +337,7 @@ export const guildRouter = t.router({
       },
     });
 
-    const userGuilds: APIGuild[] = await response.json();
+    const userGuilds: APIGuild[] = <APIGuild[]>await response.json();
 
     return { guilds: userGuilds, discordId: account.user.discordId };
   }),
@@ -397,7 +397,7 @@ export const guildRouter = t.router({
         }
       );
 
-      const roles: APIRole[] = await response.json();
+      const roles: APIRole[] = <APIRole[]>await response.json();
 
       return { roles };
     }),
@@ -470,7 +470,7 @@ export const guildRouter = t.router({
 
       return { guildMoney };
     }),
-    addToThievesBank: t.procedure
+  addToThievesBank: t.procedure
     .input(
       z.object({
         id: z.string(),
