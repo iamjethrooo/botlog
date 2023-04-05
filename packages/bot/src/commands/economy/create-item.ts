@@ -21,8 +21,8 @@ export class CreateItemCommand extends Command {
     const itemName = interaction.options.getString("name", true);
     const itemDescription = interaction.options.getString("description", true);
     const emoji = interaction.options.getString("emoji", true);
-    const price = interaction.options.getNumber("price", true);
-    const stock = interaction.options.getNumber("stock", true);
+    const price = interaction.options.getInteger("price", true);
+    const stock = interaction.options.getInteger("stock", true);
 
     try {
       await trpcNode.item.create.mutate({

@@ -4,6 +4,7 @@ import {
   ApplicationCommandRegistry,
   Command,
   CommandOptions,
+  container,
 } from "@sapphire/framework";
 import { ChatInputCommandInteraction, Message, EmbedBuilder } from "discord.js";
 import { trpcNode } from "../../trpc";
@@ -15,57 +16,63 @@ import { trpcNode } from "../../trpc";
 })
 export class ShopCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
-    let shop = await trpcNode.item.getAll.query();
-    let shopFormatted: String[] = [];
+    const { client } = container;
+    try {
+      let shop = await trpcNode.item.getAll.query();
+      let shopFormatted: String[] = [];
 
-    shopFormatted.push(`Buy an item with the command \`buy <name>\`\n`);
-
-    shop.allItems.forEach((item) => {
-      shopFormatted.push(
-        `${item.emoji} **${item.name}** | ${process.env.COIN_EMOJI}**\`${item.buyPrice}\`**\n${item.description}\n`
-      );
-    });
-
-    const baseEmbed = new EmbedBuilder()
-      .setColor(`#${process.env.GREEN_COLOR}`)
-      .setAuthor({
-        name: interaction!.guild!.name,
-        iconURL: interaction!.guild!.iconURL()!,
+      shop.allItems.forEach((item) => {
+        shopFormatted.push(
+          `${item.emoji} **${item.name}** | ${process.env.COIN_EMOJI}**\`${item.buyPrice}\`**\n${item.description}\n`
+        );
       });
-    new PaginatedFieldMessageEmbed()
-      .setTitleField(`Botlog Shop`)
-      .setTemplate(baseEmbed)
-      .setItems(shopFormatted)
-      .setItemsPerPage(10)
-      .make()
-      .run(interaction);
+
+      const baseEmbed = new EmbedBuilder()
+        .setColor(`#${process.env.GREEN_COLOR}`)
+        .setAuthor({
+          name: "Botlog Shop",
+          iconURL: client.user!.displayAvatarURL(),
+        });
+      new PaginatedFieldMessageEmbed()
+        .setTitleField(`Buy an item with the command \`buy <name>\``)
+        .setTemplate(baseEmbed)
+        .setItems(shopFormatted)
+        .setItemsPerPage(5)
+        .make()
+        .run(interaction);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   public override async messageRun(message: Message) {
-    let shop = await trpcNode.item.getAll.query();
-    let shopFormatted: String[] = [];
+    const { client } = container;
+    try {
+      let shop = await trpcNode.item.getAll.query();
+      let shopFormatted: String[] = [];
 
-    shopFormatted.push(`Buy an item with the command \`buy <name>\`\n`);
-
-    shop.allItems.forEach((item) => {
-      shopFormatted.push(
-        `${item.emoji} **${item.name}** | ${process.env.COIN_EMOJI}**\`${item.buyPrice}\`**\n${item.description}\n`
-      );
-    });
-
-    const baseEmbed = new EmbedBuilder()
-      .setColor(`#${process.env.GREEN_COLOR}`)
-      .setAuthor({
-        name: message!.guild!.name,
-        iconURL: message!.guild!.iconURL()!,
+      shop.allItems.forEach((item) => {
+        shopFormatted.push(
+          `${item.emoji} **${item.name}** | ${process.env.COIN_EMOJI}**\`${item.buyPrice}\`**\n${item.description}\n`
+        );
       });
-    new PaginatedFieldMessageEmbed()
-      .setTitleField(`Botlog Shop`)
-      .setTemplate(baseEmbed)
-      .setItems(shopFormatted)
-      .setItemsPerPage(10)
-      .make()
-      .run(message);
+
+      const baseEmbed = new EmbedBuilder()
+        .setColor(`#${process.env.GREEN_COLOR}`)
+        .setAuthor({
+          name: "Botlog Shop",
+          iconURL: client.user!.displayAvatarURL(),
+        });
+      new PaginatedFieldMessageEmbed()
+        .setTitleField(`Buy an item with the command \`buy <name>\``)
+        .setTemplate(baseEmbed)
+        .setItems(shopFormatted)
+        .setItemsPerPage(5)
+        .make()
+        .run(message);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   public override registerApplicationCommands(
