@@ -23,6 +23,9 @@ export const itemRouter = t.router({
     const allItems = await ctx.prisma.item.findMany({
       orderBy: [
         {
+          buyPrice: "asc",
+        },
+        {
           id: "asc",
         },
       ],
