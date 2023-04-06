@@ -78,38 +78,34 @@ export class BuyCommand extends Command {
         let userHasItem = userInventory.inventory.some(
           (e) => e.itemId == itemId
         );
-
-        // If item is consumable
-        if (item!.consumable) {
-          if (!userHasItem) {
-            await trpcNode.inventory.create.mutate({
-              userId: userId,
-              itemId: itemId,
-              amount: 1,
-            });
-            // await trpcNode.inventory.incrementUserItemAmount.mutate({
-            //   userId: userId,
-            //   itemId: itemId,
-            // });
-          } else {
-            embed.setDescription(`❌ You already have a **${item!.name}**!`);
-            embed.setColor(`#${process.env.RED_COLOR}`);
-            return await message.channel.send({ embeds: [embed] });
-          }
-        }
         // If item is stackable
-        else {
+        if (item!.stackable) {
           if (!userHasItem) {
+            // If user doesn't have item, add it to their inventory
             await trpcNode.inventory.create.mutate({
               userId: userId,
               itemId: itemId,
               amount: 1,
             });
           } else {
+            // If user has item, increment amount
             await trpcNode.inventory.incrementUserItemAmount.mutate({
               userId: userId,
               itemId: itemId,
             });
+          }
+        } else {
+          // If item is not stackable, and user doesn't have item, add it to their inventory
+          if (!userHasItem) {
+            await trpcNode.inventory.create.mutate({
+              userId: userId,
+              itemId: itemId,
+              amount: 1,
+            });
+          } else {
+            embed.setDescription(`❌ You already have a **${item!.name}**!`);
+            embed.setColor(`#${process.env.RED_COLOR}`);
+            return await message.channel.send({ embeds: [embed] });
           }
         }
       }
