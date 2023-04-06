@@ -172,7 +172,7 @@ async function rob(
   const consumedItems: string[] = [];
   // Remove luck potion from inventory
   if (suspectHasLuckPotion) {
-    consumedItems.push(`${luckPotion!.emoji}Luck Potion`);
+    consumedItems.push(`${luckPotion!.emoji}**Luck Potion**`);
     await trpcNode.inventory.delete.mutate({
       userId: suspectId,
       itemId: luckPotion!.id,
@@ -181,7 +181,7 @@ async function rob(
 
   // Remove unstable potion from inventory
   if (suspectHasUnstablePotion) {
-    consumedItems.push(`${unstablePotion!.emoji}Unstable Potion`);
+    consumedItems.push(`${unstablePotion!.emoji}**Unstable Potion**`);
     await trpcNode.inventory.delete.mutate({
       userId: suspectId,
       itemId: unstablePotion!.id,
