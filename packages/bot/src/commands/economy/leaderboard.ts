@@ -96,10 +96,6 @@ async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
         continue;
       }
 
-      if (user.id == _user.discordId) {
-        rank = index;
-      }
-
       let userInventory = await trpcNode.inventory.getByUserId.mutate({
         userId: _user.discordId,
       });
@@ -107,6 +103,10 @@ async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
       let userHasFakeId = userInventory.inventory.some(
         (e) => e.itemId == fakeId!.id
       );
+
+      if (user.id == _user.discordId) {
+        rank = userHasFakeId ? 0 : index;
+      }
 
       leaderboardFormatted.push(
         `**${index}.** ${
