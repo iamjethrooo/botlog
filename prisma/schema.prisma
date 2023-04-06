@@ -109,6 +109,8 @@ model Item {
   name              String    @unique
   emoji             String?
   description       String?
+  stackable         Boolean   @default(false)
+  consumable        Boolean   @default(true)
   buyPrice          Int
   stock             Int       @default(0)
   holders           Inventory[]

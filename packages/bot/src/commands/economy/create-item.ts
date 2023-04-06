@@ -23,6 +23,8 @@ export class CreateItemCommand extends Command {
     const emoji = interaction.options.getString("emoji", true);
     const price = interaction.options.getInteger("price", true);
     const stock = interaction.options.getInteger("stock", true);
+    const stackable = interaction.options.getBoolean("stackable", true);
+    const consumable = interaction.options.getBoolean("stackable", true);
 
     try {
       await trpcNode.item.create.mutate({
@@ -31,6 +33,8 @@ export class CreateItemCommand extends Command {
         description: itemDescription,
         buyPrice: price,
         stock: stock ? stock : 0,
+        stackable,
+        consumable
       });
 
       const embed = new EmbedBuilder()
@@ -82,6 +86,18 @@ export class CreateItemCommand extends Command {
           type: ApplicationCommandOptionType.Integer,
           name: "stock",
           description: "The amount of stock available.",
+          required: true,
+        },
+        {
+          type: ApplicationCommandOptionType.Boolean,
+          name: "stackable",
+          description: "Whether the item is stackable or not.",
+          required: true,
+        },
+        {
+          type: ApplicationCommandOptionType.Boolean,
+          name: "consumable",
+          description: "Whether the item is consumable or not.",
           required: true,
         },
       ],
