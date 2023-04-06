@@ -29,9 +29,7 @@ export class SpamCommand extends Command {
       .then((res) => res.json())
       .then((json) => {
         const rand = Math.floor(Math.random() * json.data.dist);
-        const split = SpamCommand.splitMessage(
-          json.data.children[rand].data.selftext
-        );
+        const split = splitMessage(json.data.children[rand].data.selftext);
         for (let s of split) {
           interaction.channel!.send(s);
         }
@@ -57,9 +55,7 @@ export class SpamCommand extends Command {
       .then((res) => res.json())
       .then((json) => {
         const rand = Math.floor(Math.random() * json.data.dist);
-        const split = SpamCommand.splitMessage(
-          json.data.children[rand].data.selftext
-        );
+        const split = splitMessage(json.data.children[rand].data.selftext);
         for (let s of split) {
           message.channel.send(s);
         }
@@ -71,31 +67,6 @@ export class SpamCommand extends Command {
       });
   }
 
-  public static splitMessage(str: String) {
-    const MAX_LENGTH = 2000;
-    const words = str.split(" ");
-    const result: string[] = [];
-    let currentLine = "";
-
-    // Iterate through each word in the input string
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i]; // Current word being processed
-
-      if (currentLine.length + word.length + 1 <= MAX_LENGTH) {
-        currentLine += (currentLine ? " " : "") + word;
-      } else {
-        result.push(currentLine);
-        currentLine = word;
-      }
-    }
-
-    if (currentLine) {
-      result.push(currentLine);
-    }
-
-    return result;
-  }
-
   public override registerApplicationCommands(
     registery: ApplicationCommandRegistry
   ): void {
@@ -104,4 +75,29 @@ export class SpamCommand extends Command {
       description: this.description,
     });
   }
+}
+
+function splitMessage(str: String) {
+  const MAX_LENGTH = 2000;
+  const words = str.split(" ");
+  const result: string[] = [];
+  let currentLine = "";
+
+  // Iterate through each word in the input string
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i]; // Current word being processed
+
+    if (currentLine.length + word.length + 1 <= MAX_LENGTH) {
+      currentLine += (currentLine ? " " : "") + word;
+    } else {
+      result.push(currentLine);
+      currentLine = word;
+    }
+  }
+
+  if (currentLine) {
+    result.push(currentLine);
+  }
+
+  return result;
 }
