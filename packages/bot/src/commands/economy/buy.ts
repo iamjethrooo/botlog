@@ -79,7 +79,8 @@ export class BuyCommand extends Command {
           (e) => e.itemId == itemId
         );
 
-        if (item!.name.toLowerCase() == "luck potion" || item!.name.toLowerCase() == "unstable potion") {
+        // If item is consumable
+        if (item!.consumable) {
           if (!userHasItem) {
             await trpcNode.inventory.create.mutate({
               userId: userId,
