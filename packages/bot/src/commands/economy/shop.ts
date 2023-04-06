@@ -37,7 +37,7 @@ export class ShopCommand extends Command {
         .setTitleField(`Buy an item with the command \`buy <name>\``)
         .setTemplate(baseEmbed)
         .setItems(shopFormatted)
-        .setItemsPerPage(5)
+        .setItemsPerPage(4)
         .make()
         .run(interaction);
     } catch (error) {
@@ -67,7 +67,7 @@ export class ShopCommand extends Command {
         .setTitleField(`Buy an item with the command \`buy <name>\``)
         .setTemplate(baseEmbed)
         .setItems(shopFormatted)
-        .setItemsPerPage(5)
+        .setItemsPerPage(4)
         .make()
         .run(message);
     } catch (error) {
