@@ -6,8 +6,123 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { ChatInputCommandInteraction, Message, EmbedBuilder } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  Message,
+  EmbedBuilder,
+  Guild,
+  User,
+} from "discord.js";
 import { trpcNode } from "../../trpc";
+
+function generateRandomName(): string {
+  const adjectives: string[] = [
+    "Anonymous",
+    "Brave",
+    "Clever",
+    "Daring",
+    "Eager",
+    "Fierce",
+    "Gentle",
+    "Honest",
+    "Intrepid",
+    "Jolly",
+    "Kind",
+    "Loyal",
+    "Mighty",
+    "Nimble",
+    "Optimistic",
+    "Powerful",
+    "Quick",
+    "Resolute",
+    "Steadfast",
+    "True",
+    "Valiant",
+    "Wise",
+    "Xenial",
+    "Yielding",
+    "Zealous",
+  ];
+  const nouns: string[] = [
+    "Adventurer",
+    "Bandit",
+    "Champion",
+    "Dragon",
+    "Explorer",
+    "Fighter",
+    "Gladiator",
+    "Hero",
+    "Innovator",
+    "Jester",
+    "Knight",
+    "Legend",
+    "Maverick",
+    "Ninja",
+    "Outlaw",
+    "Pirate",
+    "Queen",
+    "Ranger",
+    "Samurai",
+    "Traveler",
+    "Unicorn",
+    "Viking",
+    "Warrior",
+    "X-factor",
+    "Yak",
+    "Zookeeper",
+  ];
+  const adjectiveIndex = Math.floor(Math.random() * adjectives.length);
+  const nounIndex = Math.floor(Math.random() * nouns.length);
+  return `${adjectives[adjectiveIndex]} ${nouns[nounIndex]}`;
+}
+
+async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
+  try {
+    let allItems = await trpcNode.item.getAll.query();
+
+    let fakeId = allItems.allItems.find(
+      (i) => i.name.toLowerCase() == "fake id"
+    );
+    let leaderboard = await trpcNode.user.getLeaderboard.query();
+    let leaderboardFormatted: String[] = [];
+    let rank = 0;
+    let index = 1;
+
+    for (const _user of leaderboard.leaderboard) {
+      let member = guild!.members.cache.get(_user!.discordId!);
+      let isMod = member ? member!.permissions.has("Administrator") : false;
+
+      if (isMod && !showAll) {
+        continue;
+      }
+
+      if (user.id == _user.discordId) {
+        rank = index;
+      }
+
+      let userInventory = await trpcNode.inventory.getByUserId.mutate({
+        userId: _user.discordId,
+      });
+
+      let userHasFakeId = userInventory.inventory.some(
+        (e) => e.itemId == fakeId!.id
+      );
+
+      leaderboardFormatted.push(
+        `**${index}.** ${
+          userHasFakeId
+            ? `**${generateRandomName()}**`
+            : `<@${_user.discordId}>`
+        } ・ ${process.env.COIN_EMOJI}${_user.cash}`
+      );
+      index++;
+    }
+    return { rank: rank, array: leaderboardFormatted };
+  } catch (error) {
+    console.log(error);
+  }
+  return { rank: 0, array: [] };
+}
 
 @ApplyOptions<CommandOptions>({
   name: "leaderboard",
@@ -17,29 +132,14 @@ import { trpcNode } from "../../trpc";
 })
 export class LeaderboardCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
-    let leaderboard = await trpcNode.user.getLeaderboard.query();
-    let leaderboardFormatted: String[] = [];
-    let rank = 0;
-    let index = 1;
-
     await interaction.guild!.members.fetch();
 
-    leaderboard.leaderboard.forEach((user) => {
-      let member = interaction.guild!.members.cache.get(user!.discordId!);
-      let isMod = member ? member!.permissions.has("Administrator") : false;
+    const leaderboard = await generateLeaderboard(
+      interaction.user,
+      interaction.guild!,
+      false
+    );
 
-      if (isMod) {
-        return;
-      }
-
-      if (interaction.user.id == user.discordId) {
-        rank = index;
-      }
-      leaderboardFormatted.push(
-        `**${index}.** <@${user.discordId}> ・ ${process.env.COIN_EMOJI}${user.cash}`
-      );
-      index++;
-    });
     const baseEmbed = new EmbedBuilder()
       .setColor("#FF0000")
       .setAuthor({
@@ -47,42 +147,29 @@ export class LeaderboardCommand extends Command {
         iconURL: interaction!.guild!.iconURL()!,
       })
       .setFooter({
-        text: `Your leaderboard rank: ${rank == 0 ? "N/A" : rank}`,
+        text: `Your leaderboard rank: ${
+          leaderboard.rank == 0 ? "N/A" : leaderboard.rank
+        }`,
       });
     new PaginatedFieldMessageEmbed()
       .setTitleField("Leaderboard")
       .setTemplate(baseEmbed)
-      .setItems(leaderboardFormatted)
+      .setItems(leaderboard.array)
       .setItemsPerPage(10)
       .make()
       .run(interaction);
+
+    return;
   }
 
   public override async messageRun(message: Message, args: Args) {
     let showAll = (await args.pick("string").catch(() => 0)) == "all";
-    let leaderboard = await trpcNode.user.getLeaderboard.query();
-    let leaderboardFormatted: String[] = [];
-    let rank = 0;
-    let index = 1;
+    let leaderboard = await generateLeaderboard(
+      message.author,
+      message.guild!,
+      showAll
+    );
 
-    await message.guild!.members.fetch();
-
-    leaderboard.leaderboard.forEach((user) => {
-      let member = message.guild!.members.cache.get(user!.discordId!);
-      let isMod = member ? member!.permissions.has("Administrator") : false;
-
-      if (isMod && !showAll) {
-        return;
-      }
-
-      if (message.author.id == user.discordId) {
-        rank = index;
-      }
-      leaderboardFormatted.push(
-        `**${index}.** <@${user.discordId}> ・ ${process.env.COIN_EMOJI}${user.cash}`
-      );
-      index++;
-    });
     const baseEmbed = new EmbedBuilder()
       .setColor("#FF0000")
       .setAuthor({
@@ -90,12 +177,14 @@ export class LeaderboardCommand extends Command {
         iconURL: message!.guild!.iconURL()!,
       })
       .setFooter({
-        text: `Your leaderboard rank: ${rank == 0 ? "N/A" : rank}`,
+        text: `Your leaderboard rank: ${
+          leaderboard.rank == 0 ? "N/A" : leaderboard.rank
+        }`,
       });
     new PaginatedFieldMessageEmbed()
       .setTitleField("Leaderboard")
       .setTemplate(baseEmbed)
-      .setItems(leaderboardFormatted)
+      .setItems(leaderboard.array)
       .setItemsPerPage(10)
       .make()
       .run(message);
