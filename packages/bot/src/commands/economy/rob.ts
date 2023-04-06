@@ -169,9 +169,10 @@ async function rob(
     );
     embed.setColor(`#${process.env.RED_COLOR}`);
   }
-
+  const consumedItems: string[] = [];
   // Remove luck potion from inventory
   if (suspectHasLuckPotion) {
+    consumedItems.push(`${luckPotion!.emoji}Luck Potion`);
     await trpcNode.inventory.delete.mutate({
       userId: suspectId,
       itemId: luckPotion!.id,
@@ -180,10 +181,23 @@ async function rob(
 
   // Remove unstable potion from inventory
   if (suspectHasUnstablePotion) {
+    consumedItems.push(`${unstablePotion!.emoji}Unstable Potion`);
     await trpcNode.inventory.delete.mutate({
       userId: suspectId,
       itemId: unstablePotion!.id,
     });
+  }
+
+  if (consumedItems.length == 1) {
+    embed.setDescription(
+      embed.toJSON().description! +
+        `\n\nYour ${consumedItems.toString()} was consumed during the robbery.`
+    );
+  } else if (consumedItems.length > 1) {
+    embed.setDescription(
+      embed.toJSON().description! +
+        `\n\nYour ${consumedItems.join(" and ")} were consumed during the robbery.`
+    );
   }
 
   await trpcNode.user.updateLastRobDate.mutate({
