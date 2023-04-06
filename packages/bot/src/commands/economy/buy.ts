@@ -79,7 +79,7 @@ export class BuyCommand extends Command {
           (e) => e.itemId == itemId
         );
 
-        if (item!.name.toLowerCase() == "luck potion") {
+        if (item!.name.toLowerCase() == "luck potion" || item!.name.toLowerCase() == "unstable potion") {
           if (!userHasItem) {
             await trpcNode.inventory.create.mutate({
               userId: userId,
