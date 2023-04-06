@@ -124,3 +124,8 @@ model Inventory {
   item      Item    @relation(fields: [itemId], references: [id], onDelete: Cascade)
   @@id([userId, itemId])
 }
+
+model StarboardMessage {
+  messageId   String    @id
+  channelId   String
+}
