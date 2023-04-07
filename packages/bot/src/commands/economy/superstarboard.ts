@@ -100,7 +100,7 @@ export class SuperStarboardCommand extends Command {
 
         embed
           .setDescription(
-            `✅ The message has been successfully sent to the starboard channel!`
+            `✅ The message has been sent to the starboard channel!`
           )
           .setColor(`#${process.env.GREEN_COLOR}`);
       }
