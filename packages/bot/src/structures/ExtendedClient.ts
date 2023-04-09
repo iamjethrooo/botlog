@@ -1,9 +1,5 @@
 import { SapphireClient } from "@sapphire/framework";
-import {
-  GatewayDispatchEvents,
-  GatewayIntentBits,
-  Message,
-} from "discord.js";
+import { GatewayDispatchEvents, GatewayIntentBits, Message } from "discord.js";
 import { QueueClient } from "../lib/utils/queue/QueueClient";
 import Redis from "ioredis";
 import { deletePlayerEmbed } from "../lib/utils/music/buttonsCollector";
@@ -24,6 +20,9 @@ export class ExtendedClient extends SapphireClient {
   heistMembers: String[];
   heistLeader: String;
   heistIsOngoing: boolean;
+  rrPlayers: [];
+  rrBet: Number;
+  rrIsOngoing: boolean;
 
   public constructor() {
     super({
@@ -37,7 +36,7 @@ export class ExtendedClient extends SapphireClient {
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.GuildVoiceStates,
-        GatewayIntentBits.MessageContent
+        GatewayIntentBits.MessageContent,
       ],
       logger: { level: 100 },
     });
@@ -86,6 +85,9 @@ export class ExtendedClient extends SapphireClient {
     this.heistLeader = "";
     this.timestamps = {};
     this.heistIsOngoing = false;
+    this.rrPlayers = [];
+    this.rrBet = 0;
+    this.rrIsOngoing = false;
   }
 }
 
@@ -100,5 +102,8 @@ declare module "@sapphire/framework" {
     intervals: { [key: string]: NodeJS.Timeout };
     timestamps: { [key: string]: string };
     heistIsOngoing: boolean;
+    rrPlayers: String[];
+    rrBet: Number;
+    rrIsOngoing: boolean;
   }
 }
