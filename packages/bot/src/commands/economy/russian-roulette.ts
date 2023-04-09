@@ -147,7 +147,7 @@ export class RussianRouletteCommand extends Command {
         let roulette = setInterval(async () => {
           let currentPlayerId = client.rrPlayers[currentPlayerIndex];
           shot = Math.random() <= 1 / client.rrPlayers.length;
-          if (shot || currentPlayerIndex >= MAX_MEMBERS - 1) {
+          if (shot || currentPlayerIndex >= client.rrPlayers.length - 1) {
             clearInterval(roulette);
             embed
               .setAuthor(null)
