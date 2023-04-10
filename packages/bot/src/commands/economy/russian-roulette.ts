@@ -9,6 +9,10 @@ import {
 import { CommandInteraction, EmbedBuilder, Message } from "discord.js";
 import { trpcNode } from "../../trpc";
 
+function getRandomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function getRouletteMessage(playerId: String, isWin: boolean) {
   const winMessages = [
     `<@${playerId}> pulls the trigger... *click*! Lucky shot, <@${playerId}>!`,
@@ -133,6 +137,7 @@ export class RussianRouletteCommand extends Command {
           client.rrPlayers = [];
           return;
         }
+
         embed
           .setDescription(`The Russian Roulette game is starting!`)
           .setAuthor(null)
@@ -144,10 +149,14 @@ export class RussianRouletteCommand extends Command {
 
         let currentPlayerIndex = 0;
         let shot = false;
+        // Position of bullet in chamber
+        const bulletIndex = getRandomInt(0, client.rrPlayers.length - 1);
+        console.log(`Bullet Index: ${bulletIndex}`);
+        const losingPlayerId = client.rrPlayers[bulletIndex];
         let roulette = setInterval(async () => {
           let currentPlayerId = client.rrPlayers[currentPlayerIndex];
-          shot = Math.random() <= 1 / client.rrPlayers.length;
-          if (shot || currentPlayerIndex >= client.rrPlayers.length - 1) {
+          shot = currentPlayerIndex == bulletIndex;
+          if (shot) {
             clearInterval(roulette);
             embed
               .setAuthor(null)
@@ -160,7 +169,6 @@ export class RussianRouletteCommand extends Command {
               Number(client.rrBet) / (client.rrPlayers.length - 1)
             );
 
-            const losingPlayerId = client.rrPlayers[currentPlayerIndex];
             let splitMessage = "";
             for (const player of client.rrPlayers) {
               if (player == losingPlayerId) continue;
