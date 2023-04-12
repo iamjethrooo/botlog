@@ -77,6 +77,7 @@ function generateRandomName(): string {
 }
 
 async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
+  await guild!.members.fetch();
   try {
     let allItems = await trpcNode.item.getAll.query();
 
