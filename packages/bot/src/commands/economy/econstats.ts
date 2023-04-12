@@ -9,7 +9,7 @@ import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
 @ApplyOptions<CommandOptions>({
   name: "econstats",
   description: "Displays current economy system statistics.",
-  preconditions: ["inBotChannel", "userIsAdmin"],
+  preconditions: ["inBotChannel"],
 })
 export class EconStatsCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
@@ -83,7 +83,7 @@ export class EconStatsCommand extends Command {
           name: "Jail Time",
           value: `${Number(process.env.HEIST_JAIL_TIME) / 3600} hours - ${
             Number(process.env.HEIST_REDUCED_JAIL_TIME) / 60
-          } minutes per additional member`,
+          } minutes deducted per additional heist member`,
           inline: true,
         }
         // { name: "", value: ``, inline: true },
