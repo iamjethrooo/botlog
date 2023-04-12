@@ -81,6 +81,7 @@ export class HeistCommand extends Command {
           ) {
             // Reset variables
             clearTimeout(client.intervals["heist"]);
+            delete client.intervals["heist"];
             // Start heist
             robRate +=
               Number(process.env.HEIST_ADDITIONAL_RATE) *
@@ -172,7 +173,6 @@ export class HeistCommand extends Command {
               });
             });
             client.heistIsOngoing = false;
-            delete client.intervals["heist"];
           }
         }, 1000);
         return;
