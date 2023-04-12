@@ -7,7 +7,7 @@ import {
 import type { CommandInteraction, Message } from "discord.js";
 
 const botChannels = [
-  "682838969179832423",
+  // "682838969179832423", spam
   "1064926572680847490",
   "794833126270566411",
   "794833143113973760",
