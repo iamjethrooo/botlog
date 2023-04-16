@@ -29,7 +29,7 @@ export class EconStatsCommand extends Command {
         },
         {
           name: "Interval between coin rewards",
-          value: `${process.env.INTERVAL} seconds`,
+          value: `\`${process.env.INTERVAL} seconds\``,
           inline: true,
         },
         { name: " ", value: ` `, inline: false },
@@ -46,44 +46,44 @@ export class EconStatsCommand extends Command {
         { name: " ", value: ` `, inline: false },
         {
           name: "Rob Success Rate",
-          value: `${Number(process.env.ROB_CHANCE) * 100}%`,
+          value: `\`${Number(process.env.ROB_CHANCE) * 100}%\``,
           inline: true,
         },
         {
           name: "Rob Earnings",
-          value: `${Number(process.env.ROB_RATE) * 100}%`,
+          value: `\`${Number(process.env.ROB_RATE) * 100}%\``,
           inline: true,
         },
         {
           name: "Rob Cooldown",
-          value: `${Number(process.env.ROB_COOLDOWN) / 3600} hours`,
+          value: `\`${Number(process.env.ROB_COOLDOWN) / 3600} hours\``,
           inline: true,
         },
         { name: " ", value: ` `, inline: false },
         {
           name: "Heist Success Rate",
-          value: `${Number(process.env.HEIST_BASE_CHANCE) * 100}% + ${
+          value: `\`${Number(process.env.HEIST_BASE_CHANCE) * 100}% + ${
             Number(process.env.HEIST_ADDITIONAL_CHANCE) * 100
-          }% per additional member`,
+          }% per additional member\``,
           inline: true,
         },
         {
           name: "Heist Earnings",
-          value: `${Math.round(Number(process.env.HEIST_BASE_RATE) * 100)}% + ${
+          value: `\`${Math.round(Number(process.env.HEIST_BASE_RATE) * 100)}% + ${
             Number(process.env.HEIST_ADDITIONAL_RATE) * 100
-          }% per additional member`,
+          }% per additional member\``,
           inline: true,
         },
         {
           name: "Heist Cooldown",
-          value: `${Number(process.env.HEIST_COOLDOWN) / 3600} hours`,
+          value: `\`${Number(process.env.HEIST_COOLDOWN) / 3600} hours\``,
           inline: true,
         },
         {
           name: "Jail Time",
-          value: `${Number(process.env.HEIST_JAIL_TIME) / 3600} hours - ${
+          value: `\`${Number(process.env.HEIST_JAIL_TIME) / 3600} hours - ${
             Number(process.env.HEIST_REDUCED_JAIL_TIME) / 60
-          } minutes deducted per additional heist member`,
+          } minutes deducted per additional heist member\``,
           inline: true,
         }
         // { name: "", value: ``, inline: true },
