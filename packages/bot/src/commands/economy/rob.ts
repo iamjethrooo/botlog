@@ -124,11 +124,16 @@ async function rob(
   if (success) {
     let extraMessage = "";
     if (isMod) {
+      let robTax = Math.round(robAmount * Number(process.env.ROB_TAX_MOD));
       await trpcNode.guild.addToBank.mutate({
         id: guildId,
-        amount: robAmount,
+        amount: robTax,
       });
-      extraMessage = ` ${process.env.COIN_EMOJI}${robAmount} was added to the server bank.`;
+      await trpcNode.user.addCash.mutate({
+        id: suspectId,
+        cash: robAmount - robTax,
+      });
+      extraMessage = ` ${process.env.COIN_EMOJI}${robTax} was added to the server bank.`;
     } else if (isThief) {
       await trpcNode.guild.addToThievesBank.mutate({
         id: guildId,
