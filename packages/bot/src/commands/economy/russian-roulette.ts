@@ -35,7 +35,7 @@ function getRouletteMessage(playerId: String, isWin: boolean) {
 
 @ApplyOptions<CommandOptions>({
   name: "russian-roulette",
-  aliases: ["rr", "russianroulette"],
+  aliases: ["rr", "russianroulette", "roulette"],
   description: "Start a game of Russian Roulette!",
   preconditions: ["inBotChannel", "isNotInmate"],
 })
