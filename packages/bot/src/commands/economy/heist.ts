@@ -134,8 +134,6 @@ export class HeistCommand extends Command {
               let splitMessage = ``;
 
               // Serve jail time for x hours
-              await message.guild!.roles.fetch();
-              await message.guild!.members.fetch();
               let inmateRole = message!.guild!.roles.cache.find(
                 (role) => role.id == process.env.ROLE_ID_INMATE
               );

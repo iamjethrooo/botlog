@@ -12,7 +12,9 @@ export class ReadyListener extends Listener {
     const { username, id } = client.user!;
     console.log(`Successfully logged in as ${username} (${id})`);
 
+    // Fetch specified guild
     const guild = await client.guilds.fetch(String(process.env.GUILD_ID));
+    await guild.members.fetch();
     await guild.roles.fetch();
     let inmateRole = guild.roles.cache.find(
       (role) => role.id == process.env.ROLE_ID_INMATE

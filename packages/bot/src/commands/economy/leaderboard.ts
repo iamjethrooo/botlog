@@ -77,7 +77,6 @@ function generateRandomName(): string {
 }
 
 async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
-  await guild!.members.fetch();
   try {
     let allItems = await trpcNode.item.getAll.query();
 
@@ -133,8 +132,6 @@ async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
 })
 export class LeaderboardCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
-    await interaction.guild!.members.fetch();
-
     const leaderboard = await generateLeaderboard(
       interaction.user,
       interaction.guild!,
