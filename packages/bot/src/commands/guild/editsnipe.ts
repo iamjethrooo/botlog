@@ -43,19 +43,27 @@ export class EditSnipeCommand extends Command {
         });
       }
 
-      interaction.channel!.messages.fetch(editsniped.id).then((m) => {
-        const embed = new EmbedBuilder()
-          .setAuthor({
-            name: `${editsniped.author.username}#${editsniped.author.discriminator}`,
-            iconURL: editsniped.author.displayAvatarURL(),
-          })
-          .setDescription(
-            `**Original message:** ${editsniped.content}\n**Edited message:** ${m.content}`
-          )
-          .setTimestamp(editsniped.createdAt)
-          .setColor((<GuildMember>interaction.member)!.displayHexColor);
-        return interaction.reply({ embeds: [embed] });
-      });
+      interaction
+        .channel!.messages.fetch(editsniped.id)
+        .then((m) => {
+          const embed = new EmbedBuilder()
+            .setAuthor({
+              name: `${editsniped.author.username}#${editsniped.author.discriminator}`,
+              iconURL: editsniped.author.displayAvatarURL(),
+            })
+            .setDescription(
+              `**Original message:** ${editsniped.content}\n**Edited message:** ${m.content}`
+            )
+            .setTimestamp(editsniped.createdAt)
+            .setColor((<GuildMember>interaction.member)!.displayHexColor);
+          return interaction.reply({ embeds: [embed] });
+        })
+        .catch(async (err) => {
+          return await interaction.reply({
+            ephemeral: true,
+            content: "There's nothing to snipe!",
+          });
+        });
     } else {
       await interaction.reply(
         "You don't have the permissions to run this command!"
@@ -86,25 +94,33 @@ export class EditSnipeCommand extends Command {
     ) {
       const editsniped = client.editsnipes.get(message.channelId);
       if (!editsniped) {
-        return message
-          .reply(`There's nothing to snipe!`)
-          .then(() => setTimeout(() => message.delete()))
+        return await message
+          .reply("There's nothing to snipe!")
+          .then((message) => setTimeout(() => message.delete(), 15000))
           .then(message.delete);
       }
 
-      message.channel.messages.fetch(editsniped.id).then((m) => {
-        const embed = new EmbedBuilder()
-          .setAuthor({
-            name: `${editsniped.author.username}#${editsniped.author.discriminator}`,
-            iconURL: editsniped.author.displayAvatarURL(),
-          })
-          .setDescription(
-            `**Original message:** ${editsniped.content}\n**Edited message:** ${m.content}`
-          )
-          .setTimestamp(editsniped.createdAt)
-          .setColor(message.member!.displayHexColor);
-        return message.reply({ embeds: [embed] });
-      });
+      message.channel.messages
+        .fetch(editsniped.id)
+        .then((m) => {
+          const embed = new EmbedBuilder()
+            .setAuthor({
+              name: `${editsniped.author.username}#${editsniped.author.discriminator}`,
+              iconURL: editsniped.author.displayAvatarURL(),
+            })
+            .setDescription(
+              `**Original message:** ${editsniped.content}\n**Edited message:** ${m.content}`
+            )
+            .setTimestamp(editsniped.createdAt)
+            .setColor(message.member!.displayHexColor);
+          return message.reply({ embeds: [embed] });
+        })
+        .catch(async (err) => {
+          return await message
+            .reply("There's nothing to snipe!")
+            .then((message) => setTimeout(() => message.delete(), 15000))
+            .then(message.delete);
+        });
       return;
     } else {
       return await message
