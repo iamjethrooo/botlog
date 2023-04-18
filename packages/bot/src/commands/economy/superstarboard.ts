@@ -29,20 +29,22 @@ export class SuperStarboardCommand extends Command {
     console.log(user!.user!.cash);
 
     const starboardCost = Number(process.env.STARBOARD_COST);
-
+    const isMod = message.member!.permissions.has("Administrator");
     const embed = new EmbedBuilder().setAuthor({
       name: `${message.author.username}#${message.author.discriminator}`,
       iconURL: message.author.displayAvatarURL(),
     });
 
-    let insufficientFunds = user!.user!.cash < starboardCost;
-    console.log(insufficientFunds);
-    if (insufficientFunds) {
-      embed.setDescription(
-        `❌ You do not have enough money to send this message to the starboard channel!`
-      );
-      embed.setColor(`#${process.env.RED_COLOR}`);
-      return await message.channel.send({ embeds: [embed] });
+    if (!isMod) {
+      let insufficientFunds = user!.user!.cash < starboardCost;
+      console.log(insufficientFunds);
+      if (insufficientFunds) {
+        embed.setDescription(
+          `❌ You do not have enough money to send this message to the starboard channel!`
+        );
+        embed.setColor(`#${process.env.RED_COLOR}`);
+        return await message.channel.send({ embeds: [embed] });
+      }
     }
 
     const reference = await message.fetchReference();
@@ -93,10 +95,12 @@ export class SuperStarboardCommand extends Command {
         starboardChannel.send({ embeds: [starboardEmbed] });
 
         // Subtract funds
-        await trpcNode.user.subtractCash.mutate({
-          id: userId,
-          cash: starboardCost,
-        });
+        if (!isMod) {
+          await trpcNode.user.subtractCash.mutate({
+            id: userId,
+            cash: starboardCost,
+          });
+        }
 
         embed
           .setDescription(
