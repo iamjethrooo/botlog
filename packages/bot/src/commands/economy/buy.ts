@@ -39,7 +39,7 @@ export class BuyCommand extends Command {
       }
     });
     if (argumentIsNumber) {
-      item = shop.allItems[number + 1];
+      item = shop.allItems[number - 1];
     }
 
     const embed = new EmbedBuilder().setAuthor({
