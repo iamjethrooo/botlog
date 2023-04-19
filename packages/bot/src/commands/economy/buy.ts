@@ -17,25 +17,35 @@ export class BuyCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
 
   public override async messageRun(message: Message, args: Args) {
-    let itemName = await args.rest("string");
+    let argument = await args.rest("string");
+    let argumentIsNumber = false;
     let userId = message.author.id;
     let shop = await trpcNode.item.getAll.query();
     let user = await trpcNode.user.getUserById.query({
       id: userId,
     });
     let item;
+    let number = -1;
+    try {
+      number = Number(argument);
+      argumentIsNumber = typeof number == "number" ? true : false;
+    } catch (error) {
+      console.log(error);
+    }
 
     shop.allItems.forEach((i) => {
-      if (i.name.toLowerCase() == itemName.toLowerCase()) {
+      if (i.name.toLowerCase() == argument.toLowerCase()) {
         item = i;
       }
     });
+    if (argumentIsNumber) {
+      item = shop.allItems[number + 1];
+    }
 
     const embed = new EmbedBuilder().setAuthor({
       name: `${message.author.username}#${message.author.discriminator}`,
       iconURL: message.author.displayAvatarURL(),
     });
-    console.log(item);
 
     let isThief = message.member!.roles.cache.has(
       `${process.env.ROLE_ID_THIEF}`
@@ -126,7 +136,7 @@ export class BuyCommand extends Command {
       embed.setDescription(`✅ You bought a **${item!.name!}**!`);
       embed.setColor(`#${process.env.GREEN_COLOR}`);
     } else {
-      embed.setDescription(`❌ Sorry, we don't sell **${itemName}** here.`);
+      embed.setDescription(`❌ Sorry, we don't sell **${argument}** here.`);
       embed.setColor(`#${process.env.RED_COLOR}`);
     }
 

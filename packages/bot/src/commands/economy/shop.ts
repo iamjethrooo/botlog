@@ -9,6 +9,21 @@ import {
 import { ChatInputCommandInteraction, Message, EmbedBuilder } from "discord.js";
 import { trpcNode } from "../../trpc";
 
+async function generateShopText() {
+  let counter = 1;
+  let shop = await trpcNode.item.getAll.query();
+  let shopFormatted: String[] = [];
+
+  shop.allItems.forEach((item) => {
+    shopFormatted.push(
+      `**${counter}.** ${item.emoji} **${item.name}** | ${process.env.COIN_EMOJI}**\`${item.buyPrice}\`**\n${item.description}\n`
+    );
+    counter++;
+  });
+
+  return shopFormatted;
+}
+
 @ApplyOptions<CommandOptions>({
   name: "shop",
   description: "View the shop.",
@@ -18,14 +33,7 @@ export class ShopCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const { client } = container;
     try {
-      let shop = await trpcNode.item.getAll.query();
-      let shopFormatted: String[] = [];
-
-      shop.allItems.forEach((item) => {
-        shopFormatted.push(
-          `${item.emoji} **${item.name}** | ${process.env.COIN_EMOJI}**\`${item.buyPrice}\`**\n${item.description}\n`
-        );
-      });
+      let shopFormatted = await generateShopText();
 
       const baseEmbed = new EmbedBuilder()
         .setColor(`#${process.env.GREEN_COLOR}`)
@@ -34,7 +42,7 @@ export class ShopCommand extends Command {
           iconURL: client.user!.displayAvatarURL(),
         });
       new PaginatedFieldMessageEmbed()
-        .setTitleField(`Buy an item with the command \`buy <name>\``)
+        .setTitleField(`Buy an item with the command \`buy <name>/<number>\``)
         .setTemplate(baseEmbed)
         .setItems(shopFormatted)
         .setItemsPerPage(4)
@@ -48,14 +56,7 @@ export class ShopCommand extends Command {
   public override async messageRun(message: Message) {
     const { client } = container;
     try {
-      let shop = await trpcNode.item.getAll.query();
-      let shopFormatted: String[] = [];
-
-      shop.allItems.forEach((item) => {
-        shopFormatted.push(
-          `${item.emoji} **${item.name}** | ${process.env.COIN_EMOJI}**\`${item.buyPrice}\`**\n${item.description}\n`
-        );
-      });
+      let shopFormatted = await generateShopText();
 
       const baseEmbed = new EmbedBuilder()
         .setColor(`#${process.env.GREEN_COLOR}`)
@@ -64,7 +65,7 @@ export class ShopCommand extends Command {
           iconURL: client.user!.displayAvatarURL(),
         });
       new PaginatedFieldMessageEmbed()
-        .setTitleField(`Buy an item with the command \`buy <name>\``)
+        .setTitleField(`Buy an item with the command \`buy <name>/<number>\``)
         .setTemplate(baseEmbed)
         .setItems(shopFormatted)
         .setItemsPerPage(4)
