@@ -118,9 +118,11 @@ async function rob(
     (suspectHasUnstablePotion
       ? randomlyAdjustNumber(Number(process.env.LUCKY_CHARM_INCREASE))
       : 0);
-
-  let success = Math.random() <= successChance;
-
+  let roll = Math.random();
+  let success = roll <= successChance;
+  console.log(
+    `Robber: ${user.username}, Success Chance: ${successChance}, Roll: ${roll}`
+  );
   if (success) {
     let extraMessage = "";
     if (isMod) {
@@ -201,7 +203,9 @@ async function rob(
   } else if (consumedItems.length > 1) {
     embed.setDescription(
       embed.toJSON().description! +
-        `\n\nYour ${consumedItems.join(" and ")} were consumed during the robbery.`
+        `\n\nYour ${consumedItems.join(
+          " and "
+        )} were consumed during the robbery.`
     );
   }
 
