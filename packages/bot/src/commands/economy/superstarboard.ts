@@ -109,7 +109,10 @@ export class SuperStarboardCommand extends Command {
           .setColor(`#${process.env.GREEN_COLOR}`);
       }
 
-      return await message.reply({ embeds: [embed] });
+      return await message
+        .reply({ embeds: [embed] })
+        .then((message) => setTimeout(() => message.delete(), 15000))
+        .then(message.delete);
     }
     return;
   }
