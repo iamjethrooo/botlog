@@ -33,7 +33,10 @@ export class inBotChannel extends Precondition {
   public override chatInputRun(
     interaction: CommandInteraction
   ): PreconditionResult {
-    if (interaction.guildId == '669190303353143306' && !botChannels.includes(interaction.channel!.id)) {
+    if (
+      interaction.guildId == "669190303353143306" &&
+      !botChannels.includes(interaction.channel!.id)
+    ) {
       return this.error({
         message: "You cannot use this command in this channel!",
       });
@@ -42,8 +45,21 @@ export class inBotChannel extends Precondition {
   }
 
   public override async messageRun(message: Message): Promise<any> {
-    if (message.guildId == '669190303353143306' && !botChannels.includes(message.channel.id)) {
-      return this.error({ message: "You cannot use this command in this channel!" });
+    if (
+      message.guildId == "669190303353143306" &&
+      !botChannels.includes(message.channel.id)
+    ) {
+      if (message.channel.id == "682838969179832423") {
+        await message
+          .reply(
+            `Sorry, this command can only be used in the <#674518870211559428> channel.`
+          )
+          .then((message) => setTimeout(() => message.delete(), 15000))
+          .then(message.delete);
+      }
+      return this.error({
+        message: "You cannot use this command in this channel!",
+      });
     } else {
       return this.ok();
     }
