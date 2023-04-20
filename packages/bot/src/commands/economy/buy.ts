@@ -28,18 +28,19 @@ export class BuyCommand extends Command {
     let number = -1;
     try {
       number = Number(argument);
-      argumentIsNumber = typeof number == "number" ? true : false;
+      argumentIsNumber = isNaN(number) ? false : true;
     } catch (error) {
       console.log(error);
     }
 
-    shop.allItems.forEach((i) => {
-      if (i.name.toLowerCase() == argument.toLowerCase()) {
-        item = i;
-      }
-    });
     if (argumentIsNumber) {
       item = shop.allItems[number - 1];
+    } else {
+      shop.allItems.forEach((i) => {
+        if (i.name.toLowerCase() == argument.toLowerCase()) {
+          item = i;
+        }
+      });
     }
 
     const embed = new EmbedBuilder().setAuthor({
