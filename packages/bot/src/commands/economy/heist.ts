@@ -95,6 +95,13 @@ export class HeistCommand extends Command {
               id: message!.guildId!,
             });
 
+            client.heistMembers.forEach(async (member) => {
+              await trpcNode.user.updateLastHeistDate.mutate({
+                id: String(member),
+                date: Date.now().toString(),
+              });
+            });
+
             let robAmount = Math.round(guild!.guild!.bank * robRate);
             // let robAmount = client.heistMembers.length * 1000;
             if (success) {
@@ -164,12 +171,6 @@ export class HeistCommand extends Command {
               await message.channel.send({ embeds: [embed] });
             }
 
-            client.heistMembers.forEach(async (member) => {
-              await trpcNode.user.updateLastHeistDate.mutate({
-                id: String(member),
-                date: Date.now().toString(),
-              });
-            });
             client.heistIsOngoing = false;
           }
         }, 1000);
