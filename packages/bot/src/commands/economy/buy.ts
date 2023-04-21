@@ -6,10 +6,12 @@ import {
   CommandOptions,
 } from "@sapphire/framework";
 import {
-  CommandInteraction,
   Message,
   EmbedBuilder,
   GuildMember,
+  ApplicationCommandOptionType,
+  AutocompleteInteraction,
+  ChatInputCommandInteraction,
 } from "discord.js";
 import { trpcNode } from "../../trpc";
 
@@ -142,7 +144,13 @@ async function buy(itemName: string, customer: GuildMember) {
   preconditions: ["inBotChannel", "isNotInmate"],
 })
 export class BuyCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {}
+  public override async chatInputRun(interaction: ChatInputCommandInteraction) {
+    const itemName = interaction.options.getString("item", true);
+
+    const embed = await buy(itemName, (<GuildMember>interaction.member)!);
+
+    return await interaction.reply({ embeds: [embed] });
+  }
 
   public override async messageRun(message: Message, args: Args) {
     let argument = await args.rest("string");
@@ -151,12 +159,37 @@ export class BuyCommand extends Command {
     return await message.channel.send({ embeds: [embed] });
   }
 
+  public override async autocompleteRun(interaction: AutocompleteInteraction) {
+    const itemName = interaction.options.getString("item", true).toLowerCase();
+
+    const items = await trpcNode.item.getAll.query();
+    const matchingItems = items.allItems.filter((item) =>
+      item.name.toLowerCase().startsWith(itemName)
+    );
+
+    const options = matchingItems.map((item) => ({
+      name: item.name,
+      value: item.name,
+    }));
+
+    return interaction.respond([options[0]]);
+  }
+
   public override registerApplicationCommands(
     registery: ApplicationCommandRegistry
   ): void {
     registery.registerChatInputCommand({
       name: this.name,
       description: this.description,
+      options: [
+        {
+          type: ApplicationCommandOptionType.String,
+          required: true,
+          name: "item",
+          description: "What item do you want to buy?",
+          autocomplete: true,
+        },
+      ],
     });
   }
 }
