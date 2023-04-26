@@ -24,8 +24,9 @@ export class CreateItemCommand extends Command {
     const price = interaction.options.getInteger("price", true);
     const stock = interaction.options.getInteger("stock", true);
     const stackable = interaction.options.getBoolean("stackable", true);
-    const consumable = interaction.options.getBoolean("stackable", true);
-
+    const consumable = interaction.options.getBoolean("consumable", true);
+    const roleGiven = interaction.options.getRole("role-given");
+    console.log(roleGiven);
     try {
       await trpcNode.item.create.mutate({
         name: itemName,
@@ -34,7 +35,8 @@ export class CreateItemCommand extends Command {
         buyPrice: price,
         stock: stock ? stock : 0,
         stackable,
-        consumable
+        consumable,
+        roleGiven: roleGiven == null ? "" : roleGiven.id
       });
 
       const embed = new EmbedBuilder()
@@ -99,6 +101,11 @@ export class CreateItemCommand extends Command {
           name: "consumable",
           description: "Whether the item is consumable or not.",
           required: true,
+        },
+        {
+          type: ApplicationCommandOptionType.Role,
+          name: "role-given",
+          description: "The role given when the item is purchased.",
         },
       ],
     });

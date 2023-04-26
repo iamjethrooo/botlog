@@ -43,6 +43,7 @@ export const itemRouter = t.router({
         stock: z.number(),
         stackable: z.boolean(),
         consumable: z.boolean(),
+        roleGiven: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -54,8 +55,8 @@ export const itemRouter = t.router({
         stock,
         stackable,
         consumable,
+        roleGiven,
       } = input;
-
       const item = await ctx.prisma.item.create({
         data: {
           name,
@@ -65,6 +66,7 @@ export const itemRouter = t.router({
           stock,
           stackable,
           consumable,
+          roleGiven,
         },
       });
 

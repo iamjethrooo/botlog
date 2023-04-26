@@ -78,6 +78,25 @@ async function buy(itemName: string, customer: GuildMember) {
         id: userId,
         date: "0",
       });
+    }
+    // If item is supposed to give a role when purchased
+    else if (item.roleGiven) {
+      let roleId = item.roleGiven;
+      let roleGiven = customer.guild!.roles.cache.find(
+        (role) => role.id == roleId
+      );
+
+      // If the role exists
+      if (roleGiven) {
+        const customerHasRole = customer.roles.cache.has(roleId);
+        if (customerHasRole) {
+          embed.setDescription(`❌ You already have a **${item!.name}**!`);
+          embed.setColor(`#${process.env.RED_COLOR}`);
+          return embed;
+        } else {
+          customer.roles.add(roleGiven);
+        }
+      }
     } else {
       let userInventory = await trpcNode.inventory.getByUserId.mutate({
         userId: userId,
