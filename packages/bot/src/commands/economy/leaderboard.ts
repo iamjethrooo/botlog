@@ -92,7 +92,7 @@ async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
       let member = guild!.members.cache.get(_user!.discordId!);
       let isMod = member ? member!.permissions.has("Administrator") : false;
 
-      if (isMod && !showAll) {
+      if (!member || isMod && !showAll) {
         continue;
       }
 
