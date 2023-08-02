@@ -5,13 +5,13 @@ import { Message, MessageEmbed, Util } from "discord.js";
 import { trpcNode } from "../trpc";
 
 const picsOnlyChannels = [
-  "669514957938753558",
-  "800543054221541376",
-  "669514986548232193",
-  "671669574961201157",
-  "801677818760003594",
+  "669514957938753558", // artworks
+  "800543054221541376", // mixtape
+  "669514986548232193", // snaps
+  "671669574961201157", // cosplays
+  "801677818760003594", // pics-only
   "978228788561346571",
-  "1044996825754644670",
+  "1044996825754644670", // shorts
 ];
 
 const noCashChannels = [
