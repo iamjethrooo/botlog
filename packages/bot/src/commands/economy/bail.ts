@@ -42,7 +42,7 @@ async function bail(prisoner: GuildMember) {
     amount: bailAmount,
   });
   embed.setDescription(
-    `✅ You paid ${process.env.COIN_EMOJI}${bailAmount} as bail and have been released from jail`
+    `✅ You paid ${process.env.COIN_EMOJI}${bailAmount} as bail and have been released from jail.`
   );
   embed.setColor(`#${process.env.GREEN_COLOR}`);
 
