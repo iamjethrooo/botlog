@@ -32,6 +32,11 @@ async function bail(prisoner: GuildMember) {
     return embed;
   }
 
+  let inmateRole = prisoner.guild.roles.cache.find(
+    (role) => role.id == process.env.ROLE_ID_INMATE
+  );
+  prisoner.roles.remove(inmateRole!);
+
   await trpcNode.user.subtractCash.mutate({
     id: userId,
     cash: bailAmount,
