@@ -26,8 +26,12 @@ export class HeistCommand extends Command {
       iconURL: message.author.displayAvatarURL(),
     });
 
-    let robRate = Number(process.env.HEIST_BASE_RATE);
-    let robChance = Number(process.env.HEIST_BASE_CHANCE);
+    let guild = await trpcNode.guild.getGuild.query({
+      id: message!.guildId!,
+    });
+
+    let robRate = Number(guild.guild!.heistBaseRate);
+    let robChance = Number(guild.guild!.heistBaseChance);
     let success;
     try {
       let suspect = await trpcNode.user.getUserById.query({
@@ -35,7 +39,7 @@ export class HeistCommand extends Command {
       });
 
       let lastRobDate = Number(suspect.user!.lastHeistDate);
-      let heistCooldown = Number(process.env.HEIST_COOLDOWN);
+      let heistCooldown = Number(guild.guild!.heistCooldown);
       let tooSoon = (Date.now() - lastRobDate) / 1000 < heistCooldown;
 
       if (tooSoon) {
@@ -76,24 +80,21 @@ export class HeistCommand extends Command {
           if (
             client.heistIsOngoing ||
             (Date.now() - Number(client.timestamps["heist"])) / 1000 >
-              Number(process.env.HEIST_WAITING_TIME) ||
-            client.heistMembers.length >= Number(process.env.HEIST_MAX_MEMBERS)
+              Number(guild.guild!.heistWaitingTime) ||
+            client.heistMembers.length >= Number(guild.guild!.heistMaxMembers)
           ) {
             // Reset variables
             clearTimeout(client.intervals["heist"]);
             delete client.intervals["heist"];
             // Start heist
             robRate +=
-              Number(process.env.HEIST_ADDITIONAL_RATE) *
+              Number(guild.guild!.heistAdditionalRatePerMember) *
               (client.heistMembers.length - 1);
             robChance +=
-              Number(process.env.HEIST_ADDITIONAL_CHANCE) *
+              Number(guild.guild!.heistAdditionalChancePerMember) *
               (client.heistMembers.length - 1);
 
             success = Math.random() <= robChance;
-            let guild = await trpcNode.guild.getGuild.query({
-              id: message!.guildId!,
-            });
 
             client.heistMembers.forEach(async (member) => {
               await trpcNode.user.updateLastHeistDate.mutate({
@@ -145,8 +146,8 @@ export class HeistCommand extends Command {
                 (role) => role.id == process.env.ROLE_ID_INMATE
               );
               let jailTime =
-                Number(process.env.HEIST_JAIL_TIME) -
-                Number(process.env.HEIST_REDUCED_JAIL_TIME) *
+                Number(guild.guild!.heistJailTime) -
+                Number(guild.guild!.heistJailTimeReduction) *
                   (client.heistMembers.length - 1);
               client.heistMembers.forEach(async (member) => {
                 splitMessage += `<@${member}> got caught.\n`;

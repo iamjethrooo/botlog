@@ -72,13 +72,40 @@ model Guild {
   ownerId               String
   owner                 User          @relation(fields: [ownerId], references: [discordId])
   bank                  Int           @default(0)
-  thievesBank      Int                @default(0)
+  thievesBank           Int           @default(0)
   // Settings
   disabledCommands      String[]      @map("disabled_commands")
   logChannel            String?       @map("log_channel")
   welcomeMessageChannel String?       @map("welcome_message_channel")
   welcomeMessage        String?       @map("welcome_message")
   welcomeMessageEnabled Boolean       @default(false) @map("welcome_message_enabled")
+  // Chats
+  minCashPerChat        Int           @default(3)
+  maxCashPerChat        Int           @default(10)
+  interval              Int           @default(10)
+  // Rob
+  robCooldown           Int           @default(21600)
+  robCooldownThief      Int           @default(10800)
+  robChance             Decimal       @default(0.33)
+  robChanceThief        Decimal       @default(0.55)
+  robChanceMod          Decimal       @default(0.51)
+  robRate               Decimal       @default(0.02)
+  robRateThief          Decimal       @default(0.07)
+  robTaxMod             Decimal       @default(0.25)
+  // Heist
+  heistWaitingTime      Int           @default(180)
+  heistJailTime         Int           @default(21600)
+  heistJailTimeReduction  Int         @default(1800)
+  heistBaseChance       Decimal       @default(0.1)
+  heistAdditionalChancePerMember  Decimal @default(0.05)
+  heistBaseRate         Decimal       @default(0.05)
+  heistAdditionalRatePerMember  Decimal   @default(0.0125)
+  heistMaxMembers       Int           @default(5)
+  heistCooldown         Int           @default(172800)
+  starboardCost         Int           @default(2000)
+  singleSnipeCost       Int           @default(3000)
+  snipeCostIncrease     Int           @default(500)
+
   // Temp Channels
   hub                   String?
   hubChannel            String?       @map("hub_channel") // The channel that users enter to get redirected
