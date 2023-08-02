@@ -23,12 +23,12 @@ export class isNotInmate extends Precondition {
           name: `${interaction.user.username}#${interaction.user.discriminator}`,
           iconURL: interaction.user.displayAvatarURL(),
         })
-        .setDescription("You can only use this command in prison.")
+        .setDescription("You can only use this command while serving jail time.")
         .setColor((<GuildMember>interaction.member)!.displayHexColor);
 
       await interaction.channel!.send({ embeds: [embed] });
       return this.error({
-        message: "You can only use this command in prison.",
+        message: "You can only use this command while serving jail time.",
       });
     }
     return this.ok();
@@ -43,12 +43,12 @@ export class isNotInmate extends Precondition {
           name: `${message.author.username}#${message.author.discriminator}`,
           iconURL: message.author.displayAvatarURL(),
         })
-        .setDescription("You can only use this command in prison.")
+        .setDescription("You can only use this command while serving jail time.")
         .setColor(message.member!.displayHexColor);
 
       await message.channel.send({ embeds: [embed] });
       return this.error({
-        message: "You can only use this command in prison.",
+        message: "You can only use this command while serving jail time.",
       });
     } else {
       return this.ok();
