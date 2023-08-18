@@ -11,6 +11,24 @@ import * as path from "path";
 })
 export class ReadyListener extends Listener {
   public override async run(client: Client) {
+    /*
+    const targetChannel = client.channels.cache.get("669193383503200266");
+    fs.readFile(
+      path.join(__dirname, "../../src/resources/other/topics.txt"),
+      "utf8",
+      (err, content) => {
+        if (err) {
+          console.error("Error reading the file: ", err);
+        }
+        const lines = content
+          .split("\n")
+          .filter((line) => line.trim() !== "");
+
+        const randomIndex = Math.floor(Math.random() * lines.length);
+        const randomLine = lines[randomIndex];
+        (<TextChannel>targetChannel).send(randomLine);
+      }
+    ); */
     const { username, id } = client.user!;
     console.log(`Successfully logged in as ${username} (${id})`);
     // Fetch specified guild
@@ -43,11 +61,7 @@ export class ReadyListener extends Listener {
 
       const nextExecutionTime = lastExecutionTime + 30 * 60 * 1000; // 30 minutes in milliseconds
       if (currentTime >= nextExecutionTime) {
-
         lastExecutionTime = currentTime;
-        let minutes = Date.now() / (60 * 1000);
-        let remainder = minutes % 30;
-        if (Math.abs(remainder - 30) <= 2 || remainder <= 2) {
           const targetChannel = client.channels.cache.get("669193383503200266");
           fs.readFile(
             path.join(__dirname, "../../src/resources/other/topics.txt"),
@@ -65,7 +79,6 @@ export class ReadyListener extends Listener {
               (<TextChannel>targetChannel).send(randomLine);
             }
           );
-        }
       }
     }, 1000);
   }
