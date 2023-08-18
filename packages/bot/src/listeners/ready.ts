@@ -26,7 +26,6 @@ export class ReadyListener extends Listener {
     await guild.members.fetch();
     setInterval(async () => {
       const currentTime = Date.now();
-      const timeSinceLastExecution = currentTime - lastExecutionTime;
 
       let inmates = guild.roles.cache
         .get(String(process.env.ROLE_ID_INMATE))
@@ -42,7 +41,9 @@ export class ReadyListener extends Listener {
         }
       });
 
-      if (timeSinceLastExecution >= 30 * 60 * 1000) {
+      const nextExecutionTime = lastExecutionTime + 30 * 60 * 1000; // 30 minutes in milliseconds
+      if (currentTime >= nextExecutionTime) {
+
         lastExecutionTime = currentTime;
         let minutes = Date.now() / (60 * 1000);
         let remainder = minutes % 30;
