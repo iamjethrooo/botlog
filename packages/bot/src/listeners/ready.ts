@@ -11,7 +11,6 @@ import * as path from 'path';
 })
 export class ReadyListener extends Listener {
   public override async run(client: Client) {
-    const targetChannel = client.channels.cache.get('848135530197942282');
     const { username, id } = client.user!;
     console.log(`Successfully logged in as ${username} (${id})`);
     // Fetch specified guild
