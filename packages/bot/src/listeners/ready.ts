@@ -40,7 +40,7 @@ export class ReadyListener extends Listener {
     );
     // client.application?.commands.set([], String(process.env.GUILD_ID));
 
-    let lastExecutionTime = 0;
+    let lastExecutionTime = 1692457200000;
     await guild.members.fetch();
     setInterval(async () => {
       const currentTime = Date.now();
@@ -58,8 +58,8 @@ export class ReadyListener extends Listener {
           member?.roles.remove(inmateRole!);
         }
       });
-
-      const nextExecutionTime = lastExecutionTime + 30 * 60 * 1000; // 30 minutes in milliseconds
+      // lastExecutionTime + minutes * 60 * 1000;
+      const nextExecutionTime = lastExecutionTime + 120 * 60 * 1000; // 30 minutes in milliseconds
       if (currentTime >= nextExecutionTime) {
         lastExecutionTime = currentTime;
           const targetChannel = client.channels.cache.get("669193383503200266");
