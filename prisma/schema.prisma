@@ -157,3 +157,31 @@ model StarboardMessage {
   messageId   String    @id
   channelId   String
 }
+
+model NicknameChangeRequest {
+  id          Int @id @default(autoincrement())
+  requesterId String
+  targetId    String
+  newNickname String
+  expires_at  String
+}
+
+model UserNickname {
+  userId    String @id
+  nickname  String
+}
+
+model Giveaway {
+  giveawayId    String @id
+  prize         String
+  numOfWinners  Int @default(1)
+  numOfEntries  Int @default(1)
+  duration      String
+  dateStarted   String
+}
+
+model GiveawayEntry {
+  id          Int @id @default(autoincrement())
+  giveawayId  String
+  userId      String
+}
