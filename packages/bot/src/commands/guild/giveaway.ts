@@ -61,10 +61,12 @@ export class GiveawayCommand extends Command {
       new ButtonBuilder()
         .setCustomId(`${interaction.id}-Join`)
         .setLabel("Join")
+        .setEmoji("🎉")
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`${interaction.id}-Participants`)
         .setLabel("Participants")
+        .setEmoji("👥")
         .setStyle(ButtonStyle.Secondary)
     );
     await interaction.reply({
