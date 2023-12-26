@@ -10,6 +10,7 @@ import { reminderRouter } from './reminder';
 import { itemRouter } from './item';
 import { inventoryRouter } from './inventory';
 import { starboardMessageRouter } from './starboardMessage';
+import { giveawayRouter } from './giveaway';
 
 /**
  * Create your application's root router
@@ -28,7 +29,8 @@ export const appRouter = t.router({
   reminder: reminderRouter,
   item: itemRouter,
   inventory: inventoryRouter,
-  starboardMessage: starboardMessageRouter
+  starboardMessage: starboardMessageRouter,
+  giveaway: giveawayRouter
 });
 
 export type AppRouter = typeof appRouter;

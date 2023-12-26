@@ -172,12 +172,15 @@ model UserNickname {
 }
 
 model Giveaway {
+  messageId     String @default("")
   giveawayId    String @id
   prize         String
   numOfWinners  Int @default(1)
   numOfEntries  Int @default(1)
+  entryFee      String  @default("0")
   duration      String
   dateStarted   String
+  ended         Boolean @default(false)
 }
 
 model GiveawayEntry {

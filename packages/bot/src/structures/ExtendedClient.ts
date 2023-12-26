@@ -23,6 +23,7 @@ export class ExtendedClient extends SapphireClient {
   rrPlayers: [];
   rrBet: Number;
   rrIsOngoing: boolean;
+  activeGiveaways: String[];
 
   public constructor() {
     super({
@@ -88,6 +89,7 @@ export class ExtendedClient extends SapphireClient {
     this.rrPlayers = [];
     this.rrBet = 0;
     this.rrIsOngoing = false;
+    this.activeGiveaways = [];
   }
 }
 
@@ -105,5 +107,6 @@ declare module "@sapphire/framework" {
     rrPlayers: String[];
     rrBet: Number;
     rrIsOngoing: boolean;
+    activeGiveaways: String[];
   }
 }
