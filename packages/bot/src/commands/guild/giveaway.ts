@@ -76,6 +76,7 @@ export class GiveawayCommand extends Command {
     await trpcNode.giveaway.create.mutate({
       messageId: message.id,
       giveawayId: interaction.id,
+      hostId: sponsor.id,
       entryFee: entryFee.toString(),
       prize,
       numOfWinners: winners,

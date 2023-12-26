@@ -101,7 +101,11 @@ export class ReadyListener extends Listener {
           let winners: String[] = [];
           for (let i = 0; i < giveaway!.numOfWinners; i++) {
             let random = Math.floor(Math.random() * entriesFiltered.length);
-            winners.push(entriesFiltered[random]);
+            let winnerId = entriesFiltered[random];
+            winners.push(winnerId);
+            entriesFiltered.filter((entry) => {
+              entry != winnerId;
+            });
           }
           let winnerString = "";
           winners.forEach((winner) => {
@@ -119,12 +123,12 @@ export class ReadyListener extends Listener {
           const giveawayChannel = <TextChannel>(
             client.channels.cache.get(String(process.env.GIVEAWAY_CHANNEL_ID))
           );
-
+          winnerString = "Congratulations to " + winnerString + "!🎉";
           giveawayChannel.send({
             content: winnerString,
             embeds: [winnerEmbed],
           });
-          
+
           giveawayChannel.messages
             .fetch(giveaway!.messageId)
             .then((message) => {
@@ -135,7 +139,9 @@ export class ReadyListener extends Listener {
                 .setDescription(
                   `Winner${
                     giveaway!.numOfWinners > 1 ? "s" : ""
-                  }: ${winnerString}`
+                  }: ${winnerString}
+                  
+                  - Hosted by: <@${giveaway?.hostId}>`
                 )
                 .setFooter({ text: "Ended: " })
                 .setTimestamp();

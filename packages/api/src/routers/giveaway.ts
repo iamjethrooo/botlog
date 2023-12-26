@@ -8,6 +8,7 @@ export const giveawayRouter = t.router({
       z.object({
         messageId: z.string(),
         giveawayId: z.string(),
+        hostId: z.string(),
         entryFee: z.string(),
         prize: z.string(),
         numOfWinners: z.number(),
@@ -20,6 +21,7 @@ export const giveawayRouter = t.router({
       const {
         messageId,
         giveawayId,
+        hostId,
         entryFee,
         prize,
         numOfWinners,
@@ -32,6 +34,7 @@ export const giveawayRouter = t.router({
         data: {
           messageId,
           giveawayId,
+          hostId,
           entryFee,
           prize,
           numOfWinners,
