@@ -1,6 +1,13 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Listener, ListenerOptions, container } from "@sapphire/framework";
-import { type Client, type TextChannel, EmbedBuilder } from "discord.js";
+import {
+  type Client,
+  type TextChannel,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} from "discord.js";
 import { trpcNode } from "../trpc";
 import * as fs from "fs";
 import * as path from "path";
@@ -98,13 +105,13 @@ export class ReadyListener extends Listener {
           });
           shuffle(entriesFiltered);
           // Pick winner
-          let winners: String[] = [];
+          let winners: string[] = [];
           for (let i = 0; i < giveaway!.numOfWinners; i++) {
             let random = Math.floor(Math.random() * entriesFiltered.length);
             let winnerId = entriesFiltered[random];
             winners.push(winnerId);
-            entriesFiltered.filter((entry) => {
-              entry != winnerId;
+            entriesFiltered = entriesFiltered.filter((entry) => {
+              return entry != winnerId;
             });
           }
           let winnerString = "";
@@ -112,26 +119,14 @@ export class ReadyListener extends Listener {
             winnerString += `<@${winner}> `;
           });
           winnerString.trimEnd();
-          // Announce winner
-          const winnerEmbed = new EmbedBuilder()
-            .setColor("#546e7a")
-            .setDescription(
-              `${winnerString} won the giveaway of **${giveaway!.prize}**
 
-              - Reroll Command: \`bbc reroll ${giveaway!.giveawayId}\``
-            );
           const giveawayChannel = <TextChannel>(
             client.channels.cache.get(String(process.env.GIVEAWAY_CHANNEL_ID))
           );
-          winnerString = "Congratulations to " + winnerString + "!🎉";
-          giveawayChannel.send({
-            content: winnerString,
-            embeds: [winnerEmbed],
-          });
 
           giveawayChannel.messages
             .fetch(giveaway!.messageId)
-            .then((message) => {
+            .then(async (message) => {
               let messageEmbed = message.embeds[0];
               let newEmbed = new EmbedBuilder()
                 .setTitle(messageEmbed.title)
@@ -141,13 +136,49 @@ export class ReadyListener extends Listener {
                     giveaway!.numOfWinners > 1 ? "s" : ""
                   }: ${winnerString}
                   
-                  - Hosted by: <@${giveaway?.hostId}>`
+                  Hosted by: <@${giveaway?.hostId}>`
                 )
                 .setFooter({ text: "Ended: " })
                 .setTimestamp();
+              const participants =
+                await trpcNode.giveaway.getParticipants.mutate({
+                  giveawayId: String(giveaway?.giveawayId),
+                });
+              const buttons =
+                new ActionRowBuilder<ButtonBuilder>().addComponents(
+                  new ButtonBuilder()
+                    .setCustomId(`${giveaway!.giveawayId}-Join`)
+                    .setLabel(`${participants.length}`)
+                    .setEmoji("🎉")
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(true),
+                  new ButtonBuilder()
+                    .setCustomId(`${giveaway!.giveawayId}-Participants`)
+                    .setLabel("Participants")
+                    .setEmoji("👥")
+                    .setStyle(ButtonStyle.Secondary)
+                );
               message.edit({
                 content: "🎉Giveaway Ended🎉",
                 embeds: [newEmbed],
+                components: [buttons],
+              });
+
+              const winnerEmbed = new EmbedBuilder()
+                .setColor("#546e7a")
+                .setDescription(
+                  `${winnerString} won the giveaway of [**${
+                    giveaway!.prize
+                  }**](${message.url})
+                  
+                  - Reroll Command: \`bbc reroll ${giveaway!.giveawayId}\``
+                );
+
+              winnerString = "Congratulations to " + winnerString + "!🎉";
+              // Announce winner
+              giveawayChannel.send({
+                content: winnerString,
+                embeds: [winnerEmbed],
               });
             });
 
