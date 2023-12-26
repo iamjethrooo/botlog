@@ -8,7 +8,7 @@ import { PaginatedFieldMessageEmbed } from "@sapphire/discord.js-utilities";
 })
 export class InteractionCreateListener extends Listener {
   public override async run(interaction: ButtonInteraction) {
-    console.log(interaction);
+    //console.log(interaction);
     const customId = interaction.customId.split("-")[0];
     const action = interaction.customId.split("-")[1];
     const userId = interaction.member?.user.id!;
