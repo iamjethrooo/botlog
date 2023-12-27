@@ -67,9 +67,11 @@ async function rob(
   );
 
   // Number of fortune amulets of the suspect
-  let fortuneAmuletCount = suspectInventory.inventory.filter(
+  let fortuneAmuletInv = suspectInventory.inventory.filter(
     (i) => i.itemId == fortuneAmulet!.id
-  ).length;
+  );
+  let fortuneAmuletCount =
+    fortuneAmuletInv.length != 0 ? fortuneAmuletInv[0].amount : 0;
 
   let lastRobDate = Number(suspect.user!.lastRobDate);
   let robCooldown = isThief

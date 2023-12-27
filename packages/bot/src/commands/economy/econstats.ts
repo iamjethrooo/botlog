@@ -70,9 +70,11 @@ export class EconStatsCommand extends Command {
       (e) => e.itemId == unstablePotion!.id
     );
 
-    let fortuneAmuletCount = userInventory.inventory.filter(
+    let fortuneAmuletInv = userInventory.inventory.filter(
       (i) => i.itemId == fortuneAmulet!.id
-    ).length;
+    );
+    let fortuneAmuletCount =
+      fortuneAmuletInv.length != 0 ? fortuneAmuletInv[0].amount : 0;
 
     let successChance =
       robChance +
