@@ -1,24 +1,25 @@
-import { load } from '@lavaclient/spotify';
+import { load } from "@lavaclient/spotify";
 import {
   ApplicationCommandRegistries,
-  RegisterBehavior
-} from '@sapphire/framework';
-import type { NewsChannel, TextChannel, ThreadChannel } from 'discord.js';
-import buttonsCollector from './lib/utils/music/buttonsCollector';
-import { ExtendedClient } from './structures/ExtendedClient';
-import Logger from './lib/utils/logger';
-import { ErrorListeners } from './listeners/ErrorHandling';
-import ReminderEvents from './lib/utils/reminders/ReminderEvents';
-import { checkReminders } from './lib/utils/reminders/handleReminders';
-import { Time } from '@sapphire/time-utilities';
+  RegisterBehavior,
+} from "@sapphire/framework";
+import {
+  type NewsChannel,
+  type TextChannel,
+  type ThreadChannel,
+} from "discord.js";
+import buttonsCollector from "./lib/utils/music/buttonsCollector";
+import { ExtendedClient } from "./structures/ExtendedClient";
+import Logger from "./lib/utils/logger";
+import { ErrorListeners } from "./listeners/ErrorHandling";
 
 if (process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET) {
   load({
     client: {
       id: process.env.SPOTIFY_CLIENT_ID,
-      secret: process.env.SPOTIFY_CLIENT_SECRET
+      secret: process.env.SPOTIFY_CLIENT_SECRET,
     },
-    autoResolveYoutubeTracks: true
+    autoResolveYoutubeTracks: true,
   });
 }
 
@@ -26,28 +27,16 @@ const client = new ExtendedClient();
 
 ErrorListeners();
 
-client.on('ready', async () => {
+client.on("ready", async () => {
   client.music.connect(client.user!.id);
-  client.user ?.setStatus('online');
+  client.user?.setStatus("online");
 
-  try {
-    ReminderEvents();
-    await checkReminders();
-
-    // maintenance
-    setInterval(async () => {
-      await checkReminders();
-    }, Time.Day);
-  } catch (error) {
-    Logger.error('Reminders Start ' + error);
-  }
-
-  client.guilds.cache.map(async guild => {
+  client.guilds.cache.map(async (guild) => {
     const queue = client.music.queues.get(guild.id);
 
     // grab last known voice state of bot
     const voiceState = await guild.voiceStates.cache.find(
-      user => user.id == client.application?.id
+      (user) => user.id == client.application?.id
     );
 
     // update lavalink manually if the bot is still in voice chat after restart
@@ -55,7 +44,7 @@ client.on('ready', async () => {
       session_id: voiceState?.sessionId,
       channel_id: voiceState?.channel?.id,
       guild_id: voiceState?.guild.id,
-      user_id: guild.members.me?.id
+      user_id: guild.members.me?.id,
     };
     if (queue) {
       if (guild.members.me?.voice) {
@@ -89,10 +78,9 @@ client.on('ready', async () => {
   });
 });
 
-
 export type MessageChannel = TextChannel | ThreadChannel | NewsChannel | null;
 
-declare module 'lavaclient' {
+declare module "lavaclient" {
   interface Player {
     nightcore: boolean;
     vaporwave: boolean;
@@ -101,6 +89,7 @@ declare module 'lavaclient' {
   }
 }
 
+ApplicationCommandRegistries.setDefaultGuildIds(['669190303353143306']);
 ApplicationCommandRegistries.setDefaultBehaviorWhenNotIdentical(
   RegisterBehavior.Overwrite
 );
