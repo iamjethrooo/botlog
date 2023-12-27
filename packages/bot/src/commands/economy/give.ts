@@ -6,7 +6,7 @@ import {
   Args,
   container,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
+import { CommandInteraction, Message, EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
 import { trpcNode } from "../../trpc";
 
 @ApplyOptions<CommandOptions>({
@@ -124,6 +124,20 @@ export class GiveCommand extends Command {
     registery.registerChatInputCommand({
       name: this.name,
       description: this.description,
+      options: [
+        {
+          type: ApplicationCommandOptionType.User,
+          required: true,
+          name: "user",
+          description: `Who do you want to give coins to?`,
+        },
+        {
+          type: ApplicationCommandOptionType.Integer,
+          required: true,
+          name: 'amount',
+          description: 'How many coins do you want to give?'
+        },
+      ]
     });
   }
 }
