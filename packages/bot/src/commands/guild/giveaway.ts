@@ -25,16 +25,18 @@ export const participants: Map<string, GuildMember> = new Map();
 export class GiveawayCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const { client } = container;
-    const sponsor = <GuildMember>interaction.member;
+
+    const prize = interaction.options.getString("prize", true);
+    const endsAt = interaction.options.getString("ends-at", true);
+
     let entryFee = interaction.options.getInteger("entry-fee");
     entryFee = entryFee == null ? 0 : entryFee;
-    const prize = interaction.options.getString("prize", true);
-    let winners = interaction.options.getInteger("winners", true);
-    winners = winners == null ? 0 : winners;
-    const duration = interaction.options.getInteger("duration", true);
-    let entries = interaction.options.getInteger("entries", true);
-    entries = entries == null ? 0 : entries;
-    // let attachment = interaction.options.getAttachment("attachment");
+    let winners = interaction.options.getInteger("winners");
+    winners = winners == null ? 1 : winners;
+    let entries = interaction.options.getInteger("entries");
+    entries = entries == null ? 1 : entries;
+    const host = interaction.options.getUser("host");
+    let attachment = interaction.options.getAttachment("attachment");
 
     if (entryFee < 0) {
       return await interaction.reply({
@@ -51,8 +53,8 @@ export class GiveawayCommand extends Command {
       Entry Fee: ${process.env.COIN_EMOJI}${entryFee}
       Number of Entries: ${entries}
       Number of Winners: ${winners}
-      Ends at: <t:${Math.round(Date.now() / 1000) + duration}:F>
-      Hosted by: <@${sponsor.id}>
+      Ends at: <t:${Math.round(Number(endsAt)/1000)}:F>
+      ${host == null ? "" : `Hosted by: <@${host.id}>`}
       `
       )
       .setTimestamp();
@@ -69,21 +71,31 @@ export class GiveawayCommand extends Command {
         .setEmoji("👥")
         .setStyle(ButtonStyle.Secondary)
     );
-    await interaction.reply({
-      content: "🎉Giveaway🎉",
-      embeds: [invite],
-      components: [buttons],
-    });
+    if (attachment == null) {
+      await interaction.reply({
+        content: "🎉Giveaway🎉",
+        embeds: [invite],
+        components: [buttons],
+      });
+    } else {
+      await interaction.reply({
+        content: "🎉Giveaway🎉",
+        embeds: [invite],
+        components: [buttons],
+        files: [{ attachment: attachment.url }],
+      });
+    }
+
     let message = await interaction.fetchReply();
     await trpcNode.giveaway.create.mutate({
       messageId: message.id,
       giveawayId: interaction.id,
-      hostId: sponsor.id,
+      hostId: host == null ? "" : host.id,
       entryFee: entryFee.toString(),
       prize,
       numOfWinners: winners,
       numOfEntries: entries,
-      duration: duration.toString(),
+      endsAt: endsAt.toString(),
       dateStarted: Math.round(Date.now() / 1000).toString(),
     });
 
@@ -109,6 +121,13 @@ export class GiveawayCommand extends Command {
           description: "What is the prize?",
         },
         {
+          type: ApplicationCommandOptionType.String,
+          required: true,
+          name: "ends-at",
+          description:
+            "When will the giveaway end? (in milliseconds since Unix Epoch)",
+        },
+        {
           type: ApplicationCommandOptionType.Integer,
           name: "entry-fee",
           description: "How much is the entry fee?",
@@ -120,14 +139,13 @@ export class GiveawayCommand extends Command {
         },
         {
           type: ApplicationCommandOptionType.Integer,
-          required: true,
-          name: "duration",
-          description: "How long is the duration in seconds?",
-        },
-        {
-          type: ApplicationCommandOptionType.Integer,
           name: "entries",
           description: "How many entries can a user have?",
+        },
+        {
+          type: ApplicationCommandOptionType.User,
+          name: "host",
+          description: "Who hosted this giveaway?",
         },
         {
           type: ApplicationCommandOptionType.Attachment,

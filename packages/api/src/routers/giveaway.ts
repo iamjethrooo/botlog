@@ -13,7 +13,7 @@ export const giveawayRouter = t.router({
         prize: z.string(),
         numOfWinners: z.number(),
         numOfEntries: z.number(),
-        duration: z.string(),
+        endsAt: z.string(),
         dateStarted: z.string(),
       })
     )
@@ -26,7 +26,7 @@ export const giveawayRouter = t.router({
         prize,
         numOfWinners,
         numOfEntries,
-        duration,
+        endsAt,
         dateStarted,
       } = input;
 
@@ -39,7 +39,7 @@ export const giveawayRouter = t.router({
           prize,
           numOfWinners,
           numOfEntries,
-          duration,
+          endsAt,
           dateStarted,
         },
       });

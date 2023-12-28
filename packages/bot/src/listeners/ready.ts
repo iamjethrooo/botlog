@@ -30,8 +30,8 @@ export class ReadyListener extends Listener {
       (role) => role.id == process.env.ROLE_ID_INMATE
     );
 
-    guild.commands.set([]);
-    client.application!.commands.set([], String(process.env.GUILD_ID));
+    // guild.commands.set([]);
+    // client.application!.commands.set([], String(process.env.GUILD_ID));
 
     let lastExecutionTime = 1692457200000;
     await guild.members.fetch();
@@ -91,15 +91,12 @@ export class ReadyListener extends Listener {
         const giveaway = await trpcNode.giveaway.getById.mutate({
           giveawayId: giveawayId.toString(),
         });
-        if (
-          Number(giveaway!.dateStarted) + Number(giveaway!.duration) <
-          Math.round(Date.now() / 1000)
-        ) {
+        if (Number(Date.now()) > Number(giveaway!.endsAt)) {
           // Get participants
           const entries = await trpcNode.giveaway.getEntries.mutate({
             giveawayId: giveawayId.toString(),
           });
-          // console.log(entries);
+
           let entriesFiltered = entries.map((entry) => {
             return entry.userId;
           });
@@ -118,7 +115,7 @@ export class ReadyListener extends Listener {
           winners.forEach((winner) => {
             winnerString += `<@${winner}> `;
           });
-          winnerString.trimEnd();
+          winnerString.trim();
 
           const giveawayChannel = <TextChannel>(
             client.channels.cache.get(String(process.env.GIVEAWAY_CHANNEL_ID))
@@ -134,9 +131,11 @@ export class ReadyListener extends Listener {
                 .setDescription(
                   `Winner${
                     giveaway!.numOfWinners > 1 ? "s" : ""
-                  }: ${winnerString}
-                  
-                  Hosted by: <@${giveaway?.hostId}>`
+                  }: ${winnerString}${
+                    giveaway?.hostId == ""
+                      ? ""
+                      : `\n\nHosted by: <@${giveaway?.hostId}>`
+                  }`
                 )
                 .setFooter({ text: "Ended: " })
                 .setTimestamp();
@@ -158,11 +157,25 @@ export class ReadyListener extends Listener {
                     .setEmoji("👥")
                     .setStyle(ButtonStyle.Secondary)
                 );
-              message.edit({
-                content: "🎉Giveaway Ended🎉",
-                embeds: [newEmbed],
-                components: [buttons],
-              });
+
+              const attachmentUrl =
+                message.attachments.size > 0
+                  ? message.attachments.first()!.url
+                  : "";
+              if (attachmentUrl == "") {
+                message.edit({
+                  content: "🎉Giveaway Ended🎉",
+                  embeds: [newEmbed],
+                  components: [buttons],
+                });
+              } else {
+                message.edit({
+                  content: "🎉Giveaway Ended🎉",
+                  embeds: [newEmbed],
+                  components: [buttons],
+                  files: [{ attachment: attachmentUrl }],
+                });
+              }
 
               const winnerEmbed = new EmbedBuilder()
                 .setColor("#546e7a")
