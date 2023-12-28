@@ -179,7 +179,7 @@ model Giveaway {
   numOfWinners  Int @default(1)
   numOfEntries  Int @default(1)
   entryFee      String  @default("0")
-  duration      String
+  endsAt        String  @default("0")
   dateStarted   String
   ended         Boolean @default(false)
 }
