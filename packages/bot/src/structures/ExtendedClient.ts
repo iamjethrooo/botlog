@@ -38,6 +38,7 @@ export class ExtendedClient extends SapphireClient {
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.GuildVoiceStates,
         GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildPresences
       ],
       logger: { level: 100 },
     });
