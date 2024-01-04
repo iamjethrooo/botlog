@@ -27,6 +27,17 @@ function randomlyAdjustNumber(num: number): number {
   }
 }
 
+function generateRandomNumber(min: number, max: number) {
+  // Generate a random number between 0 and 1
+  const randomFraction = Math.random();
+
+  // Scale and shift the random number to the desired range (100 to 500)
+  const randomNumberInRange =
+    Math.floor(randomFraction * (max - min + 1)) + min;
+
+  return randomNumberInRange;
+}
+
 async function rob(
   user: User,
   victimId: string,
@@ -101,17 +112,17 @@ async function rob(
 
   let victimCash = victim.user!.cash;
 
-  let robRate = isThief
-    ? Number(process.env.ROB_RATE_THIEF)
-    : Number(process.env.ROB_RATE);
-
   let robChance = isMod
     ? Number(process.env.ROB_CHANCE_MOD)
     : isThief
     ? Number(process.env.ROB_CHANCE_THIEF)
     : Number(process.env.ROB_CHANCE);
 
-  let robAmount = Math.round(victimCash * robRate);
+  let robAmount = generateRandomNumber(
+    Number(process.env.ROB_MIN),
+    Number(process.env.ROB_MAX)
+  );
+  robAmount = robAmount > victimCash ? victimCash : robAmount;
 
   let successChance =
     robChance +
