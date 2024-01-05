@@ -48,9 +48,9 @@ export class EconStatsCommand extends Command {
       (i) => i.name.toLowerCase() == "unstable potion"
     );
 
-    let robRate = isThief
-      ? Number(process.env.ROB_RATE_THIEF)
-      : Number(process.env.ROB_RATE);
+    // let robRate = isThief
+    //   ? Number(process.env.ROB_RATE_THIEF)
+    //   : Number(process.env.ROB_RATE);
 
     let robChance = isMod
       ? Number(process.env.ROB_CHANCE_MOD)
@@ -117,11 +117,11 @@ export class EconStatsCommand extends Command {
           value: `\`${Math.round(Number(successChance) * 100)}%\``,
           inline: true,
         },
-        {
-          name: "Rob Earnings",
-          value: `\`${Number(robRate) * 100}%\``,
-          inline: true,
-        },
+        // {
+        //   name: "Rob Earnings",
+        //   value: `\`${Number(robRate) * 100}%\``,
+        //   inline: true,
+        // },
         {
           name: "Rob Cooldown",
           value: `\`${Number(process.env.ROB_COOLDOWN) / 3600} hours\``,

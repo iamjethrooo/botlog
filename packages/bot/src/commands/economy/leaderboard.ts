@@ -91,6 +91,7 @@ async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
     for (const _user of leaderboard.leaderboard) {
       let member = guild!.members.cache.get(_user!.discordId!);
       let isMod = member ? member!.permissions.has("Administrator") : false;
+      isMod = false;
 
       if (!member || isMod && !showAll) {
         continue;

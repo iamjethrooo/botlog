@@ -45,6 +45,7 @@ async function rob(
   isMod: boolean,
   guildId: string
 ) {
+  isMod = false;
   let suspectId = user.id;
   let suspect = await trpcNode.user.getUserById.query({
     id: suspectId,

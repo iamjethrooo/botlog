@@ -73,7 +73,7 @@ export class HeistCommand extends Command {
             iconURL: message.author.displayAvatarURL(),
           })
           .setColor(message.member!.displayHexColor)
-          .setFooter({ text: "Time remaining: 3 minutes or 5 members" });
+          .setFooter({ text: "Time remaining: 10 minutes or 10 members" });
         await message.channel.send({ embeds: [embed] });
 
         client.intervals["heist"] = setInterval(async () => {
@@ -214,7 +214,7 @@ export class HeistCommand extends Command {
               iconURL: message.author.displayAvatarURL(),
             })
             .setDescription(
-              `❌ Only <@${client.heistLeader}> can start the heist before 3 minutes is up.`
+              `❌ Only <@${client.heistLeader}> can start the heist before 10 minutes is up.`
             )
             .setColor(`#${process.env.RED_COLOR}`)
             .setFooter(null);
