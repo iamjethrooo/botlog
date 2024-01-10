@@ -47,6 +47,7 @@ model User {
   reminders         Reminder[]
   items             Inventory[]
   timeOffset        Int?
+  failedRobAttempts Int           @default(0)
   lastMessageDate   String        @default("0")
   lastRobDate       String        @default("0")
   lastHeistDate     String        @default("0")
@@ -110,6 +111,20 @@ model Guild {
   hub                   String?
   hubChannel            String?       @map("hub_channel") // The channel that users enter to get redirected
   tempChannels          TempChannel[]
+}
+
+model Setting {
+  id            Int @id @default(autoincrement())
+  guildId       String
+  settingKey    String
+  settingValue  String
+}
+
+model Topic {
+  id              Int @id @default(autoincrement())
+  guildId         String
+  messageContent  String @default("")
+  lastSentAt      String @default("")
 }
 
 model TempChannel {

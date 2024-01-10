@@ -51,6 +51,7 @@ async function rob(
     id: suspectId,
   });
   let suspectCash = suspect.user!.cash;
+  const failedRobAttempts = suspect.user!.failedRobAttempts;
 
   let allItems = await trpcNode.item.getAll.query();
 
@@ -131,7 +132,8 @@ async function rob(
     fortuneAmuletCount * Number(process.env.FORTUNE_AMULET_INCREASE) +
     (suspectHasUnstablePotion
       ? randomlyAdjustNumber(Number(process.env.LUCKY_CHARM_INCREASE))
-      : 0);
+      : 0) +
+    failedRobAttempts * 0.1;
   let roll = Math.random();
   let success = roll <= successChance;
   console.log(
@@ -167,6 +169,11 @@ async function rob(
       id: victimId,
       cash: robAmount,
     });
+
+    await trpcNode.user.setFailedRobAttempts.mutate({
+      id: suspectId,
+      failedRobAttempts: 0,
+    });
     embed.setDescription(
       `✅ You robbed ${process.env.COIN_EMOJI}${robAmount} from <@${victimId}>.${extraMessage}`
     );
@@ -183,6 +190,11 @@ async function rob(
     await trpcNode.guild.addToBank.mutate({
       id: guildId,
       amount: amountToBeSubtracted,
+    });
+
+    await trpcNode.user.setFailedRobAttempts.mutate({
+      id: suspectId,
+      failedRobAttempts: failedRobAttempts + 1,
     });
 
     embed.setDescription(

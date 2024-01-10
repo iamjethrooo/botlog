@@ -171,6 +171,25 @@ export const userRouter = t.router({
 
       return { jt };
     }),
+  setFailedRobAttempts: t.procedure
+    .input(
+      z.object({
+        id: z.string(),
+        failedRobAttempts: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, failedRobAttempts } = input;
+
+      const newValue = await ctx.prisma.user.update({
+        where: {
+          discordId: id,
+        },
+        data: { failedRobAttempts: failedRobAttempts },
+      });
+
+      return newValue;
+    }),
   addCash: t.procedure
     .input(
       z.object({

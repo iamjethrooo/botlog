@@ -1,5 +1,10 @@
 import { SapphireClient } from "@sapphire/framework";
-import { GatewayDispatchEvents, GatewayIntentBits, Message } from "discord.js";
+import {
+  GatewayDispatchEvents,
+  GatewayIntentBits,
+  Partials,
+  Message,
+} from "discord.js";
 import { QueueClient } from "../lib/utils/queue/QueueClient";
 import Redis from "ioredis";
 import { deletePlayerEmbed } from "../lib/utils/music/buttonsCollector";
@@ -38,8 +43,9 @@ export class ExtendedClient extends SapphireClient {
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.GuildVoiceStates,
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildPresences
+        GatewayIntentBits.GuildPresences,
       ],
+      partials: [Partials.Message, Partials.Reaction],
       logger: { level: 100 },
     });
 
