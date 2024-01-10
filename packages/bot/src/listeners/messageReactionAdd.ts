@@ -22,7 +22,10 @@ export class MessageReactionAddListener extends Listener {
     }
 
     const message = messageReaction.message;
-    let count = message.reactions.cache.get("⭐")?.count;
+    let reactions = message.reactions.cache.get("⭐");
+    let count = reactions?.users.cache.filter(
+      (u) => u.id != message.author?.id
+    ).size;
     count = count == undefined ? 0 : count;
     if (count >= 6) {
       const messageInStarboard =
