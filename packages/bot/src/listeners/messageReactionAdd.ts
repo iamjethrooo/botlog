@@ -20,12 +20,18 @@ export class MessageReactionAddListener extends Listener {
         );
       }
     }
+    await messageReaction.message.channel.messages.fetch(messageReaction.message.id);
 
     const message = messageReaction.message;
     let reactions = message.reactions.cache.get("⭐");
-    let count = reactions?.users.cache.filter(
-      (u) => u.id != message.author?.id
-    ).size;
+    await reactions?.users.fetch();
+    let count = reactions?.users.cache.filter((u) => {
+      {
+        console.log(u.id);
+        return u.id != message.author?.id;
+      }
+    }).size;
+
     count = count == undefined ? 0 : count;
     if (count >= 6) {
       const messageInStarboard =
