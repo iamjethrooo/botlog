@@ -20,6 +20,10 @@ import { trpcNode } from "../../trpc";
 })
 export class BalanceCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
+    const coinEmoji = await trpcNode.setting.getByKey.mutate({
+      key: "coinEmoji",
+    });
+
     try {
       let user = await trpcNode.user.getUserById.query({
         id: interaction.user.id,
@@ -31,9 +35,7 @@ export class BalanceCommand extends Command {
           iconURL: interaction.user.displayAvatarURL(),
         })
         .setDescription(
-          `You currently have ${process.env.COIN_EMOJI}${String(
-            user!.user!.cash
-          )}.`
+          `You currently have ${coinEmoji!}${String(user!.user!.cash)}.`
         )
         .setTimestamp(interaction.createdAt)
         .setColor((<GuildMember>interaction.member)!.displayHexColor);
@@ -45,6 +47,9 @@ export class BalanceCommand extends Command {
   }
 
   public override async messageRun(message: Message) {
+    const coinEmoji = await trpcNode.setting.getByKey.mutate({
+      key: "coinEmoji",
+    });
     try {
       let user = await trpcNode.user.getUserById.query({
         id: message.author.id,
@@ -56,7 +61,7 @@ export class BalanceCommand extends Command {
           iconURL: message.author.displayAvatarURL(),
         })
         .setDescription(
-          `You currently have ${process.env.COIN_EMOJI}${String(
+          `You currently have ${coinEmoji}${String(
             user!.user!.cash
           )}.`
         )

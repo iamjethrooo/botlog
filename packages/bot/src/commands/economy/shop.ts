@@ -13,10 +13,12 @@ async function generateShopText() {
   let counter = 1;
   let shop = await trpcNode.item.getAll.query();
   let shopFormatted: String[] = [];
-
+  const coinEmoji = await trpcNode.setting.getByKey.mutate({
+    key: "coinEmoji",
+  });
   shop.allItems.forEach((item) => {
     shopFormatted.push(
-      `**${counter}.** ${item.emoji} **${item.name}** | ${process.env.COIN_EMOJI}**\`${item.buyPrice}\`**\n${item.description}\n`
+      `**${counter}.** ${item.emoji} **${item.name}** | ${coinEmoji}**\`${item.buyPrice}\`**\n${item.description}\n`
     );
     counter++;
   });
@@ -32,11 +34,14 @@ async function generateShopText() {
 export class ShopCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const { client } = container;
+    const greenColor = await trpcNode.setting.getByKey.mutate({
+      key: "greenColor",
+    });
     try {
       let shopFormatted = await generateShopText();
 
       const baseEmbed = new EmbedBuilder()
-        .setColor(`#${process.env.GREEN_COLOR}`)
+        .setColor(`#${greenColor}`)
         .setAuthor({
           name: "Botlog Shop",
           iconURL: client.user!.displayAvatarURL(),
@@ -55,11 +60,14 @@ export class ShopCommand extends Command {
 
   public override async messageRun(message: Message) {
     const { client } = container;
+    const greenColor = await trpcNode.setting.getByKey.mutate({
+      key: "greenColor",
+    });
     try {
       let shopFormatted = await generateShopText();
 
       const baseEmbed = new EmbedBuilder()
-        .setColor(`#${process.env.GREEN_COLOR}`)
+        .setColor(`#${greenColor}`)
         .setAuthor({
           name: "Botlog Shop",
           iconURL: client.user!.displayAvatarURL(),

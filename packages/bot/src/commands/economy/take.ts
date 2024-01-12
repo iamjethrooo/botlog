@@ -17,7 +17,6 @@ import { trpcNode } from "../../trpc";
 
 async function takeFromRole(roleId: string, guildId: string, amount: number) {
   // Take cash from a role
-
   const { client } = container;
   const guild = client.guilds.cache.get(guildId);
   guild!.members.fetch().then((members) =>
@@ -42,6 +41,9 @@ async function takeFromRole(roleId: string, guildId: string, amount: number) {
 }
 
 async function takeFromUser(user: User, amount: number) {
+  const startingCash = await trpcNode.setting.getByKey.mutate({
+    key: "startingCash",
+  });
   // Take cash from a user
   try {
     // Check if user exists in database
@@ -56,7 +58,7 @@ async function takeFromUser(user: User, amount: number) {
       });
       await trpcNode.user.addCash.mutate({
         id: user.id,
-        cash: Number(process.env.STARTING_CASH) - amount,
+        cash: Number(startingCash) - amount,
       });
     } else {
       await trpcNode.user.subtractCash.mutate({
@@ -81,7 +83,9 @@ export class TakeCommand extends Command {
 
   public override async messageRun(message: Message, args: Args) {
     let amount = await args.pick("integer").catch(() => 0);
-
+    const coinEmoji = await trpcNode.setting.getByKey.mutate({
+      key: "coinEmoji",
+    });
     // Take cash from a user
     if (message.mentions.users.size == 1) {
       let first = message.mentions.users!.first()!;
@@ -93,7 +97,7 @@ export class TakeCommand extends Command {
           iconURL: message.author.displayAvatarURL(),
         })
         .setDescription(
-          `Took ${process.env.COIN_EMOJI}${String(amount)} from <@${first.id}>.`
+          `Took ${coinEmoji}${String(amount)} from <@${first.id}>.`
         )
         .setTimestamp(message.createdAt)
         .setColor(message.member!.displayHexColor);
@@ -110,7 +114,7 @@ export class TakeCommand extends Command {
           iconURL: message.author.displayAvatarURL(),
         })
         .setDescription(
-          `Took ${process.env.COIN_EMOJI}${String(amount)} from <@&${roleId}>.`
+          `Took ${coinEmoji}${String(amount)} from <@&${roleId}>.`
         )
         .setTimestamp(message.createdAt)
         .setColor(message.member!.displayHexColor);

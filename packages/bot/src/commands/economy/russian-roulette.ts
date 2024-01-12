@@ -47,6 +47,29 @@ export class RussianRouletteCommand extends Command {
     let argument = await args.pick("string").catch(() => "");
     let argumentIsNumber = false;
     let bet = 0;
+
+    const coinEmoji = await trpcNode.setting.getByKey.mutate({
+      key: "coinEmoji",
+    });
+    const rrMinBet = await trpcNode.setting.getByKey.mutate({
+      key: "rrMinBet",
+    });
+    const rrMaxBet = await trpcNode.setting.getByKey.mutate({
+      key: "rrMaxBet",
+    });
+    const rrMaxPlayers = await trpcNode.setting.getByKey.mutate({
+      key: "rrMaxPlayers",
+    });
+    const rrWaitingTime = await trpcNode.setting.getByKey.mutate({
+      key: "rrWaitingTime",
+    });
+    const greenColor = await trpcNode.setting.getByKey.mutate({
+      key: "greenColor",
+    });
+    const redColor = await trpcNode.setting.getByKey.mutate({
+      key: "redColor",
+    });
+
     try {
       bet = Number(argument);
       argumentIsNumber = bet ? true : false;
@@ -63,9 +86,9 @@ export class RussianRouletteCommand extends Command {
       iconURL: message.author.displayAvatarURL(),
     });
 
-    const minBet = Number(process.env.RR_MIN_BET);
-    const maxBet = Number(process.env.RR_MAX_BET);
-    const MAX_MEMBERS = Number(process.env.RR_MAX_PLAYERS);
+    const minBet = Number(rrMinBet);
+    const maxBet = Number(rrMaxBet);
+    const MAX_MEMBERS = Number(rrMaxPlayers);
 
     const noGameOngoing = !client.intervals["rr"];
     if (noGameOngoing && argumentIsNumber) {
@@ -75,14 +98,14 @@ export class RussianRouletteCommand extends Command {
       if (bet < minBet) {
         embed
           .setDescription(`❌ The bet must be more than \`${minBet}\``)
-          .setColor(`#${process.env.RED_COLOR}`)
+          .setColor(`#${redColor}`)
           .setFooter(null);
         await message.channel.send({ embeds: [embed] });
         return;
       } else if (bet > maxBet) {
         embed
           .setDescription(`❌ The bet must be less than \`${maxBet}\``)
-          .setColor(`#${process.env.RED_COLOR}`)
+          .setColor(`#${redColor}`)
           .setFooter(null);
         await message.channel.send({ embeds: [embed] });
         return;
@@ -91,7 +114,7 @@ export class RussianRouletteCommand extends Command {
       let insufficientFunds = user!.user!.cash < bet;
       if (insufficientFunds) {
         embed.setDescription(`❌ You do not have enough money for the bet!`);
-        embed.setColor(`#${process.env.RED_COLOR}`);
+        embed.setColor(`#${redColor}`);
         await message.channel.send({ embeds: [embed] });
         return;
       }
@@ -117,7 +140,7 @@ export class RussianRouletteCommand extends Command {
         if (client.rrIsOngoing) {
           client.rrIsOngoing =
             (Date.now() - Number(client.timestamps["rr"])) / 1000 <
-            Number(process.env.RR_WAITING_TIME);
+            Number(rrWaitingTime);
           return;
         }
         if (client.rrPlayers.length < 2) {
@@ -126,7 +149,7 @@ export class RussianRouletteCommand extends Command {
               `Sorry, the minimum number of players required to start a Russian roulette game is \`two\`. Please invite more players to join the game.`
             )
             .setAuthor(null)
-            .setColor(`#${process.env.RED_COLOR}`)
+            .setColor(`#${redColor}`)
             .setFooter(null);
           await message.channel.send({ embeds: [embed] });
           clearInterval(client.intervals["rr"]);
@@ -172,13 +195,13 @@ export class RussianRouletteCommand extends Command {
             let splitMessage = "";
             for (const player of client.rrPlayers) {
               if (player == losingPlayerId) continue;
-              splitMessage += `<@${player}> got ${process.env.COIN_EMOJI}${winnings}\n`;
+              splitMessage += `<@${player}> got ${coinEmoji}${winnings}\n`;
               await trpcNode.user.addCash.mutate({
                 id: String(player),
                 cash: winnings,
               });
             }
-            splitMessage += `\n<@${losingPlayerId}> lost ${process.env.COIN_EMOJI}${bet}`;
+            splitMessage += `\n<@${losingPlayerId}> lost ${coinEmoji}${bet}`;
 
             await trpcNode.user.subtractCash.mutate({
               id: String(losingPlayerId),
@@ -215,14 +238,14 @@ export class RussianRouletteCommand extends Command {
             iconURL: message.author.displayAvatarURL(),
           })
           .setDescription(`❌ You have already joined the game!`)
-          .setColor(`#${process.env.RED_COLOR}`)
+          .setColor(`#${redColor}`)
           .setFooter(null);
         await message.channel.send({ embeds: [embed] });
       } else {
         let insufficientFunds = user!.user!.cash < Number(client.rrBet);
         if (insufficientFunds) {
           embed.setDescription(`❌ You do not have enough money for the bet!`);
-          embed.setColor(`#${process.env.RED_COLOR}`);
+          embed.setColor(`#${redColor}`);
           await message.channel.send({ embeds: [embed] });
           return;
         }
@@ -235,7 +258,7 @@ export class RussianRouletteCommand extends Command {
             iconURL: message.author.displayAvatarURL(),
           })
           .setDescription(`✅ You joined the game.`)
-          .setColor(`#${process.env.GREEN_COLOR}`)
+          .setColor(`#${greenColor}`)
           .setFooter(null);
         await message.channel.send({ embeds: [embed] });
       }
@@ -252,7 +275,7 @@ export class RussianRouletteCommand extends Command {
           .setDescription(
             `❌ Only <@${client.rrPlayers[0]}> can start the game before 3 minutes is up.`
           )
-          .setColor(`#${process.env.RED_COLOR}`)
+          .setColor(`#${redColor}`)
           .setFooter(null);
         await message.channel.send({ embeds: [embed] });
       }

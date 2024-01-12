@@ -6,7 +6,12 @@ import {
   Args,
   container,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, EmbedBuilder, ApplicationCommandOptionType } from "discord.js";
+import {
+  CommandInteraction,
+  Message,
+  EmbedBuilder,
+  ApplicationCommandOptionType,
+} from "discord.js";
 import { trpcNode } from "../../trpc";
 
 @ApplyOptions<CommandOptions>({
@@ -19,7 +24,12 @@ export class GiveCommand extends Command {
 
   public override async messageRun(message: Message, args: Args) {
     let amount = await args.pick("integer").catch(() => 0);
-
+    const coinEmoji = await trpcNode.setting.getByKey.mutate({
+      key: "coinEmoji",
+    });
+    const startingCash = await trpcNode.setting.getByKey.mutate({
+      key: "startingCash",
+    });
     // Give cash to a user
     if (message.mentions.users.size == 1) {
       console.log(message.mentions.users!.first()!.id);
@@ -37,7 +47,7 @@ export class GiveCommand extends Command {
           });
           await trpcNode.user.addCash.mutate({
             id: id,
-            cash: Number(process.env.STARTING_CASH) + amount,
+            cash: Number(startingCash) + amount,
           });
         } else {
           await trpcNode.user.addCash.mutate({
@@ -51,9 +61,7 @@ export class GiveCommand extends Command {
             name: `${message.author.username}#${message.author.discriminator}`,
             iconURL: message.author.displayAvatarURL(),
           })
-          .setDescription(
-            `Gave <@${id}> ${process.env.COIN_EMOJI}${String(amount)}.`
-          )
+          .setDescription(`Gave <@${id}> ${coinEmoji}${String(amount)}.`)
           .setTimestamp(message.createdAt)
           .setColor(message.member!.displayHexColor);
         return await message.reply({ embeds: [embed] });
@@ -86,7 +94,7 @@ export class GiveCommand extends Command {
                 });
                 await trpcNode.user.addCash.mutate({
                   id: member.user.id,
-                  cash: Number(process.env.STARTING_CASH) + amount,
+                  cash: Number(startingCash) + amount,
                 });
               } else {
                 await trpcNode.user.addCash.mutate({
@@ -103,9 +111,7 @@ export class GiveCommand extends Command {
             name: `${message.author.username}#${message.author.discriminator}`,
             iconURL: message.author.displayAvatarURL(),
           })
-          .setDescription(
-            `Gave <@&${id}> ${process.env.COIN_EMOJI}${String(amount)}.`
-          )
+          .setDescription(`Gave <@&${id}> ${coinEmoji}${String(amount)}.`)
           .setTimestamp(message.createdAt)
           .setColor(message.member!.displayHexColor);
         return await message.reply({ embeds: [embed] });
@@ -134,10 +140,10 @@ export class GiveCommand extends Command {
         {
           type: ApplicationCommandOptionType.Integer,
           required: true,
-          name: 'amount',
-          description: 'How many coins do you want to give?'
+          name: "amount",
+          description: "How many coins do you want to give?",
         },
-      ]
+      ],
     });
   }
 }

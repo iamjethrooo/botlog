@@ -44,16 +44,18 @@ export class GiveawayCommand extends Command {
         ephemeral: true,
       });
     }
-
+    const coinEmoji = await trpcNode.setting.getByKey.mutate({
+      key: "coinEmoji",
+    });
     const invite = new EmbedBuilder()
       .setTitle(`${prize}`)
       .setColor((<GuildMember>interaction.member)!.displayHexColor)
       .setDescription(
         `Click the button to join!\n
-      Entry Fee: ${process.env.COIN_EMOJI}${entryFee}
+      Entry Fee: ${coinEmoji}${entryFee}
       Number of Entries: ${entries}
       Number of Winners: ${winners}
-      Ends at: <t:${Math.round(Number(endsAt)/1000)}:F>
+      Ends at: <t:${Math.round(Number(endsAt) / 1000)}:F>
       ${host == null ? "" : `Hosted by: <@${host.id}>`}
       `
       )

@@ -29,10 +29,7 @@ export class EconStatsCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
 
   public override async messageRun(message: Message) {
-    let isMod = message.member!.permissions.has("Administrator");
-    let isThief = message.member!.roles.cache.has(
-      `${process.env.ROLE_ID_THIEF}`
-    );
+    // let isMod = message.member!.permissions.has("Administrator");
 
     let allItems = await trpcNode.item.getAll.query();
 
@@ -48,15 +45,59 @@ export class EconStatsCommand extends Command {
       (i) => i.name.toLowerCase() == "unstable potion"
     );
 
-    // let robRate = isThief
-    //   ? Number(process.env.ROB_RATE_THIEF)
-    //   : Number(process.env.ROB_RATE);
-
-    let robChance = isMod
-      ? Number(process.env.ROB_CHANCE_MOD)
-      : isThief
-      ? Number(process.env.ROB_CHANCE_THIEF)
-      : Number(process.env.ROB_CHANCE);
+    const coinEmoji = await trpcNode.setting.getByKey.mutate({
+      key: "coinEmoji",
+    });
+    const interval = await trpcNode.setting.getByKey.mutate({
+      key: "interval",
+    });
+    const minCashPerChat = await trpcNode.setting.getByKey.mutate({
+      key: "minCashPerChat",
+    });
+    const maxCashPerChat = await trpcNode.setting.getByKey.mutate({
+      key: "maxCashPerChat",
+    });
+    const robChance = Number(
+      await trpcNode.setting.getByKey.mutate({
+        key: "robChance",
+      })
+    );
+    const luckyCharmIncrease = await trpcNode.setting.getByKey.mutate({
+      key: "luckyCharmIncrease",
+    });
+    const fortuneAmuletIncrease = await trpcNode.setting.getByKey.mutate({
+      key: "fortuneAmuletIncrease",
+    });
+    const snipeCost = await trpcNode.setting.getByKey.mutate({
+      key: "snipeCost",
+    });
+    const singleSnipeCost = await trpcNode.setting.getByKey.mutate({
+      key: "singleSnipeCost",
+    });
+    const robCooldown = await trpcNode.setting.getByKey.mutate({
+      key: "robCooldown",
+    });
+    const heistCooldown = await trpcNode.setting.getByKey.mutate({
+      key: "heistCooldown",
+    });
+    const heistAdditionalRate = await trpcNode.setting.getByKey.mutate({
+      key: "heistAdditionalRate",
+    });
+    const heistBaseRate = await trpcNode.setting.getByKey.mutate({
+      key: "heistBaseRate",
+    });
+    const heistAdditionalChance = await trpcNode.setting.getByKey.mutate({
+      key: "heistAdditionalChance",
+    });
+    const heistBaseChance = await trpcNode.setting.getByKey.mutate({
+      key: "heistBaseChance",
+    });
+    const heistReducedJailTime = await trpcNode.setting.getByKey.mutate({
+      key: "heistReducedJailTime",
+    });
+    const heistJailTime = await trpcNode.setting.getByKey.mutate({
+      key: "heistJailTime",
+    });
 
     let userInventory = await trpcNode.inventory.getByUserId.mutate({
       userId: message.author.id,
@@ -78,12 +119,12 @@ export class EconStatsCommand extends Command {
 
     let successChance =
       robChance +
-      (userHasLuckPotion ? Number(process.env.LUCKY_CHARM_INCREASE) : 0) +
-      fortuneAmuletCount * Number(process.env.FORTUNE_AMULET_INCREASE) +
+      (userHasLuckPotion ? Number(luckyCharmIncrease) : 0) +
+      fortuneAmuletCount * Number(fortuneAmuletIncrease) +
       (userHasUnstablePotion
-        ? randomlyAdjustNumber(Number(process.env.LUCKY_CHARM_INCREASE))
+        ? randomlyAdjustNumber(Number(luckyCharmIncrease))
         : 0);
-    // process.env.
+
     const embed = new EmbedBuilder()
       .setAuthor({
         name: message.guild!.name,
@@ -92,23 +133,23 @@ export class EconStatsCommand extends Command {
       .addFields(
         {
           name: "Coins per chat",
-          value: `${process.env.COIN_EMOJI}${process.env.MIN_CASH_PER_CHAT} to ${process.env.COIN_EMOJI}${process.env.MAX_CASH_PER_CHAT}`,
+          value: `${coinEmoji}${minCashPerChat} to ${coinEmoji}${maxCashPerChat}`,
           inline: true,
         },
         {
           name: "Interval between coin rewards",
-          value: `\`${process.env.INTERVAL} seconds\``,
+          value: `\`${interval} seconds\``,
           inline: true,
         },
         { name: " ", value: ` `, inline: false },
         {
           name: "Snipe Cost",
-          value: `${process.env.COIN_EMOJI}${process.env.SNIPE_COST}`,
+          value: `${coinEmoji}${snipeCost}`,
           inline: true,
         },
         {
           name: "Single Snipe Cost",
-          value: `${process.env.COIN_EMOJI}${process.env.SINGLE_SNIPE_COST}`,
+          value: `${coinEmoji}${singleSnipeCost}`,
           inline: true,
         },
         { name: " ", value: ` `, inline: false },
@@ -124,35 +165,33 @@ export class EconStatsCommand extends Command {
         // },
         {
           name: "Rob Cooldown",
-          value: `\`${Number(process.env.ROB_COOLDOWN) / 3600} hours\``,
+          value: `\`${Number(robCooldown) / 3600} hours\``,
           inline: true,
         },
         { name: " ", value: ` `, inline: false },
         {
           name: "Heist Success Rate",
-          value: `\`${Number(process.env.HEIST_BASE_CHANCE) * 100}% + ${
-            Number(process.env.HEIST_ADDITIONAL_CHANCE) * 100
+          value: `\`${Number(heistBaseChance) * 100}% + ${
+            Number(heistAdditionalChance) * 100
           }% per additional member\``,
           inline: true,
         },
         {
           name: "Heist Earnings",
-          value: `\`${Math.round(
-            Number(process.env.HEIST_BASE_RATE) * 100
-          )}% + ${
-            Number(process.env.HEIST_ADDITIONAL_RATE) * 100
+          value: `\`${Math.round(Number(heistBaseRate) * 100)}% + ${
+            Number(heistAdditionalRate) * 100
           }% per additional member\``,
           inline: true,
         },
         {
           name: "Heist Cooldown",
-          value: `\`${Number(process.env.HEIST_COOLDOWN) / 3600} hours\``,
+          value: `\`${Number(heistCooldown) / 3600} hours\``,
           inline: true,
         },
         {
           name: "Jail Time",
-          value: `\`${Number(process.env.HEIST_JAIL_TIME) / 3600} hours - ${
-            Number(process.env.HEIST_REDUCED_JAIL_TIME) / 60
+          value: `\`${Number(heistJailTime) / 3600} hours - ${
+            Number(heistReducedJailTime) / 60
           } minutes deducted per additional heist member\``,
           inline: true,
         }

@@ -17,6 +17,12 @@ export class TakeBankCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {}
 
   public override async messageRun(message: Message, args: Args) {
+    const coinEmoji = await trpcNode.setting.getByKey.mutate({
+      key: "coinEmoji",
+    });
+    const greenColor = await trpcNode.setting.getByKey.mutate({
+      key: "greenColor",
+    });
     try {
       let amount = await args.pick("integer").catch(() => 0);
 
@@ -30,11 +36,9 @@ export class TakeBankCommand extends Command {
           name: `${message.author.username}#${message.author.discriminator}`,
           iconURL: message.author.displayAvatarURL(),
         })
-        .setDescription(
-          `✅ Took ${process.env.COIN_EMOJI}${String(amount)} from the bank.`
-        )
+        .setDescription(`✅ Took ${coinEmoji}${String(amount)} from the bank.`)
         .setTimestamp(message.createdAt)
-        .setColor(`#${process.env.GREEN_COLOR}`);
+        .setColor(`#${greenColor}`);
       return await message.reply({ embeds: [embed] });
     } catch (error) {
       console.log(error);

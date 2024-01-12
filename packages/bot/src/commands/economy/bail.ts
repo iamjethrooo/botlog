@@ -14,6 +14,19 @@ import {
 import { trpcNode } from "../../trpc";
 
 async function bail(prisoner: GuildMember) {
+  const heistBailRate = await trpcNode.setting.getByKey.mutate({
+    key: "heistBailRate",
+  });
+  const coinEmoji = await trpcNode.setting.getByKey.mutate({
+    key: "coinEmoji",
+  });
+  const greenColor = await trpcNode.setting.getByKey.mutate({
+    key: "greenColor",
+  });
+  const redColor = await trpcNode.setting.getByKey.mutate({
+    key: "redColor",
+  });
+
   let userId = prisoner.id;
   let user = await trpcNode.user.getUserById.query({
     id: userId,
@@ -24,16 +37,18 @@ async function bail(prisoner: GuildMember) {
     iconURL: prisoner.user.displayAvatarURL(),
   });
 
-  let bailAmount = Math.round(user.user?.cash! * Number(process.env.HEIST_BAIL_RATE));
+  let bailAmount = Math.round(user.user?.cash! * Number(heistBailRate));
   let insufficientFunds = user!.user!.cash < bailAmount;
   if (insufficientFunds) {
     embed.setDescription(`❌ You do not have enough money to make bail!`);
-    embed.setColor(`#${process.env.RED_COLOR}`);
+    embed.setColor(`#${redColor}`);
     return embed;
   }
-
+  const roleIdInmate = await trpcNode.setting.getByKey.mutate({
+    key: "roleIdInmate",
+  });
   let inmateRole = prisoner.guild.roles.cache.find(
-    (role) => role.id == process.env.ROLE_ID_INMATE
+    (role) => role.id == roleIdInmate!
   );
   prisoner.roles.remove(inmateRole!);
 
@@ -47,9 +62,9 @@ async function bail(prisoner: GuildMember) {
     amount: bailAmount,
   });
   embed.setDescription(
-    `✅ You paid ${process.env.COIN_EMOJI}${bailAmount} as bail and have been released from jail.`
+    `✅ You paid ${coinEmoji}${bailAmount} as bail and have been released from jail.`
   );
-  embed.setColor(`#${process.env.GREEN_COLOR}`);
+  embed.setColor(`#${greenColor}`);
 
   return embed;
 }

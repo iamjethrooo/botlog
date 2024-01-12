@@ -6,6 +6,7 @@ import {
   Message,
   EmbedBuilder,
 } from "discord.js";
+import { trpcNode } from "../trpc";
 
 @ApplyOptions<PreconditionOptions>({
   name: "isInmate",
@@ -14,8 +15,11 @@ export class isNotInmate extends Precondition {
   public override async chatInputRun(
     interaction: CommandInteraction
   ): Promise<any> {
+    const roleIdInmate = await trpcNode.setting.getByKey.mutate({
+      key: "roleIdInmate",
+    });
     let isInmate = (<GuildMember>interaction.member)!.roles.cache.has(
-      `${process.env.ROLE_ID_INMATE}`
+      `${roleIdInmate}`
     );
     if (!isInmate) {
       const embed = new EmbedBuilder()
@@ -34,8 +38,11 @@ export class isNotInmate extends Precondition {
     return this.ok();
   }
   public override async messageRun(message: Message): Promise<any> {
+    const roleIdInmate = await trpcNode.setting.getByKey.mutate({
+      key: "roleIdInmate",
+    });
     let isInmate = message.member!.roles.cache.has(
-      `${process.env.ROLE_ID_INMATE}`
+      `${roleIdInmate}`
     );
     if (!isInmate) {
       const embed = new EmbedBuilder()

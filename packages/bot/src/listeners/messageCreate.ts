@@ -40,10 +40,25 @@ export class MessageListener extends Listener {
     const isBot = message.author.bot;
     if (isBot) return;
 
+    const startingCash = await trpcNode.setting.getByKey.mutate({
+      key: "startingCash",
+    });
+    const minCashPerChat = Number(await trpcNode.setting.getByKey.mutate({
+      key: "minCashPerChat",
+    }));
+    const maxCashPerChat = Number(await trpcNode.setting.getByKey.mutate({
+      key: "maxCashPerChat",
+    }));
+    const interval = await trpcNode.setting.getByKey.mutate({
+      key: "interval",
+    });
+    const roleIdInmate = await trpcNode.setting.getByKey.mutate({
+      key: "roleIdInmate",
+    });
     // Coinz
     try {
       let isInmate = message.member!.roles.cache.has(
-        `${process.env.ROLE_ID_INMATE}`
+        `${roleIdInmate}`
       );
 
       if (noCashChannels.includes(message.channel.id) || isInmate) {
@@ -61,21 +76,21 @@ export class MessageListener extends Listener {
         });
         await trpcNode.user.addCash.mutate({
           id: message.author.id,
-          cash: parseInt(process.env.STARTING_CASH),
+          cash: parseInt(startingCash),
         });
       } else {
         if (
           !(
             (Date.now() - Number(user.user.lastMessageDate)) / 1000 <
-            process.env.INTERVAL
+            interval
           )
         ) {
           await trpcNode.user.addCash.mutate({
             id: message.author.id,
             cash: parseInt(
               getRandomInt(
-                process.env.MIN_CASH_PER_CHAT,
-                process.env.MAX_CASH_PER_CHAT
+                minCashPerChat,
+                maxCashPerChat
               )
             ),
           });

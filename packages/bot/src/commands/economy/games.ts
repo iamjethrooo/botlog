@@ -22,6 +22,12 @@ export const playersInGame: Map<string, GuildMember> = new Map();
 })
 export class GamesCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
+    const redColor = await trpcNode.setting.getByKey.mutate({
+      key: "redColor",
+    });
+    const coinflipCooldown = await trpcNode.setting.getByKey.mutate({
+      key: "coinflipCooldown",
+    });
     let canPlay = !(
       (<GuildMember>interaction.member)!.roles.cache.has(
         "742226368213024839"
@@ -44,7 +50,7 @@ export class GamesCommand extends Command {
         .setDescription(
           `❌ Your level is not high enough to use this command. Required level is 15.`
         );
-      embed.setColor(`#${process.env.RED_COLOR}`);
+      embed.setColor(`#${redColor}`);
 
       return await interaction.reply({ embeds: [embed] });
     }
@@ -52,7 +58,7 @@ export class GamesCommand extends Command {
       id: interaction.user.id,
     });
     let lastGameDate = Number(user.user!.lastCoinFlipDate);
-    let gameCooldown = Number(process.env.COINFLIP_COOLDOWN);
+    let gameCooldown = Number(coinflipCooldown);
 
     let tooSoon = (Date.now() - lastGameDate) / 1000 < gameCooldown;
     console.log(tooSoon);
@@ -67,7 +73,7 @@ export class GamesCommand extends Command {
             Math.round(lastGameDate / 1000) + gameCooldown
           }:R>`
         );
-      embed.setColor(`#${process.env.RED_COLOR}`);
+      embed.setColor(`#${redColor}`);
 
       return await interaction.reply({ embeds: [embed] });
     }
@@ -138,7 +144,7 @@ export class GamesCommand extends Command {
     }
 
     const invite = new GameInvite(gameTitle!, [player1], interaction, bet);
-    
+
     await interaction
       .reply({
         embeds: [invite.gameInviteEmbed()],
@@ -193,7 +199,7 @@ export class GamesCommand extends Command {
                   .setDescription(
                     `❌ Your level is not high enough to use this command. Required level is 15.`
                   );
-                embed.setColor(`#${process.env.RED_COLOR}`);
+                embed.setColor(`#${redColor}`);
 
                 await response.reply({ embeds: [embed] });
                 return;
@@ -219,7 +225,7 @@ export class GamesCommand extends Command {
                       Math.round(lastGameDate / 1000) + gameCooldown
                     }:R>`
                   );
-                embed.setColor(`#${process.env.RED_COLOR}`);
+                embed.setColor(`#${redColor}`);
 
                 await response.reply({ embeds: [embed] });
                 return;

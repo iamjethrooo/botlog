@@ -20,6 +20,13 @@ export class AddBankCommand extends Command {
     try {
       let amount = await args.pick("integer").catch(() => 0);
 
+      const coinEmoji = await trpcNode.setting.getByKey.mutate({
+        key: "coinEmoji",
+      });
+      const greenColor = await trpcNode.setting.getByKey.mutate({
+        key: "greenColor",
+      });
+
       await trpcNode.guild.addToBank.mutate({
         id: message!.guildId!,
         amount: amount,
@@ -30,11 +37,9 @@ export class AddBankCommand extends Command {
           name: `${message.author.username}#${message.author.discriminator}`,
           iconURL: message.author.displayAvatarURL(),
         })
-        .setDescription(
-          `✅ Added ${process.env.COIN_EMOJI}${String(amount)} to the bank.`
-        )
+        .setDescription(`✅ Added ${coinEmoji}${String(amount)} to the bank.`)
         .setTimestamp(message.createdAt)
-        .setColor(`#${process.env.GREEN_COLOR}`);
+        .setColor(`#${greenColor}`);
       return await message.reply({ embeds: [embed] });
     } catch (error) {
       console.log(error);

@@ -33,13 +33,24 @@ export class SnipeCommand extends Command {
     const { client } = container;
     const sniped = client.snipes.get(message.channel.id);
     let num = await args.pick("integer").catch(() => -1);
+
+    const coinEmoji = await trpcNode.setting.getByKey.mutate({
+      key: "coinEmoji",
+    });
+    const snipeCost_ = await trpcNode.setting.getByKey.mutate({
+      key: "snipeCost",
+    });
+    const singleSnipeCost = await trpcNode.setting.getByKey.mutate({
+      key: "singleSnipeCost",
+    });
+
     try {
       let user = await trpcNode.user.getUserById.query({
         id: message.author.id,
       });
-      let snipeCost = Number(process.env.SNIPE_COST);
+      let snipeCost = Number(snipeCost_);
       if (num > 0) {
-        snipeCost = Number(process.env.SINGLE_SNIPE_COST);
+        snipeCost = Number(singleSnipeCost);
       }
       if (!message.member!.permissions.has("Administrator")) {
         if (user!.user!.cash - snipeCost < 0) {
@@ -49,9 +60,9 @@ export class SnipeCommand extends Command {
               iconURL: message.author.displayAvatarURL(),
             })
             .setDescription(
-              `❌ You do not have enough money to snipe. You currently have ${
-                process.env.COIN_EMOJI
-              }${String(user!.user!.cash)} on hand.`
+              `❌ You do not have enough money to snipe. You currently have ${coinEmoji}${String(
+                user!.user!.cash
+              )} on hand.`
             )
             .setColor("#ad3134");
           return await message

@@ -77,6 +77,10 @@ function generateRandomName(): string {
 }
 
 async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
+  const coinEmoji = await trpcNode.setting.getByKey.mutate({
+    key: "coinEmoji",
+  });
+
   try {
     let allItems = await trpcNode.item.getAll.query();
 
@@ -93,7 +97,7 @@ async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
       let isMod = member ? member!.permissions.has("Administrator") : false;
       isMod = false;
 
-      if (!member || isMod && !showAll) {
+      if (!member || (isMod && !showAll)) {
         continue;
       }
 
@@ -114,7 +118,7 @@ async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
           userHasFakeId
             ? `**${generateRandomName()}**`
             : `<@${_user.discordId}>`
-        } ・ ${process.env.COIN_EMOJI}${_user.cash}`
+        } ・ ${coinEmoji}${_user.cash}`
       );
       index++;
     }

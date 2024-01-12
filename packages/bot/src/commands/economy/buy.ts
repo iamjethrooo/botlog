@@ -46,13 +46,18 @@ async function buy(itemName: string, customer: GuildMember) {
     iconURL: customer.user.displayAvatarURL(),
   });
 
-  let isThief = customer.roles.cache.has(`${process.env.ROLE_ID_THIEF}`);
-  let robCooldown = isThief
-    ? Number(process.env.ROB_COOLDOWN_THIEF)
-    : Number(process.env.ROB_COOLDOWN);
+  const robCooldown = await trpcNode.setting.getByKey.mutate({
+    key: "robCooldown",
+  });
+  const greenColor = await trpcNode.setting.getByKey.mutate({
+    key: "greenColor",
+  });
+  const redColor = await trpcNode.setting.getByKey.mutate({
+    key: "redColor",
+  });
 
   let lastRobDate = Number(user.user!.lastRobDate);
-  let canRob = (Date.now() - lastRobDate) / 1000 > robCooldown;
+  let canRob = (Date.now() - lastRobDate) / 1000 > Number(robCooldown);
 
   if (item) {
     let itemId = item!.id;
@@ -61,7 +66,7 @@ async function buy(itemName: string, customer: GuildMember) {
       embed.setDescription(
         `❌ You do not have enough money to buy a **${item!.name}**!`
       );
-      embed.setColor(`#${process.env.RED_COLOR}`);
+      embed.setColor(`#${redColor}`);
       return embed;
     }
 
@@ -70,7 +75,7 @@ async function buy(itemName: string, customer: GuildMember) {
         embed.setDescription(
           `❌ You can only buy a **Refresher Orb** when \`rob\` is on cooldown!`
         );
-        embed.setColor(`#${process.env.RED_COLOR}`);
+        embed.setColor(`#${redColor}`);
         return embed;
       }
 
@@ -91,7 +96,7 @@ async function buy(itemName: string, customer: GuildMember) {
         const customerHasRole = customer.roles.cache.has(roleId);
         if (customerHasRole) {
           embed.setDescription(`❌ You already have a **${item!.name}**!`);
-          embed.setColor(`#${process.env.RED_COLOR}`);
+          embed.setColor(`#${redColor}`);
           return embed;
         } else {
           customer.roles.add(roleGiven);
@@ -128,7 +133,7 @@ async function buy(itemName: string, customer: GuildMember) {
           });
         } else {
           embed.setDescription(`❌ You already have a **${item!.name}**!`);
-          embed.setColor(`#${process.env.RED_COLOR}`);
+          embed.setColor(`#${redColor}`);
           return embed;
         }
       }
@@ -148,10 +153,10 @@ async function buy(itemName: string, customer: GuildMember) {
       amount: item!.buyPrice,
     });
     embed.setDescription(`✅ You bought a **${item!.name!}**!`);
-    embed.setColor(`#${process.env.GREEN_COLOR}`);
+    embed.setColor(`#${greenColor}`);
   } else {
     embed.setDescription(`❌ Sorry, we don't sell **${itemName}** here.`);
-    embed.setColor(`#${process.env.RED_COLOR}`);
+    embed.setColor(`#${redColor}`);
   }
 
   return embed;

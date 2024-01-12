@@ -495,21 +495,4 @@ export const guildRouter = t.router({
 
       return { guildMoney };
     }),
-  updateChatCashSettings: t.procedure
-    .input(
-      z.object({
-        guildId: z.string(),
-        minCashPerChat: z.number(),
-        maxCashPerChat: z.number(),
-        interval: z.number(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { guildId, minCashPerChat, maxCashPerChat, interval } = input;
-
-      await ctx.prisma.guild.update({
-        where: { id: guildId },
-        data: { minCashPerChat, maxCashPerChat, interval },
-      });
-    }),
 });

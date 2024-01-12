@@ -41,7 +41,6 @@ function generateRandomNumber(min: number, max: number) {
 async function rob(
   user: User,
   victimId: string,
-  isThief: boolean,
   isMod: boolean,
   guildId: string
 ) {
@@ -86,10 +85,39 @@ async function rob(
   let fortuneAmuletCount =
     fortuneAmuletInv.length != 0 ? fortuneAmuletInv[0].amount : 0;
 
+  const coinEmoji = await trpcNode.setting.getByKey.mutate({
+    key: "coinEmoji",
+  });
+  const greenColor = await trpcNode.setting.getByKey.mutate({
+    key: "greenColor",
+  });
+  const redColor = await trpcNode.setting.getByKey.mutate({
+    key: "redColor",
+  });
+  const robChance = Number(
+    await trpcNode.setting.getByKey.mutate({
+      key: "robChance",
+    })
+  );
+  const robCooldown = Number(
+    await trpcNode.setting.getByKey.mutate({
+      key: "robCooldown",
+    })
+  );
+  const luckyCharmIncrease = await trpcNode.setting.getByKey.mutate({
+    key: "luckyCharmIncrease",
+  });
+  const fortuneAmuletIncrease = await trpcNode.setting.getByKey.mutate({
+    key: "fortuneAmuletIncrease",
+  });
+  const robMin = await trpcNode.setting.getByKey.mutate({
+    key: "robMin",
+  });
+  const robMax = await trpcNode.setting.getByKey.mutate({
+    key: "robMax",
+  });
+
   let lastRobDate = Number(suspect.user!.lastRobDate);
-  let robCooldown = isThief
-    ? Number(process.env.ROB_COOLDOWN_THIEF)
-    : Number(process.env.ROB_COOLDOWN);
 
   const embed = new EmbedBuilder().setAuthor({
     name: `${user.username}#${user.discriminator}`,
@@ -103,7 +131,7 @@ async function rob(
         Math.round(lastRobDate / 1000) + robCooldown
       }:R>`
     );
-    embed.setColor(`#${process.env.RED_COLOR}`);
+    embed.setColor(`#${redColor}`);
 
     return embed;
   }
@@ -114,26 +142,18 @@ async function rob(
 
   let victimCash = victim.user!.cash;
 
-  let robChance = isMod
-    ? Number(process.env.ROB_CHANCE_MOD)
-    : isThief
-    ? Number(process.env.ROB_CHANCE_THIEF)
-    : Number(process.env.ROB_CHANCE);
-
-  let robAmount = generateRandomNumber(
-    Number(process.env.ROB_MIN),
-    Number(process.env.ROB_MAX)
-  );
+  let robAmount = generateRandomNumber(Number(robMin), Number(robMax));
   robAmount = robAmount > victimCash ? victimCash : robAmount;
 
   let successChance =
     robChance +
-    (suspectHasLuckPotion ? Number(process.env.LUCKY_CHARM_INCREASE) : 0) +
-    fortuneAmuletCount * Number(process.env.FORTUNE_AMULET_INCREASE) +
+    (suspectHasLuckPotion ? Number(luckyCharmIncrease) : 0) +
+    fortuneAmuletCount * Number(fortuneAmuletIncrease) +
     (suspectHasUnstablePotion
-      ? randomlyAdjustNumber(Number(process.env.LUCKY_CHARM_INCREASE))
+      ? randomlyAdjustNumber(Number(luckyCharmIncrease))
       : 0) +
-    failedRobAttempts * 0.1;
+    failedRobAttempts * 0.4;
+
   let roll = Math.random();
   let success = roll <= successChance;
   console.log(
@@ -142,7 +162,7 @@ async function rob(
   if (success) {
     let extraMessage = "";
     if (isMod) {
-      let robTax = Math.round(robAmount * Number(process.env.ROB_TAX_MOD));
+      let robTax = Math.round(robAmount * Number(0.25));
       await trpcNode.guild.addToBank.mutate({
         id: guildId,
         amount: robTax,
@@ -151,13 +171,7 @@ async function rob(
         id: suspectId,
         cash: robAmount - robTax,
       });
-      extraMessage = ` ${process.env.COIN_EMOJI}${robTax} was added to the server bank.`;
-    } else if (isThief) {
-      await trpcNode.guild.addToThievesBank.mutate({
-        id: guildId,
-        amount: robAmount,
-      });
-      extraMessage = ` ${process.env.COIN_EMOJI}${robAmount} was added to the Thieves Guild's bank.`;
+      extraMessage = ` ${coinEmoji}${robTax} was added to the server bank.`;
     } else {
       await trpcNode.user.addCash.mutate({
         id: suspectId,
@@ -175,9 +189,9 @@ async function rob(
       failedRobAttempts: 0,
     });
     embed.setDescription(
-      `✅ You robbed ${process.env.COIN_EMOJI}${robAmount} from <@${victimId}>.${extraMessage}`
+      `✅ You robbed ${coinEmoji}${robAmount} from <@${victimId}>.${extraMessage}`
     );
-    embed.setColor(`#${process.env.GREEN_COLOR}`);
+    embed.setColor(`#${greenColor}`);
   } else {
     let amountToBeSubtracted =
       suspectCash > robAmount ? robAmount : suspectCash;
@@ -198,9 +212,9 @@ async function rob(
     });
 
     embed.setDescription(
-      `❌ You were caught attempting to rob <@${victimId}> and have been fined ${process.env.COIN_EMOJI}${amountToBeSubtracted}.`
+      `❌ You were caught attempting to rob <@${victimId}> and have been fined ${coinEmoji}${amountToBeSubtracted}.`
     );
-    embed.setColor(`#${process.env.RED_COLOR}`);
+    embed.setColor(`#${redColor}`);
   }
   const consumedItems: string[] = [];
   // Remove luck potion from inventory
@@ -256,15 +270,10 @@ export class RobCommand extends Command {
       "Administrator"
     );
 
-    let isThief = (<GuildMember>interaction.member)!.roles.cache.has(
-      `${process.env.ROLE_ID_THIEF}`
-    );
-
     try {
       let resultEmbed = await rob(
         interaction.user,
         victimId,
-        isThief,
         isMod,
         interaction.guildId!
       );
@@ -281,15 +290,11 @@ export class RobCommand extends Command {
 
     let victimId = message.mentions.users!.first()!.id;
     let isMod = message.member!.permissions.has("Administrator");
-    let isThief = message.member!.roles.cache.has(
-      `${process.env.ROLE_ID_THIEF}`
-    );
 
     try {
       let resultEmbed = await rob(
         message.author,
         victimId,
-        isThief,
         isMod,
         message.guildId!
       );

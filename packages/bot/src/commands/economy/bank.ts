@@ -24,13 +24,17 @@ export class BankCommand extends Command {
         id: interaction!.guildId!,
       });
 
+      const coinEmoji = await trpcNode.setting.getByKey.mutate({
+        key: "coinEmoji",
+      });
+
       const embed = new EmbedBuilder()
         .setAuthor({
           name: `${interaction.user.username}#${interaction.user.discriminator}`,
           iconURL: interaction.user.displayAvatarURL(),
         })
         .setDescription(
-          `There is currently ${process.env.COIN_EMOJI}${String(
+          `There is currently ${coinEmoji}${String(
             guild!.guild!.bank
           )} in the bank.`
         )
@@ -48,6 +52,10 @@ export class BankCommand extends Command {
       let guild = await trpcNode.guild.getGuild.query({
         id: message!.guildId!,
       });
+      
+      const coinEmoji = await trpcNode.setting.getByKey.mutate({
+        key: "coinEmoji",
+      });
 
       const embed = new EmbedBuilder()
         .setAuthor({
@@ -55,7 +63,7 @@ export class BankCommand extends Command {
           iconURL: message.author.displayAvatarURL(),
         })
         .setDescription(
-          `There is currently ${process.env.COIN_EMOJI}${String(
+          `There is currently ${coinEmoji}${String(
             guild!.guild!.bank
           )} in the bank.`
         )

@@ -26,12 +26,54 @@ export class HeistCommand extends Command {
       iconURL: message.author.displayAvatarURL(),
     });
 
+    const heistWaitingTime = await trpcNode.setting.getByKey.mutate({
+      key: "heistWaitingTime",
+    });
+    const heistMaxMembers = await trpcNode.setting.getByKey.mutate({
+      key: "heistMaxMembers",
+    });
+    const heistReducedJailTime = await trpcNode.setting.getByKey.mutate({
+      key: "heistReducedJailTime",
+    });
+    const heistJailTime = await trpcNode.setting.getByKey.mutate({
+      key: "heistJailTime",
+    });
+    const heistAdditionalRate = await trpcNode.setting.getByKey.mutate({
+      key: "heistAdditionalRate",
+    });
+    const heistBaseRate = await trpcNode.setting.getByKey.mutate({
+      key: "heistBaseRate",
+    });
+    const heistAdditionalChance = await trpcNode.setting.getByKey.mutate({
+      key: "heistAdditionalChance",
+    });
+    const heistBaseChance = await trpcNode.setting.getByKey.mutate({
+      key: "heistBaseChance",
+    });
+    const heistCooldown = Number(
+      await trpcNode.setting.getByKey.mutate({
+        key: "heistCooldown",
+      })
+    );
+    const greenColor = await trpcNode.setting.getByKey.mutate({
+      key: "greenColor",
+    });
+    const redColor = await trpcNode.setting.getByKey.mutate({
+      key: "redColor",
+    });
+    const coinEmoji = await trpcNode.setting.getByKey.mutate({
+      key: "coinEmoji",
+    });
+    const roleIdInmate = await trpcNode.setting.getByKey.mutate({
+      key: "roleIdInmate",
+    });
+
     let guild = await trpcNode.guild.getGuild.query({
       id: message!.guildId!,
     });
 
-    let robRate = Number(guild.guild!.heistBaseRate);
-    let robChance = Number(guild.guild!.heistBaseChance);
+    let robRate = Number(heistBaseRate);
+    let robChance = Number(heistBaseChance);
     let success;
     try {
       let suspect = await trpcNode.user.getUserById.query({
@@ -39,7 +81,6 @@ export class HeistCommand extends Command {
       });
 
       let lastRobDate = Number(suspect.user!.lastHeistDate);
-      let heistCooldown = Number(guild.guild!.heistCooldown);
       let tooSoon = (Date.now() - lastRobDate) / 1000 < heistCooldown;
 
       if (tooSoon) {
@@ -48,7 +89,7 @@ export class HeistCommand extends Command {
             Math.round(lastRobDate / 1000) + heistCooldown
           }:R>`
         );
-        embed.setColor(`#${process.env.RED_COLOR}`);
+        embed.setColor(`#${redColor}`);
 
         return await message.channel.send({ embeds: [embed] });
       }
@@ -80,19 +121,17 @@ export class HeistCommand extends Command {
           if (
             client.heistIsOngoing ||
             (Date.now() - Number(client.timestamps["heist"])) / 1000 >
-              Number(guild.guild!.heistWaitingTime) ||
-            client.heistMembers.length >= Number(guild.guild!.heistMaxMembers)
+              Number(heistWaitingTime) ||
+            client.heistMembers.length >= Number(heistMaxMembers)
           ) {
             // Reset variables
             clearTimeout(client.intervals["heist"]);
             delete client.intervals["heist"];
             // Start heist
             robRate +=
-              Number(guild.guild!.heistAdditionalRatePerMember) *
-              (client.heistMembers.length - 1);
+              Number(heistAdditionalRate) * (client.heistMembers.length - 1);
             robChance +=
-              Number(guild.guild!.heistAdditionalChancePerMember) *
-              (client.heistMembers.length - 1);
+              Number(heistAdditionalChance) * (client.heistMembers.length - 1);
 
             success = Math.random() <= robChance;
 
@@ -108,7 +147,7 @@ export class HeistCommand extends Command {
             if (success) {
               embed
                 .setDescription(`✅ The bank heist was a success!`)
-                .setColor(`#${process.env.GREEN_COLOR}`)
+                .setColor(`#${greenColor}`)
                 .setFooter(null);
               await message.channel.send({ embeds: [embed] });
               let splitMessage = ``;
@@ -116,7 +155,7 @@ export class HeistCommand extends Command {
                 robAmount / client.heistMembers.length
               );
               client.heistMembers.forEach(async (member) => {
-                splitMessage += `<@${member}> got ${process.env.COIN_EMOJI}${splitAmount}\n`;
+                splitMessage += `<@${member}> got ${coinEmoji}${splitAmount}\n`;
                 await trpcNode.user.addCash.mutate({
                   id: String(member),
                   cash: splitAmount,
@@ -130,25 +169,24 @@ export class HeistCommand extends Command {
                 .setAuthor(null)
                 .setTitle(`Bank Heist Results`)
                 .setDescription(
-                  `A total of ${process.env.COIN_EMOJI}${robAmount} was stolen from the bank.\n\n${splitMessage}`
+                  `A total of ${coinEmoji}${robAmount} was stolen from the bank.\n\n${splitMessage}`
                 );
               await message.channel.send({ embeds: [embed] });
             } else {
               embed
                 .setDescription(`❌ The bank heist failed.`)
-                .setColor(`#${process.env.RED_COLOR}`)
+                .setColor(`#${redColor}`)
                 .setFooter(null);
               await message.channel.send({ embeds: [embed] });
               let splitMessage = ``;
 
               // Serve jail time for x hours
               let inmateRole = message!.guild!.roles.cache.find(
-                (role) => role.id == process.env.ROLE_ID_INMATE
+                (role) => role.id == roleIdInmate!
               );
               let jailTime =
-                Number(guild.guild!.heistJailTime) -
-                Number(guild.guild!.heistJailTimeReduction) *
-                  (client.heistMembers.length - 1);
+                Number(heistJailTime) -
+                Number(heistReducedJailTime) * (client.heistMembers.length - 1);
               client.heistMembers.forEach(async (member) => {
                 splitMessage += `<@${member}> got caught.\n`;
                 await trpcNode.user.setJailTime
@@ -188,7 +226,7 @@ export class HeistCommand extends Command {
               iconURL: message.author.displayAvatarURL(),
             })
             .setDescription(`❌ You have already joined the bank heist.`)
-            .setColor(`#${process.env.RED_COLOR}`)
+            .setColor(`#${redColor}`)
             .setFooter(null);
           await message.channel.send({ embeds: [embed] });
         } else {
@@ -198,7 +236,7 @@ export class HeistCommand extends Command {
               iconURL: message.author.displayAvatarURL(),
             })
             .setDescription(`✅ You joined the heist.`)
-            .setColor(`#${process.env.GREEN_COLOR}`)
+            .setColor(`#${greenColor}`)
             .setFooter(null);
           await message.channel.send({ embeds: [embed] });
           client.heistMembers.push(message.member!.id);
@@ -216,7 +254,7 @@ export class HeistCommand extends Command {
             .setDescription(
               `❌ Only <@${client.heistLeader}> can start the heist before 10 minutes is up.`
             )
-            .setColor(`#${process.env.RED_COLOR}`)
+            .setColor(`#${redColor}`)
             .setFooter(null);
           await message.channel.send({ embeds: [embed] });
         }

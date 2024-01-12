@@ -26,7 +26,11 @@ export class CreateItemCommand extends Command {
     const stackable = interaction.options.getBoolean("stackable", true);
     const consumable = interaction.options.getBoolean("consumable", true);
     const roleGiven = interaction.options.getRole("role-given");
-    console.log(roleGiven);
+
+    const greenColor = await trpcNode.setting.getByKey.mutate({
+      key: "greenColor"
+    });
+
     try {
       await trpcNode.item.create.mutate({
         name: itemName,
@@ -44,7 +48,7 @@ export class CreateItemCommand extends Command {
         .setDescription(
           `${emoji}**${itemName}**\n\nDescription: ${itemDescription}\n\nPrice: ${price}\n\nStock: ${stock}`
         )
-        .setColor(`#${process.env.GREEN_COLOR}`);
+        .setColor(`#${greenColor}`);
 
       return await interaction.reply({ embeds: [embed] });
     } catch (error) {

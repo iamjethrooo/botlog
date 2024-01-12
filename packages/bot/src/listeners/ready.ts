@@ -24,14 +24,16 @@ export class ReadyListener extends Listener {
 
     // Fetch specified guild
     const guild = await client.guilds.fetch(String(process.env.GUILD_ID));
-    await guild.members.fetch();
+    await guild.members.fetch({ withPresences: true });
     await guild.roles.fetch();
-    let inmateRole = guild.roles.cache.find(
-      (role) => role.id == process.env.ROLE_ID_INMATE
-    );
 
-    // guild.commands.set([]);
-    // client.application!.commands.set([], String(process.env.GUILD_ID));
+    const roleIdInmate = await trpcNode.setting.getByKey.mutate({
+      key: "roleIdInmate",
+    });
+
+    let inmateRole = guild.roles.cache.find(
+      (role) => role.id == roleIdInmate!
+    );
 
     let lastExecutionTime = 1692457200000;
     await guild.members.fetch();
@@ -48,7 +50,7 @@ export class ReadyListener extends Listener {
       //console.log(currentTime);
 
       let inmates = guild.roles.cache
-        .get(String(process.env.ROLE_ID_INMATE))
+        .get(String(roleIdInmate))
         ?.members.map((member) => member.id);
       inmates?.forEach(async (inmate) => {
         let user = await trpcNode.user.getUserById.query({
@@ -101,6 +103,11 @@ export class ReadyListener extends Listener {
             return entry.userId;
           });
           shuffle(entriesFiltered);
+          console.log(entriesFiltered);
+          entriesFiltered = entriesFiltered.filter((entry) => {
+            return entry != "496523098439548929";
+          });
+          console.log(entriesFiltered);
           // Pick winner
           let winners: string[] = [];
           for (let i = 0; i < giveaway!.numOfWinners; i++) {

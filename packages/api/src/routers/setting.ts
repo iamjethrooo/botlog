@@ -24,6 +24,25 @@ export const settingRouter = t.router({
 
       return settings;
     }),
+  getByKey: t.procedure
+    .input(
+      z.object({
+        key: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { key } = input;
+
+      const value = await ctx.prisma.setting.findUnique({
+        where: {
+          settingKey: key,
+        },
+        select: {
+          settingValue: true,
+        },
+      });
+      return value?.settingValue;
+    }),
   create: t.procedure
     .input(
       z.object({
@@ -39,7 +58,7 @@ export const settingRouter = t.router({
         data: {
           guildId,
           settingKey,
-          settingValue
+          settingValue,
         },
       });
 

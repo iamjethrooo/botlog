@@ -26,9 +26,21 @@ export class SuperStarboardCommand extends Command {
     let user = await trpcNode.user.getUserById.query({
       id: userId,
     });
-    console.log(user!.user!.cash);
+    const greenColor = await trpcNode.setting.getByKey.mutate({
+      key: "greenColor",
+    });
+    const redColor = await trpcNode.setting.getByKey.mutate({
+      key: "redColor",
+    });
+    const starboardCost = Number(
+      await trpcNode.setting.getByKey.mutate({
+        key: "starboardCost",
+      })
+    );
+    const starboardChannelId = await trpcNode.setting.getByKey.mutate({
+      key: "starboardChannelId",
+    });
 
-    const starboardCost = Number(process.env.STARBOARD_COST);
     const isMod = message.member!.permissions.has("Administrator");
     const embed = new EmbedBuilder().setAuthor({
       name: `${message.author.username}#${message.author.discriminator}`,
@@ -42,7 +54,7 @@ export class SuperStarboardCommand extends Command {
         embed.setDescription(
           `❌ You do not have enough money to send this message to the starboard channel!`
         );
-        embed.setColor(`#${process.env.RED_COLOR}`);
+        embed.setColor(`#${redColor}`);
         return await message.channel.send({ embeds: [embed] });
       }
     }
@@ -58,7 +70,7 @@ export class SuperStarboardCommand extends Command {
       if (messageIsInStarboard.message.length != 0) {
         embed
           .setDescription(`❌ The message is already in the starboard channel!`)
-          .setColor(`#${process.env.RED_COLOR}`);
+          .setColor(`#${redColor}`);
       } else {
         const { client } = container;
         const guildId = reference.guildId;
@@ -66,7 +78,7 @@ export class SuperStarboardCommand extends Command {
         const referenceId = reference.id;
 
         const starboardChannel = <TextChannel>(
-          client.channels.cache.get(String(process.env.STARBOARD_CHANNEL_ID))
+          client.channels.cache.get(String(starboardChannelId))
         );
         // Add to database
         await trpcNode.starboardMessage.create.mutate({
@@ -106,7 +118,7 @@ export class SuperStarboardCommand extends Command {
           .setDescription(
             `✅ The message has been sent to the starboard channel!`
           )
-          .setColor(`#${process.env.GREEN_COLOR}`);
+          .setColor(`#${greenColor}`);
       }
 
       return await message
