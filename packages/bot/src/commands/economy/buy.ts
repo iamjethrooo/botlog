@@ -55,10 +55,17 @@ async function buy(itemName: string, customer: GuildMember) {
   const redColor = await trpcNode.setting.getByKey.mutate({
     key: "redColor",
   });
+  const bodyguardDuration = Number(
+    await trpcNode.setting.getByKey.mutate({
+      key: "bodyguardDuration",
+    })
+  );
 
   let lastRobDate = Number(user.user!.lastRobDate);
   let canRob = (Date.now() - lastRobDate) / 1000 > Number(robCooldown);
-
+  const hasBodyguard =
+    Number(user.user?.lastBodyguardDate) + bodyguardDuration * 1000 >
+    Date.now();
   if (item) {
     let itemId = item!.id;
     let insufficientFunds = user!.user!.cash < item!.buyPrice;
@@ -82,6 +89,16 @@ async function buy(itemName: string, customer: GuildMember) {
       await trpcNode.user.updateLastRobDate.mutate({
         id: userId,
         date: "0",
+      });
+    } else if (item!.name.toLowerCase() == "bodyguard") {
+      if (hasBodyguard) {
+        embed.setDescription(`❌ You already have a \`Bodyguard\`!`);
+        embed.setColor(`#${redColor}`);
+        return embed;
+      }
+      await trpcNode.user.updateLastBodyguardDate.mutate({
+        id: userId,
+        date: String(Date.now()),
       });
     }
     // If item is supposed to give a role when purchased

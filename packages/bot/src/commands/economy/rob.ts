@@ -66,6 +66,10 @@ async function rob(
     (i) => i.name.toLowerCase() == "unstable potion"
   );
 
+  let sentryWard = allItems.allItems.find(
+    (i) => i.name.toLowerCase() == "sentry ward"
+  );
+
   let suspectInventory = await trpcNode.inventory.getByUserId.mutate({
     userId: suspectId,
   });
@@ -84,6 +88,15 @@ async function rob(
   );
   let fortuneAmuletCount =
     fortuneAmuletInv.length != 0 ? fortuneAmuletInv[0].amount : 0;
+
+  // Number of sentry wards of the victim
+  let victimInventory = await trpcNode.inventory.getByUserId.mutate({
+    userId: victimId,
+  });
+  let sentryWardInv = victimInventory.inventory.filter(
+    (i) => i.itemId == sentryWard!.id
+  );
+  let sentryWardCount = sentryWardInv.length != 0 ? sentryWardInv[0].amount : 0;
 
   const coinEmoji = await trpcNode.setting.getByKey.mutate({
     key: "coinEmoji",
@@ -109,6 +122,9 @@ async function rob(
   });
   const fortuneAmuletIncrease = await trpcNode.setting.getByKey.mutate({
     key: "fortuneAmuletIncrease",
+  });
+  const sentryWardDecrease = await trpcNode.setting.getByKey.mutate({
+    key: "sentryWardDecrease",
   });
   const robMin = await trpcNode.setting.getByKey.mutate({
     key: "robMin",
@@ -140,6 +156,11 @@ async function rob(
     id: victimId,
   });
 
+  const bodyguardDuration = Number(
+    await trpcNode.setting.getByKey.mutate({
+      key: "bodyguardDuration",
+    })
+  );
   let victimCash = victim.user!.cash;
 
   let robAmount = generateRandomNumber(Number(robMin), Number(robMax));
@@ -152,8 +173,14 @@ async function rob(
     (suspectHasUnstablePotion
       ? randomlyAdjustNumber(Number(luckyCharmIncrease))
       : 0) +
-    failedRobAttempts * 0.4;
-
+    failedRobAttempts * 0.1 -
+    sentryWardCount * Number(sentryWardDecrease);
+  if (
+    Number(victim.user?.lastBodyguardDate) + bodyguardDuration * 1000 >
+    Date.now()
+  ) {
+    successChance = 0;
+  }
   let roll = Math.random();
   let success = roll <= successChance;
   console.log(
