@@ -158,7 +158,7 @@ export class LeaderboardCommand extends Command {
       .setTitleField("Leaderboard")
       .setTemplate(baseEmbed)
       .setItems(leaderboard.array)
-      .setItemsPerPage(10)
+      .setItemsPerPage(20)
       .make()
       .run(interaction);
 
@@ -188,7 +188,7 @@ export class LeaderboardCommand extends Command {
       .setTitleField("Leaderboard")
       .setTemplate(baseEmbed)
       .setItems(leaderboard.array)
-      .setItemsPerPage(10)
+      .setItemsPerPage(20)
       .make()
       .run(message);
   }
