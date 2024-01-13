@@ -176,7 +176,7 @@ async function rob(
     failedRobAttempts * 0.1 -
     sentryWardCount * Number(sentryWardDecrease);
   if (
-    Number(victim.user?.lastBodyguardDate) + bodyguardDuration * 1000 >
+    Number(victim.user?.lastBodyguardDate) + Math.round(bodyguardDuration * 1000) >
     Date.now()
   ) {
     successChance = 0;

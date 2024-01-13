@@ -64,7 +64,7 @@ async function buy(itemName: string, customer: GuildMember) {
   let lastRobDate = Number(user.user!.lastRobDate);
   let canRob = (Date.now() - lastRobDate) / 1000 > Number(robCooldown);
   const hasBodyguard =
-    Number(user.user?.lastBodyguardDate) + bodyguardDuration * 1000 >
+    Number(user.user?.lastBodyguardDate) + Math.round(bodyguardDuration * 1000) >
     Date.now();
   if (item) {
     let itemId = item!.id;

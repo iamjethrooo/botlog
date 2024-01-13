@@ -30,6 +30,9 @@ async function cooldown(member: GuildMember) {
   const roleIdInmate = await trpcNode.setting.getByKey.mutate({
     key: "roleIdInmate",
   });
+  const bodyguardDuration = await trpcNode.setting.getByKey.mutate({
+    key: "bodyguardDuration",
+  });
 
   const embed = new EmbedBuilder().setAuthor({
     name: `${member.user.username}#${member.user.discriminator}`,
@@ -39,6 +42,13 @@ async function cooldown(member: GuildMember) {
 
   let lastHeistDate = Number(user.user!.lastHeistDate);
 
+  const lastBodyguardDate = user.user?.lastBodyguardDate;
+  const bodyguardUntil =
+    Number(lastBodyguardDate) + Number(bodyguardDuration) * 1000;
+  console.log(bodyguardUntil);
+  console.log(bodyguardDuration);
+  console.log(lastBodyguardDate);
+  console.log(Date.now());
   let canRob = (Date.now() - lastRobDate) / 1000 > robCooldown;
   let canHeist = (Date.now() - lastHeistDate) / 1000 > heistCooldown;
   let isInmate = (<GuildMember>member)!.roles.cache.has(`${roleIdInmate}`);
@@ -54,6 +64,11 @@ async function cooldown(member: GuildMember) {
           ? "`now`"
           : `<t:${Math.round(lastHeistDate / 1000) + heistCooldown}:R>`
       }${
+        bodyguardUntil > Date.now()
+          ? `\n\nYou are protected from robberies until <t:${Math.round(bodyguardUntil / 1000)}:F>`
+          : ""
+      }
+      ${
         isInmate
           ? `\n\nYou will be released from jail <t:${
               Math.round(lastHeistDate / 1000) + Number(user.user?.jailTime)
