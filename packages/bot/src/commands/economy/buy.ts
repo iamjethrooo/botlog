@@ -12,6 +12,7 @@ import {
   ApplicationCommandOptionType,
   AutocompleteInteraction,
   ChatInputCommandInteraction,
+  TextChannel,
 } from "discord.js";
 import { trpcNode } from "../../trpc";
 
@@ -197,7 +198,7 @@ export class BuyCommand extends Command {
     let argument = await args.rest("string");
 
     const embed = await buy(argument, message.member!);
-    return await message.channel.send({ embeds: [embed] });
+    return await (message.channel as TextChannel).send({ embeds: [embed] });
   }
 
   public override async autocompleteRun(interaction: AutocompleteInteraction) {

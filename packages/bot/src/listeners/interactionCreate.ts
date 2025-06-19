@@ -104,7 +104,7 @@ export class InteractionCreateListener extends Listener {
         .setTitleField("Participants")
         .setTemplate(baseEmbed)
         .setItems(participantsFormatted)
-        .setItemsPerPage(10)
+        .setItemsPerPage(20)
         .make()
         .run(interaction);
 

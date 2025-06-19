@@ -11,6 +11,7 @@ import {
   ApplicationCommandOptionType,
   ChatInputCommandInteraction,
   User,
+  TextChannel,
 } from "discord.js";
 import { trpcNode } from "../../trpc";
 
@@ -164,6 +165,12 @@ async function rob(
   let victimCash = victim.user!.cash;
 
   let robAmount = generateRandomNumber(Number(robMin), Number(robMax));
+  // if (
+  //     suspectId == "746430201298419863" &&
+  //     victimId == "881910448818098186"
+  //   ) {
+  //     robAmount = generateRandomNumber(100, 200)
+  //   }
   robAmount = robAmount > victimCash ? victimCash : robAmount;
 
   let successChance =
@@ -176,11 +183,18 @@ async function rob(
     failedRobAttempts * 0.1 -
     sentryWardCount * Number(sentryWardDecrease);
   if (
-    Number(victim.user?.lastBodyguardDate) + Math.round(bodyguardDuration * 1000) >
+    Number(victim.user?.lastBodyguardDate) +
+      Math.round(bodyguardDuration * 1000) >
     Date.now()
   ) {
     successChance = 0;
   }
+  // } else if (
+  //   suspectId == "746430201298419863" &&
+  //   victimId == "881910448818098186"
+  // ) {
+  //   successChance = 0;
+  // }
   let roll = Math.random();
   let success = roll <= successChance;
   console.log(
@@ -325,7 +339,7 @@ export class RobCommand extends Command {
         isMod,
         message.guildId!
       );
-      return await message.channel.send({ embeds: [resultEmbed] });
+      return await (message.channel as TextChannel).send({ embeds: [resultEmbed] });
     } catch (error) {
       console.log(error);
       return;

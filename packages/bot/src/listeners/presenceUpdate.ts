@@ -11,7 +11,7 @@ export class PresenceUpdateListener extends Listener {
     guild.channels.cache
     // airport 1190141457059811388
     // bbc 1190145789591310386
-      .get("1190141457059811388")!
+      .get("1190145789591310386")!
       .setName(`Online: ${countOnlineUsers(guild)}`);
   }
 }

@@ -6,9 +6,55 @@ import {
   CommandOptions,
   container,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
+import { CommandInteraction, Message, EmbedBuilder, TextChannel } from "discord.js";
 import { trpcNode } from "../../trpc";
 // import { trpcNode } from "../../trpc";
+
+async function startHeist(client, message, embed, redColor) {
+  // Check if user is initiator
+  if (message.member!.id == client.heistLeader) {
+    client.heistIsOngoing = true;
+  } else {
+    embed
+      .setAuthor({
+        name: `${message.author.username}#${message.author.discriminator}`,
+        iconURL: message.author.displayAvatarURL(),
+      })
+      .setDescription(
+        `❌ Only <@${client.heistLeader}> can start the heist before 10 minutes is up.`
+      )
+      .setColor(`#${redColor}`)
+      .setFooter(null);
+    await message.channel.send({ embeds: [embed] });
+  }
+}
+
+async function joinHeist(client, message, embed, greenColor, redColor) {
+  // Check member count
+  console.log("Joined heist");
+  if (client.heistMembers.includes(message.member!.id)) {
+    embed
+      .setAuthor({
+        name: `${message.author.username}#${message.author.discriminator}`,
+        iconURL: message.author.displayAvatarURL(),
+      })
+      .setDescription(`❌ You have already joined the bank heist.`)
+      .setColor(`#${redColor}`)
+      .setFooter(null);
+    await message.channel.send({ embeds: [embed] });
+  } else {
+    embed
+      .setAuthor({
+        name: `${message.author.username}#${message.author.discriminator}`,
+        iconURL: message.author.displayAvatarURL(),
+      })
+      .setDescription(`✅ You joined the heist.`)
+      .setColor(`#${greenColor}`)
+      .setFooter(null);
+    await message.channel.send({ embeds: [embed] });
+    client.heistMembers.push(message.member!.id);
+  }
+}
 
 @ApplyOptions<CommandOptions>({
   name: "heist",
@@ -21,10 +67,6 @@ export class HeistCommand extends Command {
   public override async messageRun(message: Message, args: Args) {
     const { client } = container;
     let argument = await args.pick("string").catch(() => "");
-    const embed = new EmbedBuilder().setAuthor({
-      name: `${message.author.username}#${message.author.discriminator}`,
-      iconURL: message.author.displayAvatarURL(),
-    });
 
     const heistWaitingTime = await trpcNode.setting.getByKey.mutate({
       key: "heistWaitingTime",
@@ -75,6 +117,12 @@ export class HeistCommand extends Command {
     let robRate = Number(heistBaseRate);
     let robChance = Number(heistBaseChance);
     let success;
+
+    const embed = new EmbedBuilder().setAuthor({
+      name: `${message.author.username}#${message.author.discriminator}`,
+      iconURL: message.author.displayAvatarURL(),
+    });
+
     try {
       let suspect = await trpcNode.user.getUserById.query({
         id: message.member!.id,
@@ -91,7 +139,7 @@ export class HeistCommand extends Command {
         );
         embed.setColor(`#${redColor}`);
 
-        return await message.channel.send({ embeds: [embed] });
+        return await (message.channel as TextChannel).send({ embeds: [embed] });
       }
       // If no heist is ongoing, start a new heist
       let noOngoingHeist = !client.intervals["heist"];
@@ -99,6 +147,7 @@ export class HeistCommand extends Command {
         // Reset variables
         client.heistLeader = "";
         client.heistMembers = [];
+        client.heistIsOngoing = false;
 
         // Check for heist cooldown
         // Start heist
@@ -115,18 +164,27 @@ export class HeistCommand extends Command {
           })
           .setColor(message.member!.displayHexColor)
           .setFooter({ text: "Time remaining: 10 minutes or 10 members" });
-        await message.channel.send({ embeds: [embed] });
+        await (message.channel as TextChannel).send({ embeds: [embed] });
 
         client.intervals["heist"] = setInterval(async () => {
+          console.log(Date.now());
           if (
             client.heistIsOngoing ||
             (Date.now() - Number(client.timestamps["heist"])) / 1000 >
               Number(heistWaitingTime) ||
             client.heistMembers.length >= Number(heistMaxMembers)
           ) {
+            client.heistIsOngoing = false;
+            console.log(client.heistIsOngoing);
+            console.log(
+              (Date.now() - Number(client.timestamps["heist"])) / 1000 >
+                Number(heistWaitingTime)
+            );
+            console.log(client.heistMembers.length >= Number(heistMaxMembers));
             // Reset variables
             clearTimeout(client.intervals["heist"]);
             delete client.intervals["heist"];
+            delete client.timestamps["heist"];
             // Start heist
             robRate +=
               Number(heistAdditionalRate) * (client.heistMembers.length - 1);
@@ -149,7 +207,7 @@ export class HeistCommand extends Command {
                 .setDescription(`✅ The bank heist was a success!`)
                 .setColor(`#${greenColor}`)
                 .setFooter(null);
-              await message.channel.send({ embeds: [embed] });
+              await (message.channel as TextChannel).send({ embeds: [embed] });
               let splitMessage = ``;
               let splitAmount = Math.round(
                 robAmount / client.heistMembers.length
@@ -171,13 +229,13 @@ export class HeistCommand extends Command {
                 .setDescription(
                   `A total of ${coinEmoji}${robAmount} was stolen from the bank.\n\n${splitMessage}`
                 );
-              await message.channel.send({ embeds: [embed] });
+              await (message.channel as TextChannel).send({ embeds: [embed] });
             } else {
               embed
                 .setDescription(`❌ The bank heist failed.`)
                 .setColor(`#${redColor}`)
                 .setFooter(null);
-              await message.channel.send({ embeds: [embed] });
+              await (message.channel as TextChannel).send({ embeds: [embed] });
               let splitMessage = ``;
 
               // Serve jail time for x hours
@@ -207,57 +265,23 @@ export class HeistCommand extends Command {
                     jailTime / 3600
                   } hours and will not be able to earn coins for the duration.`
                 );
-              await message.channel.send({ embeds: [embed] });
+              await (message.channel as TextChannel).send({ embeds: [embed] });
             }
-
-            client.heistIsOngoing = false;
+            console.log(client.heistIsOngoing);
+            console.log(
+              (Date.now() - Number(client.timestamps["heist"])) / 1000 >
+                Number(heistWaitingTime)
+            );
+            console.log(client.heistMembers.length >= Number(heistMaxMembers));
+            clearInterval(client.intervals["heist"]);
           }
         }, 1000);
         return;
       }
       if (argument.toLocaleLowerCase() == "join") {
-        // Join heist
-        // Check member count
-        console.log("Joined heist");
-        if (client.heistMembers.includes(message.member!.id)) {
-          embed
-            .setAuthor({
-              name: `${message.author.username}#${message.author.discriminator}`,
-              iconURL: message.author.displayAvatarURL(),
-            })
-            .setDescription(`❌ You have already joined the bank heist.`)
-            .setColor(`#${redColor}`)
-            .setFooter(null);
-          await message.channel.send({ embeds: [embed] });
-        } else {
-          embed
-            .setAuthor({
-              name: `${message.author.username}#${message.author.discriminator}`,
-              iconURL: message.author.displayAvatarURL(),
-            })
-            .setDescription(`✅ You joined the heist.`)
-            .setColor(`#${greenColor}`)
-            .setFooter(null);
-          await message.channel.send({ embeds: [embed] });
-          client.heistMembers.push(message.member!.id);
-        }
+        joinHeist(client, message, embed, greenColor, redColor);
       } else if (argument.toLocaleLowerCase() == "start") {
-        // Check if user is initiator
-        if (message.member!.id == client.heistLeader) {
-          client.heistIsOngoing = true;
-        } else {
-          embed
-            .setAuthor({
-              name: `${message.author.username}#${message.author.discriminator}`,
-              iconURL: message.author.displayAvatarURL(),
-            })
-            .setDescription(
-              `❌ Only <@${client.heistLeader}> can start the heist before 10 minutes is up.`
-            )
-            .setColor(`#${redColor}`)
-            .setFooter(null);
-          await message.channel.send({ embeds: [embed] });
-        }
+        startHeist(client, message, embed, redColor);
       }
     } catch (error) {
       console.log(error);

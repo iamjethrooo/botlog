@@ -35,7 +35,7 @@ export class ReadyListener extends Listener {
       (role) => role.id == roleIdInmate!
     );
 
-    let lastExecutionTime = 1692457200000;
+    let lastExecutionTime = 1710493200000;
     await guild.members.fetch();
 
     extendedClient.activeGiveaways = (
@@ -63,12 +63,12 @@ export class ReadyListener extends Listener {
         }
       });
       // lastExecutionTime + minutes * 60 * 1000;
-      const nextExecutionTime = lastExecutionTime + 120 * 60 * 1000; // 30 minutes in milliseconds
+      const nextExecutionTime = lastExecutionTime + 180 * 60 * 1000; // 30 minutes in milliseconds
       if (currentTime >= nextExecutionTime) {
         lastExecutionTime = currentTime;
         // dev 1075950131347738815
         // prod 669193383503200266
-        const targetChannel = client.channels.cache.get("1075950131347738815");
+        const targetChannel = client.channels.cache.get("669193383503200266");
         fs.readFile(
           path.join(__dirname, "../../src/resources/other/topics.txt"),
           "utf8",

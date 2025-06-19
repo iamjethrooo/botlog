@@ -5,7 +5,7 @@ import {
   CommandOptions,
   container
 } from '@sapphire/framework';
-import type { CommandInteraction, Message } from 'discord.js';
+import type { CommandInteraction, Message, TextChannel } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
   name: 'change-avatar',
@@ -21,7 +21,7 @@ export class ChangeAvatarCommand extends Command {
     let messageAttachment = message.attachments.size > 0 ? message.attachments.first()!.url : null
     if (messageAttachment) {
         client.user!.setAvatar(messageAttachment);
-        message.channel.send("Changed display picture!");
+        (message.channel as TextChannel).send("Changed display picture!");
     }
   }
 

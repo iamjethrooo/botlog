@@ -9,6 +9,7 @@ import {
   EmbedBuilder,
   GuildMember,
   Message,
+  TextChannel,
 } from "discord.js";
 import { trpcNode } from "../../trpc";
 
@@ -101,7 +102,7 @@ export class CooldownCommand extends Command {
   public override async messageRun(message: Message) {
     try {
       let resultEmbed = await cooldown(<GuildMember>message.member);
-      return await message.channel.send({ embeds: [resultEmbed] });
+      return await (message.channel as TextChannel).send({ embeds: [resultEmbed] });
     } catch (error) {
       console.log(error);
       return;

@@ -55,7 +55,7 @@ export class SuperStarboardCommand extends Command {
           `❌ You do not have enough money to send this message to the starboard channel!`
         );
         embed.setColor(`#${redColor}`);
-        return await message.channel.send({ embeds: [embed] });
+        return await (message.channel as TextChannel).send({ embeds: [embed] });
       }
     }
 

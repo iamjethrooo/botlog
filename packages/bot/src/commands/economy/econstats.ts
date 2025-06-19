@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
+import { CommandInteraction, Message, EmbedBuilder, TextChannel } from "discord.js";
 import { trpcNode } from "../../trpc";
 
 function randomlyAdjustNumber(num: number): number {
@@ -199,7 +199,7 @@ export class EconStatsCommand extends Command {
       )
       .setColor(message.member!.displayHexColor);
 
-    return await message.channel.send({ embeds: [embed] });
+    return await (message.channel as TextChannel).send({ embeds: [embed] });
   }
 
   public override registerApplicationCommands(

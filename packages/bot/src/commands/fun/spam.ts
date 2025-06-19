@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import type { CommandInteraction, Message } from "discord.js";
+import type { CommandInteraction, Message, TextChannel } from "discord.js";
 
 import fetch from "node-fetch";
 
@@ -23,7 +23,7 @@ export class SpamCommand extends Command {
         content: "You can't use that command here!",
       });
     }
-    fetch("https://www.reddit.com/r/copypasta/new.json?sort=top", {
+    fetch("https://www.reddit.com/r/CopyPastas/new.json?sort=top", {
       method: "GET",
     })
       .then((res) => res.json())
@@ -31,7 +31,7 @@ export class SpamCommand extends Command {
         const rand = Math.floor(Math.random() * json.data.dist);
         const split = splitMessage(json.data.children[rand].data.selftext);
         for (let s of split) {
-          interaction.channel!.send(s);
+          (interaction.channel as TextChannel)!.send(s);
         }
         return;
       })
@@ -57,7 +57,7 @@ export class SpamCommand extends Command {
         const rand = Math.floor(Math.random() * json.data.dist);
         const split = splitMessage(json.data.children[rand].data.selftext);
         for (let s of split) {
-          message.channel.send(s);
+          (message.channel as TextChannel).send(s);
         }
         return;
       })

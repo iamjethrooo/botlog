@@ -10,6 +10,7 @@ import {
   EmbedBuilder,
   GuildMember,
   ChatInputCommandInteraction,
+  TextChannel,
 } from "discord.js";
 import { trpcNode } from "../../trpc";
 
@@ -82,7 +83,7 @@ export class BailCommand extends Command {
 
   public override async messageRun(message: Message, args: Args) {
     const embed = await bail(message.member!);
-    return await message.channel.send({ embeds: [embed] });
+    return await (message.channel as TextChannel).send({ embeds: [embed] });
   }
 
   public override registerApplicationCommands(

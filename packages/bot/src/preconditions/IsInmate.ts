@@ -5,6 +5,7 @@ import {
   GuildMember,
   Message,
   EmbedBuilder,
+  TextChannel,
 } from "discord.js";
 import { trpcNode } from "../trpc";
 
@@ -30,7 +31,7 @@ export class isNotInmate extends Precondition {
         .setDescription("You can only use this command while serving jail time.")
         .setColor((<GuildMember>interaction.member)!.displayHexColor);
 
-      await interaction.channel!.send({ embeds: [embed] });
+      await (interaction.channel as TextChannel)!.send({ embeds: [embed] });
       return this.error({
         message: "You can only use this command while serving jail time.",
       });
@@ -53,7 +54,7 @@ export class isNotInmate extends Precondition {
         .setDescription("You can only use this command while serving jail time.")
         .setColor(message.member!.displayHexColor);
 
-      await message.channel.send({ embeds: [embed] });
+      await (message.channel as TextChannel).send({ embeds: [embed] });
       return this.error({
         message: "You can only use this command while serving jail time.",
       });

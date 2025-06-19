@@ -6,7 +6,7 @@ import {
   CommandOptions,
   container,
 } from "@sapphire/framework";
-import { CommandInteraction, EmbedBuilder, Message } from "discord.js";
+import { CommandInteraction, EmbedBuilder, Message, TextChannel } from "discord.js";
 import { trpcNode } from "../../trpc";
 
 function getRandomInt(min: number, max: number): number {
@@ -100,14 +100,14 @@ export class RussianRouletteCommand extends Command {
           .setDescription(`❌ The bet must be more than \`${minBet}\``)
           .setColor(`#${redColor}`)
           .setFooter(null);
-        await message.channel.send({ embeds: [embed] });
+        await (message.channel as TextChannel).send({ embeds: [embed] });
         return;
       } else if (bet > maxBet) {
         embed
           .setDescription(`❌ The bet must be less than \`${maxBet}\``)
           .setColor(`#${redColor}`)
           .setFooter(null);
-        await message.channel.send({ embeds: [embed] });
+        await (message.channel as TextChannel).send({ embeds: [embed] });
         return;
       }
 
@@ -115,7 +115,7 @@ export class RussianRouletteCommand extends Command {
       if (insufficientFunds) {
         embed.setDescription(`❌ You do not have enough money for the bet!`);
         embed.setColor(`#${redColor}`);
-        await message.channel.send({ embeds: [embed] });
+        await (message.channel as TextChannel).send({ embeds: [embed] });
         return;
       }
       // Start game
@@ -129,7 +129,7 @@ export class RussianRouletteCommand extends Command {
         })
         .setColor(message.member!.displayHexColor)
         .setFooter({ text: "Time remaining: 3 minutes or 6 members" });
-      await message.channel.send({ embeds: [embed] });
+      await (message.channel as TextChannel).send({ embeds: [embed] });
 
       // Set variables
       client.rrBet = bet;
@@ -151,7 +151,7 @@ export class RussianRouletteCommand extends Command {
             .setAuthor(null)
             .setColor(`#${redColor}`)
             .setFooter(null);
-          await message.channel.send({ embeds: [embed] });
+          await (message.channel as TextChannel).send({ embeds: [embed] });
           clearInterval(client.intervals["rr"]);
           delete client.intervals["rr"];
 
@@ -166,7 +166,7 @@ export class RussianRouletteCommand extends Command {
           .setAuthor(null)
           .setColor(message.guild!.members.me!.displayHexColor)
           .setFooter(null);
-        await message.channel.send({ embeds: [embed] });
+        await (message.channel as TextChannel).send({ embeds: [embed] });
         clearInterval(client.intervals["rr"]);
         delete client.intervals["rr"];
 
@@ -186,7 +186,7 @@ export class RussianRouletteCommand extends Command {
               .setDescription(getRouletteMessage(currentPlayerId, false))
               .setColor(null)
               .setFooter(null);
-            await message.channel.send({ embeds: [embed] });
+            await (message.channel as TextChannel).send({ embeds: [embed] });
 
             const winnings = Math.round(
               Number(client.rrBet) / (client.rrPlayers.length - 1)
@@ -214,7 +214,7 @@ export class RussianRouletteCommand extends Command {
               .setTitle(`Russian Roulette Results`)
               .setDescription(`${splitMessage}`)
               .setColor(null);
-            await message.channel.send({ embeds: [embed] });
+            await (message.channel as TextChannel).send({ embeds: [embed] });
 
             // Reset variables
             client.rrBet = 0;
@@ -225,7 +225,7 @@ export class RussianRouletteCommand extends Command {
               .setDescription(getRouletteMessage(currentPlayerId, true))
               .setColor(null)
               .setFooter(null);
-            await message.channel.send({ embeds: [embed] });
+            await (message.channel as TextChannel).send({ embeds: [embed] });
             currentPlayerIndex++;
           }
         }, 1000);
@@ -240,13 +240,13 @@ export class RussianRouletteCommand extends Command {
           .setDescription(`❌ You have already joined the game!`)
           .setColor(`#${redColor}`)
           .setFooter(null);
-        await message.channel.send({ embeds: [embed] });
+        await (message.channel as TextChannel).send({ embeds: [embed] });
       } else {
         let insufficientFunds = user!.user!.cash < Number(client.rrBet);
         if (insufficientFunds) {
           embed.setDescription(`❌ You do not have enough money for the bet!`);
           embed.setColor(`#${redColor}`);
-          await message.channel.send({ embeds: [embed] });
+          await (message.channel as TextChannel).send({ embeds: [embed] });
           return;
         }
 
@@ -260,7 +260,7 @@ export class RussianRouletteCommand extends Command {
           .setDescription(`✅ You joined the game.`)
           .setColor(`#${greenColor}`)
           .setFooter(null);
-        await message.channel.send({ embeds: [embed] });
+        await (message.channel as TextChannel).send({ embeds: [embed] });
       }
     } else if (!noGameOngoing && argument.toLocaleLowerCase() == "start") {
       // Check if user is initiator
@@ -277,7 +277,7 @@ export class RussianRouletteCommand extends Command {
           )
           .setColor(`#${redColor}`)
           .setFooter(null);
-        await message.channel.send({ embeds: [embed] });
+        await (message.channel as TextChannel).send({ embeds: [embed] });
       }
     }
   }

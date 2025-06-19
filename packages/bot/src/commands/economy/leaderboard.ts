@@ -118,7 +118,7 @@ async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
           userHasFakeId
             ? `**${generateRandomName()}**`
             : `<@${_user.discordId}>`
-        } ・ ${coinEmoji}${_user.cash}`
+        }・${coinEmoji}${_user.cash}`
       );
       index++;
     }
@@ -158,7 +158,7 @@ export class LeaderboardCommand extends Command {
       .setTitleField("Leaderboard")
       .setTemplate(baseEmbed)
       .setItems(leaderboard.array)
-      .setItemsPerPage(15)
+      .setItemsPerPage(20)
       .make()
       .run(interaction);
 
@@ -166,31 +166,35 @@ export class LeaderboardCommand extends Command {
   }
 
   public override async messageRun(message: Message, args: Args) {
-    let showAll = (await args.pick("string").catch(() => 0)) == "all";
-    let leaderboard = await generateLeaderboard(
-      message.author,
-      message.guild!,
-      showAll
-    );
+    try {
+      let showAll = (await args.pick("string").catch(() => 0)) == "all";
+      let leaderboard = await generateLeaderboard(
+        message.author,
+        message.guild!,
+        showAll
+      );
 
-    const baseEmbed = new EmbedBuilder()
-      .setColor("#FF0000")
-      .setAuthor({
-        name: message!.guild!.name,
-        iconURL: message!.guild!.iconURL()!,
-      })
-      .setFooter({
-        text: `Your leaderboard rank: ${
-          leaderboard.rank == 0 ? "N/A" : leaderboard.rank
-        }`,
-      });
-    new PaginatedFieldMessageEmbed()
-      .setTitleField("Leaderboard")
-      .setTemplate(baseEmbed)
-      .setItems(leaderboard.array)
-      .setItemsPerPage(15)
-      .make()
-      .run(message);
+      const baseEmbed = new EmbedBuilder()
+        .setColor("#FF0000")
+        .setAuthor({
+          name: message!.guild!.name,
+          iconURL: message!.guild!.iconURL()!,
+        })
+        .setFooter({
+          text: `Your leaderboard rank: ${
+            leaderboard.rank == 0 ? "N/A" : leaderboard.rank
+          }`,
+        });
+      new PaginatedFieldMessageEmbed()
+        .setTitleField("Leaderboard")
+        .setTemplate(baseEmbed)
+        .setItems(leaderboard.array)
+        .setItemsPerPage(15)
+        .make()
+        .run(message);
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   public override registerApplicationCommands(

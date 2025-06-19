@@ -10,6 +10,7 @@ import {
   EmbedBuilder,
   ChatInputCommandInteraction,
   ApplicationCommandOptionType,
+  TextChannel,
 } from "discord.js";
 import { CoinFlipGame } from "../../lib/utils/games/coinflip";
 import { trpcNode } from "../../trpc";
@@ -129,7 +130,7 @@ export class GamesCommand extends Command {
           )}**.`
         )
         .setColor((<GuildMember>interaction.member)!.displayHexColor);
-      await interaction.channel
+      await (interaction.channel as TextChannel)
         ?.send({
           embeds: [tempEmbed],
         })
@@ -152,7 +153,7 @@ export class GamesCommand extends Command {
       })
       .then(async (i) => {
         const inviteCollector =
-          interaction.channel?.createMessageComponentCollector({
+          (interaction.channel as TextChannel)?.createMessageComponentCollector({
             time: 60 * 1000,
           });
         inviteCollector?.on("collect", async (response) => {

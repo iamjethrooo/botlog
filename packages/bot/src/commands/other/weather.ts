@@ -5,7 +5,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
+import { CommandInteraction, Message, EmbedBuilder, TextChannel } from "discord.js";
 
 const fetch = require("node-fetch");
 
@@ -19,7 +19,7 @@ export class PingCommand extends Command {
   public override async messageRun(message: Message, args: Args) {
     console.log(args);
     const city = await args.rest("string").catch(() => "");
-    if (city === "") return message.channel.send("Please provide a location.");
+    if (city === "") return (message.channel as TextChannel).send("Please provide a location.");
     const randomColor = "000000".replace(/0/g, function () {
       return (~~(Math.random() * 16)).toString(16);
     });
@@ -89,7 +89,7 @@ export class PingCommand extends Command {
             .setTimestamp();
         }
 
-        return await message.channel.send({ embeds: [embed] });
+        return await (message.channel as TextChannel).send({ embeds: [embed] });
       });
     return;
   }

@@ -8,7 +8,7 @@
         "build": "tsc",
         "copy-scripts": "npx ncp ./scripts ./dist/",
         "dev": "npm run build && npm run copy-scripts && npm run start",
-        "start": "node dist/index.js"
+        "start": "pm2 start dist/index.js"
     },
     "author": "Jethro",
     "license": "ISC",
@@ -68,5 +68,9 @@
     "bugs": {
         "url": "https://github.com/iamjethrooo/bbc-bot/issues"
     },
-    "homepage": "https://github.com/iamjethrooo/bbc-bot#readme"
+    "homepage": "https://github.com/iamjethrooo/bbc-bot#readme",
+    "overrides": {
+        "ajv": "^8.17.1",
+        "whatwg-url": "^14.0.0"
+      }
 }

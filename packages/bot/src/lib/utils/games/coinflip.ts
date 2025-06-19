@@ -1,4 +1,4 @@
-import { CommandInteraction, GuildMember, EmbedBuilder } from "discord.js";
+import { CommandInteraction, GuildMember, EmbedBuilder, TextChannel } from "discord.js";
 import { trpcNode } from "../../../trpc";
 
 export class CoinFlipGame {
@@ -82,7 +82,7 @@ export class CoinFlipGame {
           }> gained ${betString}\n<@${loser.user.id}> lost ${betString}`
         )
         .setColor(player1.displayHexColor);
-      return await interaction.channel?.send({
+      return await (interaction.channel as TextChannel)?.send({
         embeds: [embed],
       });
     }

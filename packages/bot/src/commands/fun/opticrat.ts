@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, Message, EmbedBuilder } from 'discord.js';
+import { CommandInteraction, Message, EmbedBuilder, TextChannel } from 'discord.js';
 
 @ApplyOptions<CommandOptions>({
   name: 'optic-rat',
@@ -23,7 +23,7 @@ export class OpticRatCommand extends Command {
     .setColor("#F5463D")
     .setURL("https://discord.com/channels/669190303353143306/682838969179832423/1071441316669558865")
 
-    return await message.channel.send({ embeds: [embed] });
+    return await (message.channel as TextChannel).send({ embeds: [embed] });
   }
 
   public override registerApplicationCommands(
