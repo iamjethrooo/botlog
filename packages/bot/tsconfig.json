@@ -13,7 +13,7 @@
     "allowSyntheticDefaultImports": true,
     "verbatimModuleSyntax": false,
     "esModuleInterop": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
   },
   "include": ["src", "scripts"],
   "exclude": ["node_modules"]

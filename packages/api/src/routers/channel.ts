@@ -1,6 +1,6 @@
 import { t } from "../trpc";
 import { z } from "zod";
-import { APIGuildChannel, APIGuildTextChannel } from "discord-api-types/v10";
+import { APIGuildChannel, APIGuildTextChannel, ChannelType } from "discord-api-types/v10";
 import { getFetch } from "@trpc/client";
 
 const fetch = getFetch();
@@ -26,12 +26,15 @@ export const channelRouter = t.router({
           },
         }
       );
-      const responseChannels: APIGuildChannel<any>[] = <APIGuildChannel<any>[]>(
+      const responseChannels: APIGuildChannel<ChannelType>[] = <APIGuildChannel<ChannelType>[]>(
         await response.json()
       );
 
-      const channels: APIGuildTextChannel<0>[] = responseChannels.filter(
-        (channel) => channel.type === 0
+      const channels: APIGuildTextChannel<ChannelType.GuildText>[] = responseChannels.filter(
+        //(channel) => channel.type === 0
+        (channel): channel is APIGuildTextChannel<ChannelType.GuildText> => {
+          return channel.type === ChannelType.GuildText;
+        }
       );
       return { channels };
     }),

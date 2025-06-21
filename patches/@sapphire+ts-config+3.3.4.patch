@@ -1,0 +1,21 @@
+diff --git a/node_modules/@sapphire/ts-config/tsconfig.json b/node_modules/@sapphire/ts-config/tsconfig.json
+index 5062cae..153aefd 100644
+--- a/node_modules/@sapphire/ts-config/tsconfig.json
++++ b/node_modules/@sapphire/ts-config/tsconfig.json
+@@ -10,7 +10,6 @@
+ 		"experimentalDecorators": true,
+ 		"forceConsistentCasingInFileNames": true,
+ 		"importHelpers": true,
+-		"importsNotUsedAsValues": "error",
+ 		"incremental": true,
+ 		"lib": ["esnext"],
+ 		"module": "CommonJS",
+@@ -28,6 +27,7 @@
+ 		"sourceMap": true,
+ 		"strict": true,
+ 		"target": "ES2020",
+-		"useDefineForClassFields": true
++		"useDefineForClassFields": true,
++		"verbatimModuleSyntax": false
+ 	}
+ }

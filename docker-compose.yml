@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  bot:
+    build:
+      context: . # <--- CHANGE THIS: Set context to the monorepo root
+      dockerfile: packages/bot/Dockerfile # <--- Specify Dockerfile path
+    container_name: botlog
+    restart: always
+    # ... environment variables ...
+    depends_on:
+      - redis
+
+  dashboard:
+    build:
+      context: .
+      # context: ./packages/dashboard # Docker will look for Dockerfile and source files HERE
+      dockerfile: packages/dashboard/Dockerfile      # This is packages/dashboard/Dockerfile
+    container_name: dashboard
+    restart: always
+    # ... environment variables ...
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+
+  redis: # <-- Redis service definition is BACK!
+    image: redis:7-alpine # Using the official Docker Redis image
+    container_name: my_redis_instance
+    restart: always
+   # command: redis-server --requirepass # Set password for Redis
+    volumes:
+      - redis_data:/data # Persistent storage for Redis data
+    # No ports mapping for Redis unless you need to access it from your host machine (e.g., redis-cli)
+    # ports:
+    #   - "6379:6379"
+
+volumes:
+  redis_data:

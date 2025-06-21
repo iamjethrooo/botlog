@@ -1,0 +1,8 @@
+.git
+# .env # <--- REMOVE THIS LINE!
+packages/*/node_modules/ 
+packages/dashboard/.next/
+packages/dashboard/dist/
+*.log
+tmp/
+.vscode/
