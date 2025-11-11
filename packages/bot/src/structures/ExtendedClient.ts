@@ -17,7 +17,7 @@ dotenv.config({
 
 export class ExtendedClient extends SapphireClient {
   readonly music: QueueClient;
-  leaveTimers: { [key: string]: NodeJS.Timer };
+  leaveTimers: { [key: string]: NodeJS.Timeout };
   snipes: Map<string, Message[]>;
   editsnipes: Map<string, Message>;
   intervals: { [key: string]: NodeJS.Timeout };
@@ -103,7 +103,7 @@ export class ExtendedClient extends SapphireClient {
 declare module "@sapphire/framework" {
   interface SapphireClient {
     readonly music: QueueClient;
-    leaveTimers: { [key: string]: NodeJS.Timer };
+    leaveTimers: { [key: string]: NodeJS.Timeout };
     snipes: Map<string, Message[]>;
     editsnipes: Map<string, Message>;
     heistMembers: String[];

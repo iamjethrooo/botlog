@@ -24,19 +24,25 @@ export class ReadyListener extends Listener {
 
     // Fetch specified guild
     const guild = await client.guilds.fetch(String(process.env.GUILD_ID));
+    console.log("Fetched guild");
     await guild.members.fetch({ withPresences: true });
+    console.log("Fetched presences");
     await guild.roles.fetch();
+    console.log("Fetched roles");
 
     const roleIdInmate = await trpcNode.setting.getByKey.mutate({
       key: "roleIdInmate",
     });
+    console.log(`Fetched Inmate ID: ${roleIdInmate}`)
 
     let inmateRole = guild.roles.cache.find(
       (role) => role.id == roleIdInmate!
     );
+    console.log("Fetched Inmate Role")
 
-    let lastExecutionTime = 1710493200000;
-    await guild.members.fetch();
+    // let lastExecutionTime = 1762695426597;
+    //await guild.members.fetch();
+    //console.log("Fetched guild members");
 
     extendedClient.activeGiveaways = (
       await trpcNode.giveaway.getActive.query()
@@ -45,8 +51,9 @@ export class ReadyListener extends Listener {
     });
 
     setInterval(async () => {
+      console.log("Inside interval");
       // #region Topics
-      const currentTime = Date.now();
+      // const currentTime = Date.now();
       //console.log(currentTime);
 
       let inmates = guild.roles.cache
@@ -63,9 +70,12 @@ export class ReadyListener extends Listener {
         }
       });
       // lastExecutionTime + minutes * 60 * 1000;
-      const nextExecutionTime = lastExecutionTime + 180 * 60 * 1000; // 30 minutes in milliseconds
-      if (currentTime >= nextExecutionTime) {
-        lastExecutionTime = currentTime;
+      // const nextExecutionTime = lastExecutionTime + 180 * 60 * 1000; // 30 minutes in milliseconds
+      // console.log("Current Time: " + currentTime);
+      // console.log("Next Execution Time: " + nextExecutionTime);
+      //if (currentTime >= nextExecutionTime) {
+      if (false) {
+        // lastExecutionTime = currentTime;
         // dev 1075950131347738815
         // prod 669193383503200266
         const targetChannel = client.channels.cache.get("669193383503200266");
@@ -79,7 +89,7 @@ export class ReadyListener extends Listener {
             const lines = content
               .split("\n")
               .filter((line) => line.trim() !== "");
-
+            // console.log(content);
             const randomIndex = Math.floor(Math.random() * lines.length);
             const randomLine = lines[randomIndex];
             (<TextChannel>targetChannel).send(randomLine);

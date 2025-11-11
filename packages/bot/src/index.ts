@@ -3,10 +3,10 @@ import {
   ApplicationCommandRegistries,
   RegisterBehavior,
 } from "@sapphire/framework";
-import {
-  type NewsChannel,
-  type TextChannel,
-  type ThreadChannel,
+import type {
+  NewsChannel,
+  TextChannel,
+  ThreadChannel,
 } from "discord.js";
 import buttonsCollector from "./lib/utils/music/buttonsCollector";
 import { ExtendedClient } from "./structures/ExtendedClient";

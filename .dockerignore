@@ -6,3 +6,11 @@ packages/dashboard/dist/
 *.log
 tmp/
 .vscode/
+.git
+.vscode
+node_modules/
+tmp/
+logs/
+.DS_Store
+**/node_modules
+**/dist

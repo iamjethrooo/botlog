@@ -1,6 +1,6 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Listener, ListenerOptions, container } from "@sapphire/framework";
-import { Presence } from "discord.js";
+import type { Presence } from "discord.js";
 @ApplyOptions<ListenerOptions>({
   event: "presenceUpdate",
 })

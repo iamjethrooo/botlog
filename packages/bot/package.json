@@ -5,7 +5,7 @@
     "main": "dist/index.js",
     "keywords": [],
     "scripts": {
-        "build": "tsc",
+        "build": "npx tsc",
         "copy-scripts": "npx ncp ./scripts ./dist/",
         "dev": "npm run build && npm run copy-scripts && npm run start",
         "start": "pm2 start dist/index.js"

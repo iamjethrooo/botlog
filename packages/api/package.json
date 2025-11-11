@@ -5,9 +5,11 @@
     "license": "ISC",
     "private": true,
     "files": [
-      "src"
+        "src"
     ],
     "scripts": {},
-    "dependencies": {},
-    "devDependencies": {}
-  }
+    "dependencies": {
+        "discord-api-types": "^0.38.12",
+        "next-auth": "^4.15.1"
+    }
+}

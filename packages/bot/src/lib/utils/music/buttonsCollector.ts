@@ -1,5 +1,5 @@
 import { Time } from "@sapphire/time-utilities";
-import { Message, MessageComponentInteraction } from "discord.js";
+import type { Message, MessageComponentInteraction } from "discord.js";
 import { container } from "@sapphire/framework";
 import type { Queue } from "../queue/Queue";
 import { NowPlayingEmbed } from "./NowPlayingEmbed";
@@ -16,7 +16,7 @@ export default async function buttonsCollector(message: Message, song: Song) {
   if (!channel) return;
 
   const maxLimit = Time.Minute * 30;
-  let timer: NodeJS.Timer;
+  let timer: NodeJS.Timeout | undefined;
 
   collector.on("collect", async (i: MessageComponentInteraction) => {
     if (!message.member?.voice.channel?.members.has(i.user.id)) {

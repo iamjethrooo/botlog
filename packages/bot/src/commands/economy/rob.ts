@@ -187,14 +187,15 @@ async function rob(
       Math.round(bodyguardDuration * 1000) >
     Date.now()
   ) {
+    successChance -= 0.85;
+  }
+  else if (
+    suspectId == "746430201298419863" && // strep
+    victimId == "881910448818098186" // alex
+  ) {
     successChance = 0;
   }
-  // } else if (
-  //   suspectId == "746430201298419863" &&
-  //   victimId == "881910448818098186"
-  // ) {
-  //   successChance = 0;
-  // }
+
   let roll = Math.random();
   let success = roll <= successChance;
   console.log(

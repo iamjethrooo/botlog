@@ -45,6 +45,10 @@ export class EconStatsCommand extends Command {
       (i) => i.name.toLowerCase() == "unstable potion"
     );
 
+    let sentryWard = allItems.allItems.find(
+      (i) => i.name.toLowerCase() == "sentry ward"
+    );
+
     const coinEmoji = await trpcNode.setting.getByKey.mutate({
       key: "coinEmoji",
     });
@@ -67,6 +71,9 @@ export class EconStatsCommand extends Command {
     });
     const fortuneAmuletIncrease = await trpcNode.setting.getByKey.mutate({
       key: "fortuneAmuletIncrease",
+    });
+    const sentryWardDecrease = await trpcNode.setting.getByKey.mutate({
+      key: "sentryWardDecrease",
     });
     const snipeCost = await trpcNode.setting.getByKey.mutate({
       key: "snipeCost",
@@ -117,6 +124,13 @@ export class EconStatsCommand extends Command {
     let fortuneAmuletCount =
       fortuneAmuletInv.length != 0 ? fortuneAmuletInv[0].amount : 0;
 
+    let sentryWardInv = userInventory.inventory.filter(
+      (i) => i.itemId == sentryWard!.id
+    );
+
+    let sentryWardCount =
+      sentryWardInv.length != 0 ? sentryWardInv[0].amount : 0;
+
     let successChance =
       robChance +
       (userHasLuckPotion ? Number(luckyCharmIncrease) : 0) +
@@ -124,6 +138,8 @@ export class EconStatsCommand extends Command {
       (userHasUnstablePotion
         ? randomlyAdjustNumber(Number(luckyCharmIncrease))
         : 0);
+
+    let robProtection = sentryWardCount * Number(sentryWardDecrease);
 
     const embed = new EmbedBuilder()
       .setAuthor({
@@ -156,6 +172,11 @@ export class EconStatsCommand extends Command {
         {
           name: "Rob Success Rate",
           value: `\`${Math.round(Number(successChance) * 100)}%\``,
+          inline: true,
+        },
+        {
+          name: "Rob Protection",
+          value: `\`${Math.round(Number(robProtection) * 100)}%\``,
           inline: true,
         },
         // {

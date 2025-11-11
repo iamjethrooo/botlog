@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions,
 } from "@sapphire/framework";
-import { ChatInputCommandInteraction } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
 import { EmbedBuilder } from "discord.js";
 
 @ApplyOptions<CommandOptions>({

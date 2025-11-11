@@ -2,7 +2,7 @@ import { t } from "../trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { getFetch } from "@trpc/client";
-import { APIGuildChannel } from "discord-api-types/v10";
+import type { APIGuildChannel } from "discord-api-types/v10";
 
 const fetch = getFetch();
 

@@ -21,6 +21,7 @@ export default withTM(
     swcMinify: true,
     experimental: {
       externalDir: true
-    }
+    },
+    output: "standalone"
   })
 );

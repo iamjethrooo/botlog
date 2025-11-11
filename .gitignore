@@ -4,6 +4,7 @@
 *.pem
 .env
 .env*.local
+BAK.env
 
 # Testing
 /coverage
