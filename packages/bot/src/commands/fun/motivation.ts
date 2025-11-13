@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, EmbedBuilder, Message } from 'discord.js';
+import { CommandInteraction, Message } from 'discord.js';
 import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
@@ -21,14 +21,15 @@ export class MotivationCommand extends Command {
 
         const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
 
-        const embed = new EmbedBuilder()
-          .setColor('#FFD77A')
-          .setAuthor({
-            name: 'Motivational Quote',
-          })
-          .setDescription(`*"${randomQuote.text}*"\n\n-${randomQuote.author}`)
-          .setTimestamp();
-        return await interaction.reply({ embeds: [embed] });
+        // const embed = new EmbedBuilder()
+        //   .setColor('#FFD77A')
+        //   .setAuthor({
+        //     name: 'Motivational Quote',
+        //   })
+        //   .setDescription(`*"${randomQuote.text}*"\n\n-${randomQuote.author}`)
+        //   .setTimestamp();
+        // return await interaction.reply({ embeds: [embed] });
+        return await interaction.reply(`*"${randomQuote.text}*"\n\n-${randomQuote.author}`);
       })
       .catch(async error => {
         console.error(error);
@@ -46,14 +47,15 @@ export class MotivationCommand extends Command {
 
         const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
 
-        const embed = new EmbedBuilder()
-          .setColor('#FFD77A')
-          .setAuthor({
-            name: 'Motivational Quote',
-          })
-          .setDescription(`*"${randomQuote.text}*"\n\n-${randomQuote.author}`)
-          .setTimestamp();
-        return await message.reply({ embeds: [embed] });
+        // const embed = new EmbedBuilder()
+        //   .setColor('#FFD77A')
+        //   .setAuthor({
+        //     name: 'Motivational Quote',
+        //   })
+        //   .setDescription(`*"${randomQuote.text}*"\n\n-${randomQuote.author}`)
+        //   .setTimestamp();
+        // return await message.reply({ embeds: [embed] });
+        return await message.reply(`*"${randomQuote.text}*"\n\n-${randomQuote.author}`);
       })
       .catch(async error => {
         console.error(error);

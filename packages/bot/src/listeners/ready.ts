@@ -40,7 +40,7 @@ export class ReadyListener extends Listener {
     );
     console.log("Fetched Inmate Role")
 
-    // let lastExecutionTime = 1762695426597;
+    let lastExecutionTime = 1762695426597;
     //await guild.members.fetch();
     //console.log("Fetched guild members");
 
@@ -51,9 +51,9 @@ export class ReadyListener extends Listener {
     });
 
     setInterval(async () => {
-      console.log("Inside interval");
+      // console.log("Inside interval");
       // #region Topics
-      // const currentTime = Date.now();
+      const currentTime = Date.now();
       //console.log(currentTime);
 
       let inmates = guild.roles.cache
@@ -70,15 +70,15 @@ export class ReadyListener extends Listener {
         }
       });
       // lastExecutionTime + minutes * 60 * 1000;
-      // const nextExecutionTime = lastExecutionTime + 180 * 60 * 1000; // 30 minutes in milliseconds
+      const nextExecutionTime = lastExecutionTime + 180 * 60 * 1000; // 30 minutes in milliseconds
       // console.log("Current Time: " + currentTime);
       // console.log("Next Execution Time: " + nextExecutionTime);
-      //if (currentTime >= nextExecutionTime) {
-      if (false) {
-        // lastExecutionTime = currentTime;
-        // dev 1075950131347738815
+      if (currentTime >= nextExecutionTime) {
+      // if (false) {
+        lastExecutionTime = currentTime;
+        // dev 1223433266686595154
         // prod 669193383503200266
-        const targetChannel = client.channels.cache.get("669193383503200266");
+        const targetChannel = client.channels.cache.get("1223433266686595154");
         fs.readFile(
           path.join(__dirname, "../../src/resources/other/topics.txt"),
           "utf8",

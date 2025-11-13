@@ -5,7 +5,7 @@ import {
   CommandOptions,
   Args
 } from '@sapphire/framework';
-import { EmbedBuilder, Message, ChatInputCommandInteraction, ApplicationCommandOptionType } from 'discord.js';
+import { Message, ChatInputCommandInteraction, ApplicationCommandOptionType } from 'discord.js';
 import * as fs from 'fs';
 
 @ApplyOptions<CommandOptions>({
@@ -29,16 +29,17 @@ export class EightBallCommand extends Command {
     const randomAnswer =
       answersArray[Math.floor(Math.random() * answersArray.length)];
 
-    const answerEmbed = new EmbedBuilder()
-      .setTitle(question)
-      .setAuthor({
-        name: 'Magic 8 Ball',
-        iconURL: 'https://i.imgur.com/HbwMhWM.png'
-      })
-      .setDescription(randomAnswer)
-      .setColor('#000000')
-      .setTimestamp();
-    return await interaction.reply({ embeds: [answerEmbed] });
+    // const answerEmbed = new EmbedBuilder()
+    //   .setTitle(question)
+    //   .setAuthor({
+    //     name: 'Magic 8 Ball',
+    //     iconURL: 'https://i.imgur.com/HbwMhWM.png'
+    //   })
+    //   .setDescription(randomAnswer)
+    //   .setColor('#000000')
+    //   .setTimestamp();
+    //return await interaction.reply({ embeds: [answerEmbed] });
+    return await interaction.reply(`\`` + randomAnswer + `\``);
   }
 
   public override async messageRun(message: Message, args: Args) {
@@ -57,16 +58,17 @@ export class EightBallCommand extends Command {
       const randomAnswer =
         answersArray[Math.floor(Math.random() * answersArray.length)];
 
-      const answerEmbed = new EmbedBuilder()
-        .setTitle(question)
-        .setAuthor({
-          name: 'Magic 8 Ball',
-          iconURL: 'https://i.imgur.com/HbwMhWM.png'
-        })
-        .setDescription(randomAnswer)
-        .setColor('#000000')
-        .setTimestamp();
-      return await message.reply({ embeds: [answerEmbed] });
+      // const answerEmbed = new EmbedBuilder()
+      //   .setTitle(question)
+      //   .setAuthor({
+      //     name: 'Magic 8 Ball',
+      //     iconURL: 'https://i.imgur.com/HbwMhWM.png'
+      //   })
+      //   .setDescription(randomAnswer)
+      //   .setColor('#000000')
+      //   .setTimestamp();
+      // return await message.reply({ embeds: [answerEmbed] });
+      return await message.reply(`\`` + randomAnswer + `\``);
   }
 
   public override registerApplicationCommands(

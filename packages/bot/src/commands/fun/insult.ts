@@ -4,7 +4,7 @@ import {
   Command,
   CommandOptions
 } from '@sapphire/framework';
-import { CommandInteraction, EmbedBuilder, Message } from 'discord.js';
+import { CommandInteraction, Message } from 'discord.js';
 import axios from 'axios';
 
 @ApplyOptions<CommandOptions>({
@@ -17,19 +17,20 @@ export class InsultCommand extends Command {
       .get('https://evilinsult.com/generate_insult.php?lang=en&type=json')
       .then(async response => {
         const insult: string = response.data.insult;
-        const embed = new EmbedBuilder()
-          .setColor('#E41032')
-          .setAuthor({
-            name: 'Evil Insult',
-            url: 'https://evilinsult.com',
-            iconURL: 'https://i.imgur.com/bOVpNAX.png'
-          })
-          .setDescription(insult)
-          .setTimestamp()
-          .setFooter({
-            text: 'Powered by evilinsult.com'
-          });
-        return await interaction.reply({ embeds: [embed] });
+        // const embed = new EmbedBuilder()
+        //   .setColor('#E41032')
+        //   .setAuthor({
+        //     name: 'Evil Insult',
+        //     url: 'https://evilinsult.com',
+        //     iconURL: 'https://i.imgur.com/bOVpNAX.png'
+        //   })
+        //   .setDescription(insult)
+        //   .setTimestamp()
+        //   .setFooter({
+        //     text: 'Powered by evilinsult.com'
+        //   });
+        // return await interaction.reply({ embeds: [embed] });
+        return await interaction.reply(`\`` + insult + `\``);
       })
       .catch(async error => {
         console.error(error);
@@ -44,19 +45,20 @@ export class InsultCommand extends Command {
       .get('https://evilinsult.com/generate_insult.php?lang=en&type=json')
       .then(async response => {
         const insult: string = response.data.insult;
-        const embed = new EmbedBuilder()
-          .setColor('#E41032')
-          .setAuthor({
-            name: 'Evil Insult',
-            url: 'https://evilinsult.com',
-            iconURL: 'https://i.imgur.com/bOVpNAX.png'
-          })
-          .setDescription(insult)
-          .setTimestamp()
-          .setFooter({
-            text: 'Powered by evilinsult.com'
-          });
-        return await message.reply({ embeds: [embed] });
+        // const embed = new EmbedBuilder()
+        //   .setColor('#E41032')
+        //   .setAuthor({
+        //     name: 'Evil Insult',
+        //     url: 'https://evilinsult.com',
+        //     iconURL: 'https://i.imgur.com/bOVpNAX.png'
+        //   })
+        //   .setDescription(insult)
+        //   .setTimestamp()
+        //   .setFooter({
+        //     text: 'Powered by evilinsult.com'
+        //   });
+        // return await message.reply({ embeds: [embed] });
+        return await message.reply(`\`` + insult + `\``);
       })
       .catch(async error => {
         console.error(error);
