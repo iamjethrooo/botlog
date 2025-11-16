@@ -144,8 +144,7 @@ async function rob(
   let tooSoon = (Date.now() - lastRobDate) / 1000 < robCooldown;
   if (tooSoon) {
     embed.setDescription(
-      `⏲️ Too soon. You can attempt to rob another member in <t:${
-        Math.round(lastRobDate / 1000) + robCooldown
+      `⏲️ Too soon. You can attempt to rob another member in <t:${Math.round(lastRobDate / 1000) + robCooldown
       }:R>`
     );
     embed.setColor(`#${redColor}`);
@@ -157,6 +156,35 @@ async function rob(
     id: victimId,
   });
 
+  // Block robbing of same person in a row
+  let lastVictimRobbed = await trpcNode.robLog.getLastVictimRobbed.query({
+    robberId: suspectId
+  });
+  console.log(lastVictimRobbed.lastVictim?.victimId)
+  console.log(victimId);
+  if (lastVictimRobbed.lastVictim?.victimId == victimId) {
+    embed.setDescription(
+      `❌ You cannot rob the same user in a row!`
+    );
+    embed.setColor(`#${redColor}`);
+
+    return embed;
+  }
+  // Shield victim after successful robbery against them
+  let lastRobAgainstVictim = await trpcNode.robLog.getLastRobbed.query({
+    victimId
+  });
+
+  let msSinceLastSuccessfulRobAgainstVictim = Date.now() - lastRobAgainstVictim.lastRobbery!.timestamp.getTime();
+  let robProtectionWindow = 6 * 60 * 60 * 1000; // 6 hours
+  if (lastRobAgainstVictim && msSinceLastSuccessfulRobAgainstVictim < robProtectionWindow) {
+    embed.setDescription(
+      `❌ <@${victimId}> was robbed recently. Try again <t:${Math.floor((lastRobAgainstVictim.lastRobbery!.timestamp.getTime() + robProtectionWindow) / 1000)}:R>`
+    );
+    embed.setColor(`#${redColor}`);
+
+    return embed;
+  }
   const bodyguardDuration = Number(
     await trpcNode.setting.getByKey.mutate({
       key: "bodyguardDuration",
@@ -184,7 +212,7 @@ async function rob(
     sentryWardCount * Number(sentryWardDecrease);
   if (
     Number(victim.user?.lastBodyguardDate) +
-      Math.round(bodyguardDuration * 1000) >
+    Math.round(bodyguardDuration * 1000) >
     Date.now()
   ) {
     successChance -= 0.85;
@@ -198,6 +226,7 @@ async function rob(
 
   let roll = Math.random();
   let success = roll <= successChance;
+  let amountToBeSubtracted = 0;
   console.log(
     `Robber: ${user.username}, Success Chance: ${successChance}, Roll: ${roll}`
   );
@@ -235,7 +264,7 @@ async function rob(
     );
     embed.setColor(`#${greenColor}`);
   } else {
-    let amountToBeSubtracted =
+    amountToBeSubtracted =
       suspectCash > robAmount ? robAmount : suspectCash;
 
     await trpcNode.user.subtractCash.mutate({
@@ -280,20 +309,30 @@ async function rob(
   if (consumedItems.length == 1) {
     embed.setDescription(
       embed.toJSON().description! +
-        `\n\nYour ${consumedItems.toString()} was consumed during the robbery.`
+      `\n\nYour ${consumedItems.toString()} was consumed during the robbery.`
     );
   } else if (consumedItems.length > 1) {
     embed.setDescription(
       embed.toJSON().description! +
-        `\n\nYour ${consumedItems.join(
-          " and "
-        )} were consumed during the robbery.`
+      `\n\nYour ${consumedItems.join(
+        " and "
+      )} were consumed during the robbery.`
     );
   }
 
   await trpcNode.user.updateLastRobDate.mutate({
     id: user.id,
     date: Date.now().toString(),
+  });
+
+  robAmount = suspectCash > robAmount ? robAmount : suspectCash;
+
+  await trpcNode.robLog.create.mutate({
+    robberId: suspectId,
+    victimId,
+    success,
+    amount: robAmount,
+    reason: ""
   });
 
   return embed;

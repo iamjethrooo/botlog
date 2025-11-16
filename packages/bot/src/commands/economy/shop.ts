@@ -18,7 +18,7 @@ async function generateShopText() {
   });
   shop.allItems.forEach((item) => {
     shopFormatted.push(
-      `**${counter}.** ${item.emoji} **${item.name}** | ${coinEmoji}**\`${item.buyPrice}\`**\n${item.description}\n`
+      `**${counter}.** ${item.emoji} **${item.name}** | ${item.name == 'Bodyguard' ? '' : coinEmoji}**\`${item.name == 'Bodyguard' ? `${item.buyPrice}% of cash` : item.buyPrice}\`**\n${item.description}\n`
     );
     counter++;
   });

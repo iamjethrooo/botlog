@@ -12,6 +12,7 @@ import { inventoryRouter } from './inventory';
 import { starboardMessageRouter } from './starboardMessage';
 import { giveawayRouter } from './giveaway';
 import { settingRouter } from './setting';
+import { robLogRouter } from './robLog';
 
 /**
  * Create your application's root router
@@ -33,6 +34,7 @@ export const appRouter = t.router({
   starboardMessage: starboardMessageRouter,
   giveaway: giveawayRouter,
   setting: settingRouter,
+  robLog: robLogRouter,
 });
 
 export type AppRouter = typeof appRouter;

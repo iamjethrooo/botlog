@@ -67,9 +67,18 @@ async function buy(itemName: string, customer: GuildMember) {
   const hasBodyguard =
     Number(user.user?.lastBodyguardDate) + Math.round(bodyguardDuration * 1000) >
     Date.now();
+
+  const canBuyBodyguard =
+      Number(user.user?.lastBodyguardDate) + Math.round(432000 * 1000) >= // 5 days
+    Date.now();
+
   if (item) {
     let itemId = item!.id;
-    let insufficientFunds = user!.user!.cash < item!.buyPrice;
+    let buyPrice = item!.buyPrice;
+    if (item!.percentage) {
+      buyPrice = user!.user!.cash * (item!.buyPrice / 100)
+    }
+    let insufficientFunds = user!.user!.cash < buyPrice;
     if (insufficientFunds) {
       embed.setDescription(
         `❌ You do not have enough money to buy a **${item!.name}**!`
@@ -94,6 +103,11 @@ async function buy(itemName: string, customer: GuildMember) {
     } else if (item!.name.toLowerCase() == "bodyguard") {
       if (hasBodyguard) {
         embed.setDescription(`❌ You already have a \`Bodyguard\`!`);
+        embed.setColor(`#${redColor}`);
+        return embed;
+      }
+      if (!canBuyBodyguard) {
+        embed.setDescription(`❌ You can only hire a \`Bodyguard\` every 5 days. Come back in <t:${Number(user.user?.lastBodyguardDate) + Math.round(432000 * 1000)}:R>`);
         embed.setColor(`#${redColor}`);
         return embed;
       }
@@ -159,7 +173,7 @@ async function buy(itemName: string, customer: GuildMember) {
 
     await trpcNode.user.subtractCash.mutate({
       id: userId,
-      cash: item!.buyPrice,
+      cash: buyPrice,
     });
 
     await trpcNode.item.buyItem.mutate({
@@ -168,7 +182,7 @@ async function buy(itemName: string, customer: GuildMember) {
 
     await trpcNode.guild.addToBank.mutate({
       id: customer.guild.id,
-      amount: item!.buyPrice,
+      amount: buyPrice,
     });
     embed.setDescription(`✅ You bought a **${item!.name!}**!`);
     embed.setColor(`#${greenColor}`);
