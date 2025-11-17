@@ -17,7 +17,7 @@ async function startHeist(client, message, embed, redColor) {
   } else {
     embed
       .setAuthor({
-        name: `${message.author.username}#${message.author.discriminator}`,
+        name: `${message.author.username}`,
         iconURL: message.author.displayAvatarURL(),
       })
       .setDescription(
@@ -35,7 +35,7 @@ async function joinHeist(client, message, embed, greenColor, redColor) {
   if (client.heistMembers.includes(message.member!.id)) {
     embed
       .setAuthor({
-        name: `${message.author.username}#${message.author.discriminator}`,
+        name: `${message.author.username}`,
         iconURL: message.author.displayAvatarURL(),
       })
       .setDescription(`❌ You have already joined the bank heist.`)
@@ -45,7 +45,7 @@ async function joinHeist(client, message, embed, greenColor, redColor) {
   } else {
     embed
       .setAuthor({
-        name: `${message.author.username}#${message.author.discriminator}`,
+        name: `${message.author.username}`,
         iconURL: message.author.displayAvatarURL(),
       })
       .setDescription(`✅ You joined the heist.`)
@@ -119,7 +119,7 @@ export class HeistCommand extends Command {
     let success;
 
     const embed = new EmbedBuilder().setAuthor({
-      name: `${message.author.username}#${message.author.discriminator}`,
+      name: `${message.author.username}`,
       iconURL: message.author.displayAvatarURL(),
     });
 
@@ -159,7 +159,7 @@ export class HeistCommand extends Command {
             `A bank heist is starting!\n\nTo start the heist, use the command \`bbc heist start\`.\nTo join the heist, use the command \`bbc heist join\`.`
           )
           .setAuthor({
-            name: `${message.author.username}#${message.author.discriminator}`,
+            name: `${message.author.username}`,
             iconURL: message.author.displayAvatarURL(),
           })
           .setColor(message.member!.displayHexColor)

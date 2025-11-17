@@ -34,7 +34,7 @@ async function bail(prisoner: GuildMember) {
   });
 
   const embed = new EmbedBuilder().setAuthor({
-    name: `${prisoner.user.username}#${prisoner.user.discriminator}`,
+    name: `${prisoner.user.username}`,
     iconURL: prisoner.user.displayAvatarURL(),
   });
 

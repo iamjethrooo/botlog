@@ -179,3 +179,25 @@ model GiveawayEntry {
   giveawayId  String
   userId      String
 }
+
+model RobLog {
+  id          Int @id   @default(autoincrement())
+  robberId    String
+  victimId    String
+  timestamp   DateTime  @default(now())
+  success     Boolean   @default(false)
+  amount      Int?
+  reason      String?
+
+  @@index([robberId, victimId])
+}
+
+model HoldupLog {
+  id            Int @id   @default(autoincrement())
+  victimId      String
+  leaderId      String
+  participants  Json
+  timestamp     DateTime  @default(now())
+  success       Boolean   @default(false)
+  totalLoot     Int?
+}

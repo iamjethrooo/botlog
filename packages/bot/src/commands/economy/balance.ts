@@ -31,7 +31,7 @@ export class BalanceCommand extends Command {
 
       const embed = new EmbedBuilder()
         .setAuthor({
-          name: `${interaction.user.username}#${interaction.user.discriminator}`,
+          name: `${interaction.user.username}`,
           iconURL: interaction.user.displayAvatarURL(),
         })
         .setDescription(
@@ -57,7 +57,7 @@ export class BalanceCommand extends Command {
 
       const embed = new EmbedBuilder()
         .setAuthor({
-          name: `${message.author.username}#${message.author.discriminator}`,
+          name: `${message.author.username}`,
           iconURL: message.author.displayAvatarURL(),
         })
         .setDescription(

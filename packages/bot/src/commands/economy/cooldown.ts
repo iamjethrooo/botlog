@@ -34,9 +34,14 @@ async function cooldown(member: GuildMember) {
   const bodyguardDuration = await trpcNode.setting.getByKey.mutate({
     key: "bodyguardDuration",
   });
+  const holdupCooldown = Number(
+    await trpcNode.setting.getByKey.mutate({
+      key: "holdupCooldown",
+    })
+  );
 
   const embed = new EmbedBuilder().setAuthor({
-    name: `${member.user.username}#${member.user.discriminator}`,
+    name: `${member.user.username}`,
     iconURL: member.displayAvatarURL(),
   });
   let lastRobDate = Number(user.user!.lastRobDate);
@@ -46,35 +51,37 @@ async function cooldown(member: GuildMember) {
   const lastBodyguardDate = user.user?.lastBodyguardDate;
   const bodyguardUntil =
     Number(lastBodyguardDate) + Number(bodyguardDuration) * 1000;
-  console.log(bodyguardUntil);
-  console.log(bodyguardDuration);
-  console.log(lastBodyguardDate);
-  console.log(Date.now());
+
+  let lastHoldup = await trpcNode.holdupLog.getLastHoldup.query({
+    suspectId: userId,
+  })
+
+  let lastHoldupDate = Number(lastHoldup.lastHoldup?.timestamp);
+
   let canRob = (Date.now() - lastRobDate) / 1000 > robCooldown;
   let canHeist = (Date.now() - lastHeistDate) / 1000 > heistCooldown;
   let isInmate = (<GuildMember>member)!.roles.cache.has(`${roleIdInmate}`);
+  let canHoldup = (Date.now() - lastHoldupDate) / 1000 > holdupCooldown;
   embed
     .setTitle("⏲️ Cooldowns")
     .setDescription(
-      `• Rob: ${
-        canRob
-          ? "`now`"
-          : `<t:${Math.round(lastRobDate / 1000) + robCooldown}:R>`
-      }\n• Heist: ${
-        canHeist
-          ? "`now`"
-          : `<t:${Math.round(lastHeistDate / 1000) + heistCooldown}:R>`
-      }${
-        bodyguardUntil > Date.now()
-          ? `\n\nYou are protected from robberies until <t:${Math.round(bodyguardUntil / 1000)}:F>`
-          : ""
+      `• Rob: ${canRob || isNaN(lastRobDate)
+        ? "`now`"
+        : `<t:${Math.round(lastRobDate / 1000) + robCooldown}:R>`
+      }\n• Holdup: ${canHoldup || isNaN(lastHoldupDate)
+        ? "`now`"
+        : `<t:${Math.round(lastHoldupDate / 1000) + holdupCooldown}:R>`
+      }\n• Heist: ${canHeist || isNaN(lastHeistDate)
+        ? "`now`"
+        : `<t:${Math.round(lastHeistDate / 1000) + heistCooldown}:R>`
+      }${bodyguardUntil > Date.now()
+        ? `\n\nYou are protected from robberies until <t:${Math.round(bodyguardUntil / 1000)}:F>`
+        : ""
       }
-      ${
-        isInmate
-          ? `\n\nYou will be released from jail <t:${
-              Math.round(lastHeistDate / 1000) + Number(user.user?.jailTime)
-            }:R>`
-          : ""
+      ${isInmate
+        ? `\n\nYou will be released from jail <t:${Math.round(lastHeistDate / 1000) + Number(user.user?.jailTime)
+        }:R>`
+        : ""
       }`
     )
     .setColor((<GuildMember>member)!.displayHexColor);

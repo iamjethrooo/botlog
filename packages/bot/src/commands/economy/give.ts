@@ -58,7 +58,7 @@ export class GiveCommand extends Command {
 
         const embed = new EmbedBuilder()
           .setAuthor({
-            name: `${message.author.username}#${message.author.discriminator}`,
+            name: `${message.author.username}`,
             iconURL: message.author.displayAvatarURL(),
           })
           .setDescription(`Gave <@${id}> ${coinEmoji}${String(amount)}.`)
@@ -108,7 +108,7 @@ export class GiveCommand extends Command {
 
         const embed = new EmbedBuilder()
           .setAuthor({
-            name: `${message.author.username}#${message.author.discriminator}`,
+            name: `${message.author.username}`,
             iconURL: message.author.displayAvatarURL(),
           })
           .setDescription(`Gave <@&${id}> ${coinEmoji}${String(amount)}.`)

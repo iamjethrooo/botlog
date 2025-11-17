@@ -56,7 +56,7 @@ export class SnipeCommand extends Command {
         if (user!.user!.cash - snipeCost < 0) {
           const embed = new EmbedBuilder()
             .setAuthor({
-              name: `${message.author.username}#${message.author.discriminator}`,
+              name: `${message.author.username}`,
               iconURL: message.author.displayAvatarURL(),
             })
             .setDescription(
@@ -111,7 +111,7 @@ export class SnipeCommand extends Command {
 
       const embed = new EmbedBuilder()
         .setAuthor({
-          name: `${singleSnipe.author.username}#${singleSnipe.author.discriminator}`,
+          name: `${singleSnipe.author.username}`,
           iconURL: singleSnipe.author.displayAvatarURL(),
         })
         .setDescription(singleSnipe.content)

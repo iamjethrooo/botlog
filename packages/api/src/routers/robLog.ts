@@ -61,18 +61,4 @@ export const robLogRouter = t.router({
       });
       return { log };
     }),
-  getLeaderboard: t.procedure.query(async ({ ctx }) => {
-    const leaderboard = await ctx.prisma.user.findMany({
-      orderBy: [
-        {
-          cash: "desc",
-        },
-        {
-          name: "desc",
-        },
-      ],
-    });
-
-    return { leaderboard };
-  }),
 });

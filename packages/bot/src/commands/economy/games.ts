@@ -45,7 +45,7 @@ export class GamesCommand extends Command {
     if (!canPlay) {
       const embed = new EmbedBuilder()
         .setAuthor({
-          name: `${interaction.user.username}#${interaction.user.discriminator}`,
+          name: `${interaction.user.username}`,
           iconURL: interaction.user.displayAvatarURL(),
         })
         .setDescription(
@@ -66,7 +66,7 @@ export class GamesCommand extends Command {
     if (tooSoon) {
       const embed = new EmbedBuilder()
         .setAuthor({
-          name: `${interaction.user.username}#${interaction.user.discriminator}`,
+          name: `${interaction.user.username}`,
           iconURL: interaction.user.displayAvatarURL(),
         })
         .setDescription(
@@ -118,7 +118,7 @@ export class GamesCommand extends Command {
       const tempEmbed = new EmbedBuilder()
         .setTitle("Coin Flip")
         .setAuthor({
-          name: `${interaction.user.username}#${interaction.user.discriminator}`,
+          name: `${interaction.user.username}`,
           iconURL: interaction.user.displayAvatarURL(),
         })
         .setDescription(
@@ -190,9 +190,7 @@ export class GamesCommand extends Command {
               if (!canPlay) {
                 const embed = new EmbedBuilder()
                   .setAuthor({
-                    name: `${(<GuildMember>response.member).user.username}#${
-                      (<GuildMember>response.member).user.discriminator
-                    }`,
+                    name: `${(<GuildMember>response.member).user.username}`,
                     iconURL: (<GuildMember>(
                       response.member
                     )).user.displayAvatarURL(),
@@ -214,9 +212,7 @@ export class GamesCommand extends Command {
               if (tooSoon) {
                 const embed = new EmbedBuilder()
                   .setAuthor({
-                    name: `${(<GuildMember>response.member).user.username}#${
-                      (<GuildMember>response.member).user.discriminator
-                    }`,
+                    name: `${(<GuildMember>response.member).user.username}`,
                     iconURL: (<GuildMember>(
                       response.member
                     )).user.displayAvatarURL(),

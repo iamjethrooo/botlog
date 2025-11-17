@@ -82,7 +82,7 @@ export class RussianRouletteCommand extends Command {
     });
 
     const embed = new EmbedBuilder().setAuthor({
-      name: `${message.author.username}#${message.author.discriminator}`,
+      name: `${message.author.username}`,
       iconURL: message.author.displayAvatarURL(),
     });
 
@@ -124,7 +124,7 @@ export class RussianRouletteCommand extends Command {
           `A Russian Roulette game is starting!\n\nTo start the game, use the command \`bbc rr start\`.\nTo join the game, use the command \`bbc rr join\`.`
         )
         .setAuthor({
-          name: `${message.author.username}#${message.author.discriminator}`,
+          name: `${message.author.username}`,
           iconURL: message.author.displayAvatarURL(),
         })
         .setColor(message.member!.displayHexColor)
@@ -234,7 +234,7 @@ export class RussianRouletteCommand extends Command {
       if (client.rrPlayers.includes(message.member!.id)) {
         embed
           .setAuthor({
-            name: `${message.author.username}#${message.author.discriminator}`,
+            name: `${message.author.username}`,
             iconURL: message.author.displayAvatarURL(),
           })
           .setDescription(`❌ You have already joined the game!`)
@@ -254,7 +254,7 @@ export class RussianRouletteCommand extends Command {
         client.rrIsOngoing = client.rrPlayers.length < MAX_MEMBERS;
         embed
           .setAuthor({
-            name: `${message.author.username}#${message.author.discriminator}`,
+            name: `${message.author.username}`,
             iconURL: message.author.displayAvatarURL(),
           })
           .setDescription(`✅ You joined the game.`)
@@ -269,7 +269,7 @@ export class RussianRouletteCommand extends Command {
       } else {
         embed
           .setAuthor({
-            name: `${message.author.username}#${message.author.discriminator}`,
+            name: `${message.author.username}`,
             iconURL: message.author.displayAvatarURL(),
           })
           .setDescription(

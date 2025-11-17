@@ -67,7 +67,7 @@ export class CoinFlipGame {
       let betString = `${process.env.COIN_EMOJI}${bet}`;
       embed
         .setAuthor({
-          name: `${interaction.user.username}#${interaction.user.discriminator}`,
+          name: `${interaction.user.username}`,
           iconURL: interaction.user.displayAvatarURL(),
         })
         .setDescription(

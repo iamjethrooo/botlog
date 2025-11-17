@@ -43,7 +43,7 @@ export class SuperStarboardCommand extends Command {
 
     const isMod = message.member!.permissions.has("Administrator");
     const embed = new EmbedBuilder().setAuthor({
-      name: `${message.author.username}#${message.author.discriminator}`,
+      name: `${message.author.username}`,
       iconURL: message.author.displayAvatarURL(),
     });
 
@@ -88,7 +88,7 @@ export class SuperStarboardCommand extends Command {
 
         const starboardEmbed = new EmbedBuilder()
           .setAuthor({
-            name: `${reference.author.username}#${reference.author.discriminator}`,
+            name: `${reference.author.username}`,
             iconURL: reference.author.displayAvatarURL(),
           })
           .setDescription(reference.content)

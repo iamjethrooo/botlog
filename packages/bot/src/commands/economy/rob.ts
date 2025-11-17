@@ -137,7 +137,7 @@ async function rob(
   let lastRobDate = Number(suspect.user!.lastRobDate);
 
   const embed = new EmbedBuilder().setAuthor({
-    name: `${user.username}#${user.discriminator}`,
+    name: `${user.username}`,
     iconURL: user.displayAvatarURL(),
   });
 
@@ -175,15 +175,17 @@ async function rob(
     victimId
   });
 
-  let msSinceLastSuccessfulRobAgainstVictim = Date.now() - lastRobAgainstVictim.lastRobbery!.timestamp.getTime();
   let robProtectionWindow = 6 * 60 * 60 * 1000; // 6 hours
-  if (lastRobAgainstVictim && msSinceLastSuccessfulRobAgainstVictim < robProtectionWindow) {
-    embed.setDescription(
-      `❌ <@${victimId}> was robbed recently. Try again <t:${Math.floor((lastRobAgainstVictim.lastRobbery!.timestamp.getTime() + robProtectionWindow) / 1000)}:R>`
-    );
-    embed.setColor(`#${redColor}`);
+  if (lastRobAgainstVictim.lastRobbery) {
+    let msSinceLastSuccessfulRobAgainstVictim = Date.now() - lastRobAgainstVictim.lastRobbery!.timestamp.getTime();
+    if (msSinceLastSuccessfulRobAgainstVictim < robProtectionWindow) {
+      embed.setDescription(
+        `❌ <@${victimId}> was robbed recently. Try again <t:${Math.floor((lastRobAgainstVictim.lastRobbery!.timestamp.getTime() + robProtectionWindow) / 1000)}:R>`
+      );
+      embed.setColor(`#${redColor}`);
 
-    return embed;
+      return embed;
+    }
   }
   const bodyguardDuration = Number(
     await trpcNode.setting.getByKey.mutate({

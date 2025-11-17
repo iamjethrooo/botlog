@@ -139,7 +139,7 @@ export class StormtrooperSnipeCommand extends Command {
 
       let embed = new EmbedBuilder()
         .setAuthor({
-          name: `${sniped.author.username}#${sniped.author.discriminator}`,
+          name: `${sniped.author.username}`,
           iconURL: sniped.author.displayAvatarURL(),
         })
         .setDescription(sniped.content)
@@ -202,7 +202,7 @@ export class StormtrooperSnipeCommand extends Command {
 
       let embed = new EmbedBuilder()
         .setAuthor({
-          name: `${sniped.author.username}#${sniped.author.discriminator}`,
+          name: `${sniped.author.username}`,
           iconURL: sniped.author.displayAvatarURL(),
         })
         .setDescription(sniped.content)

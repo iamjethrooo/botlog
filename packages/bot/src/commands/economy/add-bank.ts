@@ -34,7 +34,7 @@ export class AddBankCommand extends Command {
 
       const embed = new EmbedBuilder()
         .setAuthor({
-          name: `${message.author.username}#${message.author.discriminator}`,
+          name: `${message.author.username}`,
           iconURL: message.author.displayAvatarURL(),
         })
         .setDescription(`✅ Added ${coinEmoji}${String(amount)} to the bank.`)

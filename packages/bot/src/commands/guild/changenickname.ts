@@ -21,7 +21,7 @@ async function changeNickname(user: User, victimId: string, guildId: string) {
   });
 
   const embed = new EmbedBuilder().setAuthor({
-    name: `${user.username}#${user.discriminator}`,
+    name: `${user.username}`,
     iconURL: user.displayAvatarURL(),
   });
 

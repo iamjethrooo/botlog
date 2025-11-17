@@ -43,7 +43,7 @@ async function buy(itemName: string, customer: GuildMember) {
   }
 
   const embed = new EmbedBuilder().setAuthor({
-    name: `${customer.user.username}#${customer.user.discriminator}`,
+    name: `${customer.user.username}`,
     iconURL: customer.user.displayAvatarURL(),
   });
 

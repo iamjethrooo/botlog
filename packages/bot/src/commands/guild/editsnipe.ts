@@ -48,7 +48,7 @@ export class EditSnipeCommand extends Command {
         .then((m) => {
           const embed = new EmbedBuilder()
             .setAuthor({
-              name: `${editsniped.author.username}#${editsniped.author.discriminator}`,
+              name: `${editsniped.author.username}`,
               iconURL: editsniped.author.displayAvatarURL(),
             })
             .setDescription(
@@ -105,7 +105,7 @@ export class EditSnipeCommand extends Command {
         .then((m) => {
           const embed = new EmbedBuilder()
             .setAuthor({
-              name: `${editsniped.author.username}#${editsniped.author.discriminator}`,
+              name: `${editsniped.author.username}`,
               iconURL: editsniped.author.displayAvatarURL(),
             })
             .setDescription(

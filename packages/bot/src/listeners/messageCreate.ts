@@ -139,7 +139,7 @@ export class MessageListener extends Listener {
 
           let embed = new MessageEmbed()
             .setAuthor(
-              `${message.author.username}#${message.author.discriminator}`,
+              `${message.author.username}`,
               message.author.displayAvatarURL({ dynamic: true })
             )
             .addField("Message content:", content)
