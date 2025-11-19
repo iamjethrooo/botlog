@@ -32,6 +32,7 @@ export class ExtendedClient extends SapphireClient {
   holdupMembers: String[];
   holdupLeader: String;
   holdupIsOngoing: boolean;
+  holdupVictim: String;
 
   public constructor() {
     super({
@@ -102,6 +103,7 @@ export class ExtendedClient extends SapphireClient {
     this.activeGiveaways = [];
     this.holdupMembers = [];
     this.holdupLeader = "";
+    this.holdupVictim = "";
     this.holdupIsOngoing = false;
   }
 }
@@ -124,5 +126,6 @@ declare module "@sapphire/framework" {
     holdupMembers: String[];
     holdupLeader: String;
     holdupIsOngoing: boolean;
+    holdupVictim: String;
   }
 }

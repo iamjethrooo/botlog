@@ -41,7 +41,18 @@ async function joinHoldup(client, message, embed, greenColor, redColor) {
       .setColor(`#${redColor}`)
       .setFooter(null);
     await message.channel.send({ embeds: [embed] });
-  } else {
+  } else if (message.member!.id == client.holdupVictim) {
+    embed
+      .setAuthor({
+        name: `${message.author.username}`,
+        iconURL: message.author.displayAvatarURL(),
+      })
+      .setDescription(`❌ You can't participate in a holdup against yourself.`)
+      .setColor(`#${redColor}`)
+      .setFooter(null);
+    await message.channel.send({ embeds: [embed] });
+  }
+  else {
     console.log("Joined holdup");
     // Check member count
     embed
@@ -135,6 +146,10 @@ export class HoldupCommand extends Command {
         if (hasNoMention) return;
 
         let victimId = message.mentions.users!.first()!.id;
+
+        if (victimId == message.member!.id) return;
+
+        client.holdupVictim = victimId;
         let lastTimeVictimWasHeldup = await trpcNode.holdupLog.getLastTimeHeldup.query({
           victimId: victimId
         });
