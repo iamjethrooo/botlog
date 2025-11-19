@@ -61,22 +61,25 @@ async function buy(itemName: string, customer: GuildMember) {
       key: "bodyguardDuration",
     })
   );
+  const coinEmoji = await trpcNode.setting.getByKey.mutate({
+    key: "coinEmoji",
+  });
 
   let lastRobDate = Number(user.user!.lastRobDate);
   let canRob = (Date.now() - lastRobDate) / 1000 > Number(robCooldown);
   const hasBodyguard =
     Number(user.user?.lastBodyguardDate) + Math.round(bodyguardDuration * 1000) >
     Date.now();
-
+  console.log(user.user?.lastBodyguardDate)
   const canBuyBodyguard =
-      Number(user.user?.lastBodyguardDate) + Math.round(432000 * 1000) >= // 5 days
+      Number(user.user?.lastBodyguardDate) + Math.round(432000 * 1000) < // 5 days
     Date.now();
 
   if (item) {
     let itemId = item!.id;
     let buyPrice = item!.buyPrice;
     if (item!.percentage) {
-      buyPrice = user!.user!.cash * (item!.buyPrice / 100)
+      buyPrice = Math.round(user!.user!.cash * (item!.buyPrice / 100))
     }
     let insufficientFunds = user!.user!.cash < buyPrice;
     if (insufficientFunds) {
@@ -107,7 +110,8 @@ async function buy(itemName: string, customer: GuildMember) {
         return embed;
       }
       if (!canBuyBodyguard) {
-        embed.setDescription(`❌ You can only hire a \`Bodyguard\` every 5 days. Come back in <t:${Number(user.user?.lastBodyguardDate) + Math.round(432000 * 1000)}:R>`);
+        console.log(`Last bodyguard: ${Math.round(Number(user.user?.lastBodyguardDate) * 1000) + 43200}`);
+        embed.setDescription(`❌ You can only hire a \`Bodyguard\` every 5 days. Come back <t:${Math.round(Number(user.user?.lastBodyguardDate) / 1000) + 432000}:R>`); // 432000 = 5 days
         embed.setColor(`#${redColor}`);
         return embed;
       }
@@ -184,7 +188,7 @@ async function buy(itemName: string, customer: GuildMember) {
       id: customer.guild.id,
       amount: buyPrice,
     });
-    embed.setDescription(`✅ You bought a **${item!.name!}**!`);
+    embed.setDescription(`✅ You bought a **${item!.name!}**${item!.name.toLowerCase() == 'bodyguard' ? ` for **${coinEmoji}${buyPrice}**` : ''}!`);
     embed.setColor(`#${greenColor}`);
   } else {
     embed.setDescription(`❌ Sorry, we don't sell **${itemName}** here.`);

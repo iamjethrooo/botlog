@@ -62,6 +62,7 @@ async function cooldown(member: GuildMember) {
   let canHeist = (Date.now() - lastHeistDate) / 1000 > heistCooldown;
   let isInmate = (<GuildMember>member)!.roles.cache.has(`${roleIdInmate}`);
   let canHoldup = (Date.now() - lastHoldupDate) / 1000 > holdupCooldown;
+  console.log(`Last rob: ${Math.round(lastRobDate / 1000) + robCooldown}`);
   embed
     .setTitle("⏲️ Cooldowns")
     .setDescription(
