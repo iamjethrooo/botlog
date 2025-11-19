@@ -78,7 +78,7 @@ export class ReadyListener extends Listener {
         lastExecutionTime = currentTime;
         // dev 1223433266686595154
         // prod 669193383503200266
-        const targetChannel = client.channels.cache.get("1223433266686595154");
+        const targetChannel = client.channels.cache.get("669193383503200266");
         fs.readFile(
           path.join(__dirname, "../../src/resources/other/topics.txt"),
           "utf8",
