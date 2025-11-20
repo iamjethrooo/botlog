@@ -141,6 +141,15 @@ async function rob(
     iconURL: user.displayAvatarURL(),
   });
 
+  if (victimId == suspectId) {
+    embed.setDescription(
+      `❌ You cannot rob yourself!`
+    );
+    embed.setColor(`#${redColor}`);
+
+    return embed;
+  }
+
   let tooSoon = (Date.now() - lastRobDate) / 1000 < robCooldown;
   if (tooSoon) {
     embed.setDescription(
