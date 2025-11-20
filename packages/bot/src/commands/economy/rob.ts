@@ -153,7 +153,7 @@ async function rob(
   let tooSoon = (Date.now() - lastRobDate) / 1000 < robCooldown;
   if (tooSoon) {
     embed.setDescription(
-      `⏲️ Too soon. You can attempt to rob another member in <t:${Math.round(lastRobDate / 1000) + robCooldown
+      `⏲️ Too soon. You can attempt to rob another member <t:${Math.round(lastRobDate / 1000) + robCooldown
       }:R>`
     );
     embed.setColor(`#${redColor}`);
@@ -169,8 +169,6 @@ async function rob(
   let lastVictimRobbed = await trpcNode.robLog.getLastVictimRobbed.query({
     robberId: suspectId
   });
-  console.log(lastVictimRobbed.lastVictim?.victimId)
-  console.log(victimId);
   if (lastVictimRobbed.lastVictim?.victimId == victimId) {
     embed.setDescription(
       `❌ You cannot rob the same user in a row!`

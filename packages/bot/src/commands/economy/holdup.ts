@@ -53,7 +53,6 @@ async function joinHoldup(client, message, embed, greenColor, redColor) {
     await message.channel.send({ embeds: [embed] });
   }
   else {
-    console.log("Joined holdup");
     // Check member count
     embed
       .setAuthor({
@@ -267,7 +266,6 @@ export class HoldupCommand extends Command {
                 }
               }
 
-              console.log(splitMessage);
               embed
                 .setAuthor(null)
                 .setTitle(`Holdup Results`)

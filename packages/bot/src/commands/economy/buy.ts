@@ -4,6 +4,7 @@ import {
   Args,
   Command,
   CommandOptions,
+  container,
 } from "@sapphire/framework";
 import {
   Message,
@@ -17,8 +18,26 @@ import {
 import { trpcNode } from "../../trpc";
 
 async function buy(itemName: string, customer: GuildMember) {
+  const { client } = container;
   let argumentIsNumber = false;
   let userId = customer.id;
+
+  const embed = new EmbedBuilder().setAuthor({
+    name: `${customer.user.username}`,
+    iconURL: customer.user.displayAvatarURL(),
+  });
+  const redColor = await trpcNode.setting.getByKey.mutate({
+    key: "redColor",
+  });
+
+  let holdupIsOngoing = client.intervals["holdup"];
+  if (holdupIsOngoing && client.holdupVictim == userId) {
+    embed.setDescription(
+      `❌ You cannot make purchases while a holdup targeting you is in progress!`
+    );
+    embed.setColor(`#${redColor}`);
+    return embed;
+  }
   let shop = await trpcNode.item.getAll.query();
   let user = await trpcNode.user.getUserById.query({
     id: userId,
@@ -42,19 +61,11 @@ async function buy(itemName: string, customer: GuildMember) {
     });
   }
 
-  const embed = new EmbedBuilder().setAuthor({
-    name: `${customer.user.username}`,
-    iconURL: customer.user.displayAvatarURL(),
-  });
-
   const robCooldown = await trpcNode.setting.getByKey.mutate({
     key: "robCooldown",
   });
   const greenColor = await trpcNode.setting.getByKey.mutate({
     key: "greenColor",
-  });
-  const redColor = await trpcNode.setting.getByKey.mutate({
-    key: "redColor",
   });
   const bodyguardDuration = Number(
     await trpcNode.setting.getByKey.mutate({
@@ -72,7 +83,7 @@ async function buy(itemName: string, customer: GuildMember) {
     Date.now();
   console.log(user.user?.lastBodyguardDate)
   const canBuyBodyguard =
-      Number(user.user?.lastBodyguardDate) + Math.round(432000 * 1000) < // 5 days
+    Number(user.user?.lastBodyguardDate) + Math.round(432000 * 1000) < // 5 days
     Date.now();
 
   if (item) {
