@@ -261,6 +261,9 @@ export const userRouter = t.router({
     }),
   getLeaderboard: t.procedure.query(async ({ ctx }) => {
     const leaderboard = await ctx.prisma.user.findMany({
+      where: {
+        NOT: { cash: 15000 }
+      },
       orderBy: [
         {
           cash: "desc",
