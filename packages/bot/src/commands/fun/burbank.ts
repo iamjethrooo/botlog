@@ -12,6 +12,7 @@ import { CommandInteraction, Message, EmbedBuilder } from "discord.js";
 })
 export class BurbankCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
+    await interaction.deferReply();
     const embed = new EmbedBuilder()
       .setTitle("The Burbank")
       .setColor("#893cbc")
@@ -25,7 +26,7 @@ export class BurbankCommand extends Command {
         "https://discordapp.com/channels/669190303353143306/734048924519759982/734070202500776036"
       )
       .setFooter({ text: "Burbank's Ungodly Concoction" });
-    return await interaction.reply({ embeds: [embed] });
+    return await interaction.editReply({ embeds: [embed] });
   }
 
   public override async messageRun(message: Message) {

@@ -361,13 +361,14 @@ export class RobCommand extends Command {
     );
 
     try {
+      await interaction.deferReply();
       let resultEmbed = await rob(
         interaction.user,
         victimId,
         isMod,
         interaction.guildId!
       );
-      return await interaction.reply({ embeds: [resultEmbed] });
+      return await interaction.editReply({ embeds: [resultEmbed] });
     } catch (error) {
       console.log(error);
       return;

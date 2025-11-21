@@ -25,7 +25,7 @@ export const participants: Map<string, GuildMember> = new Map();
 export class GiveawayCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const { client } = container;
-
+    await interaction.deferReply();
     const prize = interaction.options.getString("prize", true);
     const endsAt = interaction.options.getString("ends-at", true);
 
@@ -74,13 +74,13 @@ export class GiveawayCommand extends Command {
         .setStyle(ButtonStyle.Secondary)
     );
     if (attachment == null) {
-      await interaction.reply({
+      await interaction.editReply({
         content: "🎉Giveaway🎉",
         embeds: [invite],
         components: [buttons],
       });
     } else {
-      await interaction.reply({
+      await interaction.editReply({
         content: "🎉Giveaway🎉",
         embeds: [invite],
         components: [buttons],

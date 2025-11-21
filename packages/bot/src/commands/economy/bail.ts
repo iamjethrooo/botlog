@@ -77,8 +77,9 @@ async function bail(prisoner: GuildMember) {
 })
 export class BailCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply();
     const embed = await bail((<GuildMember>interaction.member)!);
-    return await interaction.reply({ embeds: [embed] });
+    return await interaction.editReply({ embeds: [embed] });
   }
 
   public override async messageRun(message: Message, args: Args) {

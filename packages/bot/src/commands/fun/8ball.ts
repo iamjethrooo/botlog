@@ -15,9 +15,9 @@ import * as fs from 'fs';
 export class EightBallCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const question = interaction.options.getString('question', true);
-
+    await interaction.deferReply();
     if (question.length > 255) {
-      return await interaction.reply('Please ask a shorter question!');
+      return await interaction.editReply('Please ask a shorter question!');
     }
 
     const possibleAnswers = fs.readFileSync(
@@ -39,7 +39,7 @@ export class EightBallCommand extends Command {
     //   .setColor('#000000')
     //   .setTimestamp();
     //return await interaction.reply({ embeds: [answerEmbed] });
-    return await interaction.reply(`\`` + randomAnswer + `\``);
+    return await interaction.editReply(`\`` + randomAnswer + `\``);
   }
 
   public override async messageRun(message: Message, args: Args) {

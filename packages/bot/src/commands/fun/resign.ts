@@ -12,10 +12,11 @@ import { CommandInteraction, Message, AttachmentBuilder } from "discord.js";
 })
 export class ResignCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
+    await interaction.deferReply();
     const imagePath = 'src/images/resignation.png';
     const attachment = new AttachmentBuilder(imagePath);
     
-    return await interaction.reply({ content: `<@${interaction.member?.user.id}>, This is your sign to resign.`, files: [attachment] });
+    return await interaction.editReply({ content: `<@${interaction.member?.user.id}>, This is your sign to resign.`, files: [attachment] });
   }
 
   public override async messageRun(message: Message) {

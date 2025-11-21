@@ -25,6 +25,7 @@ export class BalanceCommand extends Command {
     });
 
     try {
+      await interaction.deferReply();
       let user = await trpcNode.user.getUserById.query({
         id: interaction.user.id,
       });
@@ -39,7 +40,7 @@ export class BalanceCommand extends Command {
         )
         .setTimestamp(interaction.createdAt)
         .setColor((<GuildMember>interaction.member)!.displayHexColor);
-      return await interaction.reply({ embeds: [embed] });
+      return await interaction.editReply({ embeds: [embed] });
     } catch (error) {
       console.log(error);
       return;

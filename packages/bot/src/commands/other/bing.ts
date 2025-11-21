@@ -12,7 +12,8 @@ import type { CommandInteraction, Message } from "discord.js";
 })
 export class PingCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
-    return await interaction.reply(
+    await interaction.deferReply();
+    return await interaction.editReply(
       `[Spoken]
 Zǎo shang hǎo zhōng guó!
 Xiàn zài wǒ yǒu bing chilling

@@ -13,13 +13,14 @@ import { ApplicationCommandOptionType, ChatInputCommandInteraction, EmbedBuilder
 })
 export class AvatarCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply();
     const user = interaction.options.getUser('user', true);
     const embed = new EmbedBuilder()
       .setTitle(user.username)
       .setImage(user.displayAvatarURL())
       .setColor('#0x00ae86');
 
-    return await interaction.reply({ embeds: [embed] });
+    return await interaction.editReply({ embeds: [embed] });
   }
 
   public override registerApplicationCommands(

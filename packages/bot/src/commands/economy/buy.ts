@@ -216,11 +216,12 @@ async function buy(itemName: string, customer: GuildMember) {
 })
 export class BuyCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply();
     const itemName = interaction.options.getString("item", true);
 
     const embed = await buy(itemName, (<GuildMember>interaction.member)!);
 
-    return await interaction.reply({ embeds: [embed] });
+    return await interaction.editReply({ embeds: [embed] });
   }
 
   public override async messageRun(message: Message, args: Args) {

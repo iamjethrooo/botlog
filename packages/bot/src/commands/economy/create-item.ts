@@ -32,6 +32,7 @@ export class CreateItemCommand extends Command {
     });
 
     try {
+      await interaction.deferReply();
       await trpcNode.item.create.mutate({
         name: itemName,
         emoji: emoji,
@@ -50,7 +51,7 @@ export class CreateItemCommand extends Command {
         )
         .setColor(`#${greenColor}`);
 
-      return await interaction.reply({ embeds: [embed] });
+      return await interaction.editReply({ embeds: [embed] });
     } catch (error) {
       console.log(error);
       return;

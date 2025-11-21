@@ -48,6 +48,7 @@ async function changeNickname(user: User, victimId: string, guildId: string) {
 })
 export class ChangeNicknameCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply();
     const user = interaction.options.getUser("user", true);
 
     let victimId = user.id;
@@ -58,7 +59,7 @@ export class ChangeNicknameCommand extends Command {
         victimId,
         interaction.guildId!
       );
-      return await interaction.reply({ embeds: [resultEmbed] });
+      return await interaction.editReply({ embeds: [resultEmbed] });
     } catch (error) {
       console.log(error);
       return;

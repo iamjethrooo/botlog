@@ -20,6 +20,7 @@ import { trpcNode } from "../../trpc";
 export class BankCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
     try {
+      await interaction.deferReply();
       let guild = await trpcNode.guild.getGuild.query({
         id: interaction!.guildId!,
       });
@@ -40,7 +41,7 @@ export class BankCommand extends Command {
         )
         .setTimestamp(interaction.createdAt)
         .setColor((<GuildMember>interaction.member)!.displayHexColor);
-      return await interaction.reply({ embeds: [embed] });
+      return await interaction.editReply({ embeds: [embed] });
     } catch (error) {
       console.log(error);
       return;

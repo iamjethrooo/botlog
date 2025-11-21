@@ -42,7 +42,7 @@ export class HelpCommand extends Command {
       return;
     }
     const { client } = container;
-
+    await interaction.deferReply();
     const query = interaction.options.getString("command-name")?.toLowerCase();
     const array: CommandInfo[] = [];
 
@@ -129,7 +129,7 @@ export class HelpCommand extends Command {
           .setDescription(`**Description**\n> ${command.details}`);
 
         if (!command.options.length)
-          return await interaction.reply({ embeds: [commandDetails] });
+          return await interaction.editReply({ embeds: [commandDetails] });
 
         DetailedPagination.setTemplate(commandDetails)
           .setTitleField("Options")
@@ -141,7 +141,7 @@ export class HelpCommand extends Command {
           .make();
 
         return DetailedPagination.run(interaction);
-      } else await interaction.reply(`:x: Command: **${query}** was not found`);
+      } else await interaction.editReply(`:x: Command: **${query}** was not found`);
     }
     interface CommandInfo {
       name: string;

@@ -27,12 +27,12 @@ export class RerollCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const { client } = container;
     const giveawayId = interaction.options.getString("message-id", true);
-
+await interaction.deferReply();
     const giveawayChannel = <TextChannel>(
       client.channels.cache.get(String(process.env.GIVEAWAY_CHANNEL_ID))
     );
 
-    return interaction.reply({
+    return interaction.editReply({
       embeds: [await reroll(giveawayId, giveawayChannel)],
     });
   }

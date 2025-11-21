@@ -13,16 +13,17 @@ import axios from 'axios';
 })
 export class AdviceCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
+    await interaction.deferReply();
     axios
       .get('https://api.adviceslip.com/advice')
       .then(async response => {
         const advice: string = response.data.slip.advice;
 
-        return await interaction.reply(advice);
+        return await interaction.editReply(advice);
       })
       .catch(async error => {
         console.error(error);
-        return await interaction.reply(
+        return await interaction.editReply(
           'Something went wrong when asking for advice :('
         );
       });

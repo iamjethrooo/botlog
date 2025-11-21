@@ -23,6 +23,7 @@ export const playersInGame: Map<string, GuildMember> = new Map();
 })
 export class GamesCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply();
     const redColor = await trpcNode.setting.getByKey.mutate({
       key: "redColor",
     });
@@ -43,6 +44,7 @@ export class GamesCommand extends Command {
     );
 
     if (!canPlay) {
+      
       const embed = new EmbedBuilder()
         .setAuthor({
           name: `${interaction.user.username}`,
@@ -53,7 +55,7 @@ export class GamesCommand extends Command {
         );
       embed.setColor(`#${redColor}`);
 
-      return await interaction.reply({ embeds: [embed] });
+      return await interaction.editReply({ embeds: [embed] });
     }
     let user = await trpcNode.user.getUserById.query({
       id: interaction.user.id,
@@ -62,7 +64,6 @@ export class GamesCommand extends Command {
     let gameCooldown = Number(coinflipCooldown);
 
     let tooSoon = (Date.now() - lastGameDate) / 1000 < gameCooldown;
-    console.log(tooSoon);
     if (tooSoon) {
       const embed = new EmbedBuilder()
         .setAuthor({
@@ -76,13 +77,13 @@ export class GamesCommand extends Command {
         );
       embed.setColor(`#${redColor}`);
 
-      return await interaction.reply({ embeds: [embed] });
+      return await interaction.editReply({ embeds: [embed] });
     }
 
     let maxPlayers = 2;
     const playerMap = new Map();
     const player1 = <GuildMember>interaction.member;
-    const bet = interaction.options.getNumber("bet", true);
+    const bet = interaction.options.getInteger("bet", true);
     if (bet < 0) {
       return await interaction.reply({
         content: ":x: Bet must not be less than 0!",
@@ -147,7 +148,7 @@ export class GamesCommand extends Command {
     const invite = new GameInvite(gameTitle!, [player1], interaction, bet);
 
     await interaction
-      .reply({
+      .editReply({
         embeds: [invite.gameInviteEmbed()],
         components: [invite.gameInviteButtons()],
       })

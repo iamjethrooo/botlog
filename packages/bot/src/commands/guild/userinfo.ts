@@ -13,8 +13,9 @@ import { EmbedBuilder } from "discord.js";
 })
 export class UserInfoCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply();
     if (!interaction.guild)
-      return interaction.reply(`You can't use this command in a DM!`);
+      return interaction.editReply(`You can't use this command in a DM!`);
     const user = interaction.options.getUser("user", true);
     const member = interaction.guild.members.cache.get(user.id);
     const roles = member!.roles.cache
@@ -74,7 +75,7 @@ export class UserInfoCommand extends Command {
         }
       )
       .setTimestamp();
-    return interaction.reply({ embeds: [embed] });
+    return interaction.editReply({ embeds: [embed] });
   }
 
   public override registerApplicationCommands(

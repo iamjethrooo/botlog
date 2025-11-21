@@ -23,11 +23,11 @@ export class ChuckNorrisCommand extends Command {
           })
           .setDescription(response.data.value)
           .setTimestamp();
-        return interaction.reply({ embeds: [embed] });
+        return interaction.editReply({ embeds: [embed] });
       })
       .catch(async error => {
         console.error(error);
-        return await interaction.reply(
+        return await interaction.editReply(
           ':x: An error occured, Chuck is investigating this!'
         );
       });

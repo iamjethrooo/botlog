@@ -94,6 +94,7 @@ var allIds = mainIds.concat(
 })
 export class StormtrooperSnipeCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
+    await interaction.deferReply();
     if (!interaction.guild) {
       return await interaction.reply(`You can't use this command in a DM!`);
     }
@@ -149,7 +150,7 @@ export class StormtrooperSnipeCommand extends Command {
       if (sniped.channel instanceof TextChannel) {
         embed.setFooter({ text: "#".concat(sniped.channel.name) });
       }
-      return await interaction.reply({ embeds: [embed] });
+      return await interaction.editReply({ embeds: [embed] });
     }
     return await interaction.reply({
       ephemeral: true,

@@ -13,8 +13,9 @@ import { EmbedBuilder } from "discord.js";
 })
 export class ServerInfoCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply();
     if (!interaction.guild)
-      return interaction.reply(`You can't use this command in a DM!`);
+      return interaction.editReply(`You can't use this command in a DM!`);
     // const user = interaction.options.getUser("user", true);
     const randomColor = "000000".replace(/0/g, function () {
       return (~~(Math.random() * 16)).toString(16);
@@ -52,7 +53,7 @@ export class ServerInfoCommand extends Command {
       )
       .setFooter({ text: "Server created at:" })
       .setTimestamp(interaction.guild.createdAt);
-    return interaction.reply({ embeds: [embed] });
+    return interaction.editReply({ embeds: [embed] });
   }
 
   public override registerApplicationCommands(

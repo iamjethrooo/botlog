@@ -99,8 +99,9 @@ async function cooldown(member: GuildMember) {
 export class CooldownCommand extends Command {
   public override async chatInputRun(interaction: CommandInteraction) {
     try {
+      await interaction.deferReply();
       let resultEmbed = await cooldown(<GuildMember>interaction.member);
-      return await interaction.reply({ embeds: [resultEmbed] });
+      return await interaction.editReply({ embeds: [resultEmbed] });
     } catch (error) {
       console.log(error);
       return;
