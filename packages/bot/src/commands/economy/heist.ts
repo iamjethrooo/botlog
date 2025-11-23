@@ -48,7 +48,7 @@ async function joinHeist(client, message, embed, greenColor, redColor) {
         name: `${message.author.username}`,
         iconURL: message.author.displayAvatarURL(),
       })
-      .setDescription(`✅ You joined the heist.`)
+      .setDescription(`✅ You joined the heist. Total members: **${client.heistMembers.length + 1}**`)
       .setColor(`#${greenColor}`)
       .setFooter(null);
     await message.channel.send({ embeds: [embed] });
@@ -62,7 +62,7 @@ async function joinHeist(client, message, embed, greenColor, redColor) {
   preconditions: ["inBotChannel", "isNotInmate"],
 })
 export class HeistCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {}
+  public override async chatInputRun(interaction: CommandInteraction) { }
 
   public override async messageRun(message: Message, args: Args) {
     const { client } = container;
@@ -133,8 +133,7 @@ export class HeistCommand extends Command {
 
       if (tooSoon) {
         embed.setDescription(
-          `⏲️ Too soon. You can attempt another bank heist <t:${
-            Math.round(lastRobDate / 1000) + heistCooldown
+          `⏲️ Too soon. You can attempt another bank heist <t:${Math.round(lastRobDate / 1000) + heistCooldown
           }:R>`
         );
         embed.setColor(`#${redColor}`);
@@ -171,14 +170,14 @@ export class HeistCommand extends Command {
           if (
             client.heistIsOngoing ||
             (Date.now() - Number(client.timestamps["heist"])) / 1000 >
-              Number(heistWaitingTime) ||
+            Number(heistWaitingTime) ||
             client.heistMembers.length >= Number(heistMaxMembers)
           ) {
             client.heistIsOngoing = false;
             console.log(client.heistIsOngoing);
             console.log(
               (Date.now() - Number(client.timestamps["heist"])) / 1000 >
-                Number(heistWaitingTime)
+              Number(heistWaitingTime)
             );
             console.log(client.heistMembers.length >= Number(heistMaxMembers));
             // Reset variables
@@ -261,8 +260,7 @@ export class HeistCommand extends Command {
                 .setAuthor(null)
                 .setTitle(`Bank Heist Results`)
                 .setDescription(
-                  `${splitMessage}\nThey will serve jail time for ${
-                    jailTime / 3600
+                  `${splitMessage}\nThey will serve jail time for ${jailTime / 3600
                   } hours and will not be able to earn coins for the duration.`
                 );
               await (message.channel as TextChannel).send({ embeds: [embed] });
@@ -270,7 +268,7 @@ export class HeistCommand extends Command {
             console.log(client.heistIsOngoing);
             console.log(
               (Date.now() - Number(client.timestamps["heist"])) / 1000 >
-                Number(heistWaitingTime)
+              Number(heistWaitingTime)
             );
             console.log(client.heistMembers.length >= Number(heistMaxMembers));
             clearInterval(client.intervals["heist"]);
@@ -282,6 +280,15 @@ export class HeistCommand extends Command {
         joinHeist(client, message, embed, greenColor, redColor);
       } else if (argument.toLocaleLowerCase() == "start") {
         startHeist(client, message, embed, redColor);
+      } else {
+        embed
+          .setAuthor({
+            name: `${message.author.username}`,
+            iconURL: message.author.displayAvatarURL(),
+          })
+          .setDescription(`ℹ️ A heist is already ongoing. Use \`bbc heist join\` to join.`)
+          .setFooter(null);
+        await (message.channel as TextChannel).send({ embeds: [embed] });
       }
     } catch (error) {
       console.log(error);
