@@ -74,27 +74,35 @@ export class ReadyListener extends Listener {
       // console.log("Current Time: " + currentTime);
       // console.log("Next Execution Time: " + nextExecutionTime);
       if (currentTime >= nextExecutionTime) {
-      // if (false) {
+        // if (false) {
         lastExecutionTime = currentTime;
         // dev 1223433266686595154
         // prod 669193383503200266
         const targetChannel = client.channels.cache.get(String(process.env.GENERAL_CHANNEL_ID));
-        fs.readFile(
-          path.join(__dirname, "../../src/resources/other/topics.txt"),
-          "utf8",
-          (err, content) => {
-            if (err) {
-              console.error("Error reading the file: ", err);
-            }
-            const lines = content
-              .split("\n")
-              .filter((line) => line.trim() !== "");
-            // console.log(content);
-            const randomIndex = Math.floor(Math.random() * lines.length);
-            const randomLine = lines[randomIndex];
-            (<TextChannel>targetChannel).send(randomLine);
-          }
-        );
+        // fs.readFile(
+        //   path.join(__dirname, "../../src/resources/other/topics.txt"),
+        //   "utf8",
+        //   (err, content) => {
+        //     if (err) {
+        //       console.error("Error reading the file: ", err);
+        //     }
+        //     const lines = content
+        //       .split("\n")
+        //       .filter((line) => line.trim() !== "");
+        //     // console.log(content);
+        //     const randomIndex = Math.floor(Math.random() * lines.length);
+        //     const randomLine = lines[randomIndex];
+        //     (<TextChannel>targetChannel).send(randomLine);
+        //   }
+        // );
+        let topic = getRandomTopicAndRemove();
+
+        if (!topic) {
+          console.log("Nothing to send, boss.");
+          return;
+        }
+
+        (<TextChannel>targetChannel).send(topic);
       }
       // #endregion
 
@@ -146,12 +154,10 @@ export class ReadyListener extends Listener {
                 .setTitle(messageEmbed.title)
                 .setColor(messageEmbed.color)
                 .setDescription(
-                  `Winner${
-                    giveaway!.numOfWinners > 1 ? "s" : ""
-                  }: ${winnerString}${
-                    giveaway?.hostId == ""
-                      ? ""
-                      : `\n\nHosted by: <@${giveaway?.hostId}>`
+                  `Winner${giveaway!.numOfWinners > 1 ? "s" : ""
+                  }: ${winnerString}${giveaway?.hostId == ""
+                    ? ""
+                    : `\n\nHosted by: <@${giveaway?.hostId}>`
                   }`
                 )
                 .setFooter({ text: "Ended: " })
@@ -197,8 +203,7 @@ export class ReadyListener extends Listener {
               const winnerEmbed = new EmbedBuilder()
                 .setColor("#546e7a")
                 .setDescription(
-                  `${winnerString} won the giveaway of [**${
-                    giveaway!.prize
+                  `${winnerString} won the giveaway of [**${giveaway!.prize
                   }**](${message.url})
                   
                   - Reroll Command: \`bbc reroll ${giveaway!.giveawayId}\``
@@ -230,13 +235,11 @@ function shuffle(array: String[]) {
   let currentIndex = array.length,
     randomIndex;
 
-  // While there remain elements to shuffle.
   while (currentIndex > 0) {
-    // Pick a remaining element.
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
 
-    // And swap it with the current element.
+    // Swap elements
     [array[currentIndex], array[randomIndex]] = [
       array[randomIndex],
       array[currentIndex],
@@ -244,4 +247,33 @@ function shuffle(array: String[]) {
   }
 
   return array;
+}
+
+const FILE = path.join(__dirname, "../../src/resources/other/topics.txt");
+const TEMP = path.join(__dirname, "../../src/resources/other/topics_temp.txt");
+
+function getRandomTopicAndRemove() {
+  if (!fs.existsSync(FILE)) {
+    console.log("topics.txt not found");
+    return null;
+  }
+
+  const data = fs.readFileSync(FILE, "utf8").trim();
+
+  if (!data) {
+    console.log("No topics left.");
+    return null;
+  }
+
+  const lines = data.split("\n").filter(Boolean);
+
+  const index = Math.floor(Math.random() * lines.length);
+  const topic = lines[index];
+
+  lines.splice(index, 1);
+
+  fs.writeFileSync(TEMP, lines.join("\n"), "utf8");
+  fs.renameSync(TEMP, FILE);
+
+  return topic;
 }
