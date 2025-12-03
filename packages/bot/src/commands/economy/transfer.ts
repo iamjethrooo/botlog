@@ -16,7 +16,7 @@ import { trpcNode } from "../../trpc";
 @ApplyOptions<CommandOptions>({
     name: "transfer",
     description: "Transfer coins to a user.",
-    preconditions: ["inBotChannel", "userIsAdmin"],
+    preconditions: ["inBotChannel", "isNotInmate"],
 })
 export class TransferCommand extends Command {
     public override async chatInputRun(interaction: CommandInteraction) { }
