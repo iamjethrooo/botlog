@@ -10,6 +10,8 @@ import { CommandInteraction, Message, EmbedBuilder, TextChannel } from "discord.
 import { trpcNode } from "../../trpc";
 // import { trpcNode } from "../../trpc";
 
+const isChinese = process.env.CHINESE === 'true';
+
 async function startHeist(client, message, embed, redColor) {
   // Check if user is initiator
   if (message.member!.id == client.heistLeader) {
@@ -21,7 +23,9 @@ async function startHeist(client, message, embed, redColor) {
         iconURL: message.author.displayAvatarURL(),
       })
       .setDescription(
-        `❌ Only <@${client.heistLeader}> can start the heist before 10 minutes is up.`
+        isChinese
+        ? `只有 Only <@${client.heistLeader}> 可以在 10 minutes 钟开始抢劫。`
+        : `❌ Only <@${client.heistLeader}> can start the heist before 10 minutes is up.`
       )
       .setColor(`#${redColor}`)
       .setFooter(null);
@@ -38,7 +42,10 @@ async function joinHeist(client, message, embed, greenColor, redColor) {
         name: `${message.author.username}`,
         iconURL: message.author.displayAvatarURL(),
       })
-      .setDescription(`❌ You have already joined the bank heist.`)
+      .setDescription(
+        isChinese
+        ? `你已经 already joined 劫计划了`
+        : `❌ You have already joined the bank heist.`)
       .setColor(`#${redColor}`)
       .setFooter(null);
     await message.channel.send({ embeds: [embed] });
@@ -133,7 +140,9 @@ export class HeistCommand extends Command {
 
       if (tooSoon) {
         embed.setDescription(
-          `⏲️ Too soon. You can attempt another bank heist <t:${Math.round(lastRobDate / 1000) + heistCooldown
+          isChinese
+          ? `⏲️ Too soon. 你可以尝试 bank heist <t:${Math.round(lastRobDate / 1000) + heistCooldown }:R>`
+          : `⏲️ Too soon. You can attempt another bank heist <t:${Math.round(lastRobDate / 1000) + heistCooldown
           }:R>`
         );
         embed.setColor(`#${redColor}`);
@@ -155,7 +164,9 @@ export class HeistCommand extends Command {
         client.heistLeader = message.member!.id;
         embed
           .setDescription(
-            `A bank heist is starting!\n\nTo start the heist, use the command \`bbc heist start\`.\nTo join the heist, use the command \`bbc heist join\`.`
+            isChinese
+            ? `正在开始 bank heist! \n\n 要开始抢劫，请使用 \`bbc heist start\`.\n要加入抢劫行动，请使用 command \`bbc heist join\`.`
+            : `A bank heist is starting!\n\nTo start the heist, use the command \`bbc heist start\`.\nTo join the heist, use the command \`bbc heist join\`.`
           )
           .setAuthor({
             name: `${message.author.username}`,
@@ -231,7 +242,10 @@ export class HeistCommand extends Command {
               await (message.channel as TextChannel).send({ embeds: [embed] });
             } else {
               embed
-                .setDescription(`❌ The bank heist failed.`)
+                .setDescription(
+                  isChinese
+                  ? `❌ 银行抢劫 failed.`
+                  : `❌ The bank heist failed.`)
                 .setColor(`#${redColor}`)
                 .setFooter(null);
               await (message.channel as TextChannel).send({ embeds: [embed] });
