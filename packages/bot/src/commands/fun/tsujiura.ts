@@ -24,8 +24,13 @@ async function getFortune(message: Message) {
         const meaning = root.querySelector("#meaning")?.text.trim() ?? "";
         const numbers = root.querySelector("#numbers")?.text.trim() ?? "";
 
+        
+        /* Learn Chinese: Telephone = Dian-hua
+        Lucky numbers (Lotto): 36-55-04-26-34-52
+        Daily numbers (Pick3): 027 */
+
         const formatted = [
-            hanzi && meaning ? `${hanzi}: ${meaning}` : null,
+            hanzi && meaning ? `Learn Chinese: ${hanzi}: ${meaning}` : null,
             numbers ? `Lucky numbers: ${numbers}` : null,
         ].filter(Boolean).join("\n");
 
