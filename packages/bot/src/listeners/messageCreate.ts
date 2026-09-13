@@ -161,7 +161,39 @@ export class MessageListener extends Listener {
         }
       }
     }
+
+    // Linger
+    const content = normalize(message.content);
+    const matchedKey = Object.keys(LINGER_CHAIN).find((key) =>
+      content.includes(normalize(key))
+    );
+
+    if (matchedKey) {
+      const response = LINGER_CHAIN[matchedKey];
+
+      (message.channel as TextChannel).send(response);
+    }
   }
+}
+
+const LINGER_CHAIN: Record<string, string> = {
+  "im lingering": `🎶 BUT I'M IN SO DEEEEEP...`,
+
+  "but im in so deep": `😔 YOU KNOW I'M SUCH A FOOL FOR YOU`,
+
+  "you know im such a fool for you": `🫵YOU GOT ME WRAPPED AROUND YOUR FINGER, OH-OH-OH`,
+
+  "you got me wrapped around your finger": `💭DO YOU HAVE TO LET IT LINGER?`,
+
+  "do you have to let it linger": `😭 bro is lingering...`,
+};
+
+function normalize(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "") // remove punctuation
+    .replace(/\s+/g, "")        // collapse spaces
+    .trim();
 }
 
 function getRandomInt(min, max) {
