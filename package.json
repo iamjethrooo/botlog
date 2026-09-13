@@ -29,8 +29,11 @@
     "@trpc/server": "^10.1.0",
     "concurrently": "^7.3.0",
     "cpy-cli": "^4.2.0",
+    "html-entities": "^2.6.0",
+    "node-html-parser": "^7.1.0",
     "patch-package": "^8.0.0",
     "postinstall-postinstall": "^2.1.0",
+    "sharp": "^0.34.5",
     "superjson": "^1.9.1",
     "zod": "^3.18.0"
   },
