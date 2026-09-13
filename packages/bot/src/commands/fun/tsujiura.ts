@@ -6,57 +6,34 @@ import {
 } from '@sapphire/framework';
 import { AttachmentBuilder, CommandInteraction, Message, TextChannel } from 'discord.js';
 import fetch from "node-fetch";
-import * as iconv from "iconv-lite";
 import sharp from "sharp";
 import { parse } from "node-html-parser";
-
-const regex: RegExp[] = [
-    /class="cookie-link">([^`]*?)<\/a>/,
-    /<p>([^`]*?)<\/p>/,
-    /(?:\\\\['])/,
-    /<strong>([^`]*?)<\/strong>/,
-    /<\/strong><\/a>([^`]*?)<br>/,
-    /3\)<\/strong><\/a>([^`]*?)<\/div>/,
-]
 
 const url = "http://www.fortunecookiemessage.com";
 
 async function getFortune(message: Message) {
     try {
-        const resp = await fetch(url, { headers: { encoding: "utf-8" } });
-        const buffer = await resp.arrayBuffer();
-        const test = iconv.decode(Buffer.from(buffer), "ISO-8859-1");
+        const resp = await fetch(url);
+        const html = await resp.text();
+        const root = parse(html);
 
-        let fortuneMatches = test.match(regex[0]);
-        if (!fortuneMatches) throw new Error("No fortune found");
+        const fortune = root.querySelector("#fortuneText")?.text.trim();
+        if (!fortune) throw new Error("No fortune found");
 
-        let fortune = fortuneMatches[0];
-        const fortest = /^<p>/.exec(fortune);
-        if (fortest) {
-            const inner = fortune.match(regex[1]);
-            if (inner) fortune = inner[0];
-        }
-        const root = parse(test);
+        const hanzi = root.querySelector("#hanzi")?.text.trim() ?? "";
+        const meaning = root.querySelector("#meaning")?.text.trim() ?? "";
+        const numbers = root.querySelector("#numbers")?.text.trim() ?? "";
 
-        const anchors = root.querySelectorAll("div.bottom-message a");
-        const sections = anchors.map(anchor => {
-            const label = anchor.text.trim();
-            const siblingText = anchor.nextSibling?.text?.trim() ?? "";
-            const value = siblingText.replace(/^:/, "").trim();
-            return { label, value };
-        });
-
-        const formatted = sections.map(s => `${s.label}: ${s.value}`).join("\n");
-
-        fortune = fortune.replace('class="cookie-link">', '');
-        fortune = fortune.replace("</a>", "");
-        fortune = fortune.replace("<p>", "").replace("</p>", "");
+        const formatted = [
+            hanzi && meaning ? `${hanzi}: ${meaning}` : null,
+            numbers ? `Lucky numbers: ${numbers}` : null,
+        ].filter(Boolean).join("\n");
 
         const imgPng = await fortuneProcess(fortune);
         const attachment = new AttachmentBuilder(imgPng, { name: `cookie_${message.author.id}.png` });
         await (message.channel as TextChannel).send({ content: "Your fortune is:", files: [attachment] });
 
-          await (message.channel as TextChannel).send(formatted);
+        if (formatted) await (message.channel as TextChannel).send(formatted);
     } catch (err) {
         console.error("Error fetching fortune:", err);
     }
