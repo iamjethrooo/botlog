@@ -92,8 +92,6 @@ export class RussianRouletteCommand extends Command {
 
     const noGameOngoing = !client.intervals["rr"];
     if (noGameOngoing && argumentIsNumber) {
-      if (bet) {
-      }
       // Start waiting
       if (bet < minBet) {
         embed
@@ -118,31 +116,26 @@ export class RussianRouletteCommand extends Command {
         await (message.channel as TextChannel).send({ embeds: [embed] });
         return;
       }
-      // Start game
-      embed
-        .setDescription(
-          `A Russian Roulette game is starting!\n\nTo start the game, use the command \`bbc rr start\`.\nTo join the game, use the command \`bbc rr join\`.`
-        )
-        .setAuthor({
-          name: `${message.author.username}`,
-          iconURL: message.author.displayAvatarURL(),
-        })
-        .setColor(message.member!.displayHexColor)
-        .setFooter({ text: "Time remaining: 3 minutes or 6 members" });
-      await (message.channel as TextChannel).send({ embeds: [embed] });
-
-      // Set variables
+      // Claim the game slot synchronously: an await between the
+      // `noGameOngoing` check and this assignment lets a second `rr <bet>`
+      // pass the check too and leaves one of the intervals unreachable.
       client.rrBet = bet;
       client.rrPlayers.push(message.member!.id);
       client.rrIsOngoing = true;
       client.timestamps["rr"] = Date.now().toString();
-      client.intervals["rr"] = setInterval(async () => {
+      const waitingInterval: NodeJS.Timeout = setInterval(async () => {
         if (client.rrIsOngoing) {
           client.rrIsOngoing =
             (Date.now() - Number(client.timestamps["rr"])) / 1000 <
             Number(rrWaitingTime);
           return;
         }
+
+        // Stop the timer before awaiting, so a send slower than the tick
+        // cannot re-enter this callback.
+        clearInterval(waitingInterval);
+        delete client.intervals["rr"];
+
         if (client.rrPlayers.length < 2) {
           embed
             .setDescription(
@@ -152,8 +145,6 @@ export class RussianRouletteCommand extends Command {
             .setColor(`#${redColor}`)
             .setFooter(null);
           await (message.channel as TextChannel).send({ embeds: [embed] });
-          clearInterval(client.intervals["rr"]);
-          delete client.intervals["rr"];
 
           // Reset variables
           client.rrBet = 0;
@@ -167,8 +158,6 @@ export class RussianRouletteCommand extends Command {
           .setColor(message.guild!.members.me!.displayHexColor)
           .setFooter(null);
         await (message.channel as TextChannel).send({ embeds: [embed] });
-        clearInterval(client.intervals["rr"]);
-        delete client.intervals["rr"];
 
         let currentPlayerIndex = 0;
         let shot = false;
@@ -220,16 +209,32 @@ export class RussianRouletteCommand extends Command {
             client.rrBet = 0;
             client.rrPlayers = [];
           } else {
+            // Advance before awaiting, so a slow send cannot let the next
+            // tick replay the same player's turn.
+            currentPlayerIndex++;
             embed
               .setAuthor(null)
               .setDescription(getRouletteMessage(currentPlayerId, true))
               .setColor(null)
               .setFooter(null);
             await (message.channel as TextChannel).send({ embeds: [embed] });
-            currentPlayerIndex++;
           }
         }, 1000);
       }, 1000);
+      client.intervals["rr"] = waitingInterval;
+
+      // Start game
+      embed
+        .setDescription(
+          `A Russian Roulette game is starting!\n\nTo start the game, use the command \`bbc rr start\`.\nTo join the game, use the command \`bbc rr join\`.`
+        )
+        .setAuthor({
+          name: `${message.author.username}`,
+          iconURL: message.author.displayAvatarURL(),
+        })
+        .setColor(message.member!.displayHexColor)
+        .setFooter({ text: "Time remaining: 3 minutes or 6 members" });
+      await (message.channel as TextChannel).send({ embeds: [embed] });
     } else if (!noGameOngoing && argument.toLocaleLowerCase() == "join") {
       if (client.rrPlayers.includes(message.member!.id)) {
         embed
@@ -279,6 +284,18 @@ export class RussianRouletteCommand extends Command {
           .setFooter(null);
         await (message.channel as TextChannel).send({ embeds: [embed] });
       }
+    } else if (!noGameOngoing && argumentIsNumber) {
+      embed
+        .setAuthor({
+          name: `${message.author.username}`,
+          iconURL: message.author.displayAvatarURL(),
+        })
+        .setDescription(
+          `❌ A Russian Roulette game is already ongoing. Use \`bbc rr join\` to join it.`
+        )
+        .setColor(`#${redColor}`)
+        .setFooter(null);
+      await (message.channel as TextChannel).send({ embeds: [embed] });
     }
   }
 
