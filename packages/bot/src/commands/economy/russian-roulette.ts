@@ -33,6 +33,21 @@ function getRouletteMessage(playerId: String, isWin: boolean) {
     : loseMessages[Math.floor(Math.random() * loseMessages.length)];
 }
 
+function resetRoulette(client) {
+  if (client.intervals["rr"]) {
+    clearInterval(client.intervals["rr"]);
+    delete client.intervals["rr"];
+  }
+  if (client.intervals["rrRoulette"]) {
+    clearInterval(client.intervals["rrRoulette"]);
+    delete client.intervals["rrRoulette"];
+  }
+  client.rrBet = 0;
+  client.rrPlayers = [];
+  client.rrIsOngoing = false;
+  client.rrActive = false;
+}
+
 @ApplyOptions<CommandOptions>({
   name: "russian-roulette",
   aliases: ["rr", "russianroulette", "roulette"],
@@ -40,7 +55,8 @@ function getRouletteMessage(playerId: String, isWin: boolean) {
   preconditions: ["inBotChannel", "isNotInmate"],
 })
 export class RussianRouletteCommand extends Command {
-  public override async chatInputRun(interaction: CommandInteraction) {}
+
+  public override async chatInputRun(interaction: CommandInteraction) { }
 
   public override async messageRun(message: Message, args: Args) {
     const { client } = container;
@@ -136,6 +152,7 @@ export class RussianRouletteCommand extends Command {
       client.rrPlayers.push(message.member!.id);
       client.rrIsOngoing = true;
       client.timestamps["rr"] = Date.now().toString();
+
       client.intervals["rr"] = setInterval(async () => {
         if (client.rrIsOngoing) {
           client.rrIsOngoing =
@@ -152,14 +169,14 @@ export class RussianRouletteCommand extends Command {
             .setColor(`#${redColor}`)
             .setFooter(null);
           await (message.channel as TextChannel).send({ embeds: [embed] });
-          clearInterval(client.intervals["rr"]);
-          delete client.intervals["rr"];
 
           // Reset variables
-          client.rrBet = 0;
-          client.rrPlayers = [];
+          resetRoulette(client);
           return;
         }
+
+        clearInterval(client.intervals["rr"]);
+        delete client.intervals["rr"];
 
         embed
           .setDescription(`The Russian Roulette game is starting!`)
@@ -167,20 +184,33 @@ export class RussianRouletteCommand extends Command {
           .setColor(message.guild!.members.me!.displayHexColor)
           .setFooter(null);
         await (message.channel as TextChannel).send({ embeds: [embed] });
-        clearInterval(client.intervals["rr"]);
-        delete client.intervals["rr"];
+
+        if (client.rrActive) return; // already active, bail out
+        client.rrActive = true
 
         let currentPlayerIndex = 0;
         let shot = false;
         // Position of bullet in chamber
         const bulletIndex = getRandomInt(0, client.rrPlayers.length - 1);
         console.log(`Bullet Index: ${bulletIndex}`);
+        console.log(`Total Players: ${client.rrPlayers.length}`);
+        
         const losingPlayerId = client.rrPlayers[bulletIndex];
-        let roulette = setInterval(async () => {
+        
+        // client.intervals["rr"]
+        //let roulette = setInterval(async () => {
+
+        let isTicking = false;
+        client.intervals["rrRoulette"] = setInterval(async () => {
+          if (isTicking) return;
+          isTicking = true;
           let currentPlayerId = client.rrPlayers[currentPlayerIndex];
           shot = currentPlayerIndex == bulletIndex;
+          console.log({ currentPlayerIndex, bulletIndex });
           if (shot) {
-            clearInterval(roulette);
+            clearInterval(client.intervals["rrRoulette"]);
+            delete client.intervals["rrRoulette"];
+
             embed
               .setAuthor(null)
               .setDescription(getRouletteMessage(currentPlayerId, false))
@@ -217,8 +247,7 @@ export class RussianRouletteCommand extends Command {
             await (message.channel as TextChannel).send({ embeds: [embed] });
 
             // Reset variables
-            client.rrBet = 0;
-            client.rrPlayers = [];
+            resetRoulette(client);
           } else {
             embed
               .setAuthor(null)
@@ -228,7 +257,15 @@ export class RussianRouletteCommand extends Command {
             await (message.channel as TextChannel).send({ embeds: [embed] });
             currentPlayerIndex++;
           }
-        }, 1000);
+
+          if (currentPlayerIndex >= client.rrPlayers.length) {
+            clearInterval(client.intervals["rrRoulette"]);
+            delete client.intervals["rrRoulette"];
+            resetRoulette(client);
+            return;
+          }
+          isTicking = false;
+        }, 1000); // rrRoulette interval
       }, 1000);
     } else if (!noGameOngoing && argument.toLocaleLowerCase() == "join") {
       if (client.rrPlayers.includes(message.member!.id)) {

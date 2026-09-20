@@ -28,6 +28,7 @@ export class ExtendedClient extends SapphireClient {
   rrPlayers: [];
   rrBet: Number;
   rrIsOngoing: boolean;
+  rrActive: boolean;
   activeGiveaways: String[];
   holdupMembers: String[];
   holdupLeader: String;
@@ -100,6 +101,7 @@ export class ExtendedClient extends SapphireClient {
     this.rrPlayers = [];
     this.rrBet = 0;
     this.rrIsOngoing = false;
+    this.rrActive = false;
     this.activeGiveaways = [];
     this.holdupMembers = [];
     this.holdupLeader = "";
@@ -122,6 +124,7 @@ declare module "@sapphire/framework" {
     rrPlayers: String[];
     rrBet: Number;
     rrIsOngoing: boolean;
+    rrActive: boolean;
     activeGiveaways: String[];
     holdupMembers: String[];
     holdupLeader: String;
