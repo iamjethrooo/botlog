@@ -166,6 +166,10 @@ export class HoldupCommand extends Command {
             return;
           }
         }
+        // The awaits above mean `noOngoingHoldup` may be stale by now;
+        // another holdup could have claimed the slot in the meantime.
+        if (client.intervals["holdup"]) return;
+
         // Reset variables
         client.holdupLeader = "";
         client.holdupMembers = [];
@@ -176,19 +180,10 @@ export class HoldupCommand extends Command {
         client.timestamps["holdup"] = Date.now().toString();
         client.holdupMembers.push(message.member!.id);
         client.holdupLeader = message.member!.id;
-        embed
-          .setDescription(
-            `A holdup is starting against <@${victimId}>!\n\nTo start the holdup, use the command \`bbc holdup start\`.\nTo join the holdup, use the command \`bbc holdup join\`.`
-          )
-          .setAuthor({
-            name: `${message.author.username}`,
-            iconURL: message.author.displayAvatarURL(),
-          })
-          .setColor(message.member!.displayHexColor)
-          .setFooter({ text: "Time remaining: 5 minutes or 5 members" });
-        await (message.channel as TextChannel).send({ embeds: [embed] });
 
-        client.intervals["holdup"] = setInterval(async () => {
+        // Claim the slot synchronously: an await before this assignment
+        // lets a second `holdup` through and orphans one of the intervals.
+        const holdupInterval: NodeJS.Timeout = setInterval(async () => {
           if (
             client.holdupIsOngoing ||
             (Date.now() - Number(client.timestamps["holdup"])) / 1000 >
@@ -197,7 +192,7 @@ export class HoldupCommand extends Command {
           ) {
             client.holdupIsOngoing = false;
             // Reset variables
-            clearTimeout(client.intervals["holdup"]);
+            clearInterval(holdupInterval);
             delete client.intervals["holdup"];
             delete client.timestamps["holdup"];
             // Start holdup
@@ -285,10 +280,21 @@ export class HoldupCommand extends Command {
               success,
               totalLoot: splitAmount,
             });
-
-            clearInterval(client.intervals["holdup"]);
           }
         }, 1000);
+        client.intervals["holdup"] = holdupInterval;
+
+        embed
+          .setDescription(
+            `A holdup is starting against <@${victimId}>!\n\nTo start the holdup, use the command \`bbc holdup start\`.\nTo join the holdup, use the command \`bbc holdup join\`.`
+          )
+          .setAuthor({
+            name: `${message.author.username}`,
+            iconURL: message.author.displayAvatarURL(),
+          })
+          .setColor(message.member!.displayHexColor)
+          .setFooter({ text: "Time remaining: 5 minutes or 5 members" });
+        await (message.channel as TextChannel).send({ embeds: [embed] });
         return;
       }
       if (argument.toLocaleLowerCase() == "join") {
