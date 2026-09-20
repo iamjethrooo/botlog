@@ -162,21 +162,11 @@ export class HeistCommand extends Command {
         client.timestamps["heist"] = Date.now().toString();
         client.heistMembers.push(message.member!.id);
         client.heistLeader = message.member!.id;
-        embed
-          .setDescription(
-            isChinese
-            ? `正在开始 bank heist! \n\n 要开始抢劫，请使用 \`bbc heist start\`.\n要加入抢劫行动，请使用 command \`bbc heist join\`.`
-            : `A bank heist is starting!\n\nTo start the heist, use the command \`bbc heist start\`.\nTo join the heist, use the command \`bbc heist join\`.`
-          )
-          .setAuthor({
-            name: `${message.author.username}`,
-            iconURL: message.author.displayAvatarURL(),
-          })
-          .setColor(message.member!.displayHexColor)
-          .setFooter({ text: "Time remaining: 10 minutes or 10 members" });
-        await (message.channel as TextChannel).send({ embeds: [embed] });
 
-        client.intervals["heist"] = setInterval(async () => {
+        // Claim the slot synchronously: an await between the
+        // `noOngoingHeist` check and this assignment lets a second `heist`
+        // pass the check too and leaves one of the intervals unreachable.
+        const heistInterval: NodeJS.Timeout = setInterval(async () => {
           console.log(Date.now());
           if (
             client.heistIsOngoing ||
@@ -192,7 +182,7 @@ export class HeistCommand extends Command {
             );
             console.log(client.heistMembers.length >= Number(heistMaxMembers));
             // Reset variables
-            clearTimeout(client.intervals["heist"]);
+            clearInterval(heistInterval);
             delete client.intervals["heist"];
             delete client.timestamps["heist"];
             // Start heist
@@ -285,9 +275,23 @@ export class HeistCommand extends Command {
               Number(heistWaitingTime)
             );
             console.log(client.heistMembers.length >= Number(heistMaxMembers));
-            clearInterval(client.intervals["heist"]);
           }
         }, 1000);
+        client.intervals["heist"] = heistInterval;
+
+        embed
+          .setDescription(
+            isChinese
+            ? `正在开始 bank heist! \n\n 要开始抢劫，请使用 \`bbc heist start\`.\n要加入抢劫行动，请使用 command \`bbc heist join\`.`
+            : `A bank heist is starting!\n\nTo start the heist, use the command \`bbc heist start\`.\nTo join the heist, use the command \`bbc heist join\`.`
+          )
+          .setAuthor({
+            name: `${message.author.username}`,
+            iconURL: message.author.displayAvatarURL(),
+          })
+          .setColor(message.member!.displayHexColor)
+          .setFooter({ text: "Time remaining: 10 minutes or 10 members" });
+        await (message.channel as TextChannel).send({ embeds: [embed] });
         return;
       }
       if (argument.toLocaleLowerCase() == "join") {
