@@ -39,8 +39,10 @@ export class ReadyListener extends Listener {
       (role) => role.id == roleIdInmate!
     );
     console.log("Fetched Inmate Role")
-
-    let lastExecutionTime = 1762695426597;
+    // 1762695426597
+    // 1789723417000
+    // https://www.epochconverter.com/ milliseconds
+    let lastExecutionTime = 1789723417000;
     //await guild.members.fetch();
     //console.log("Fetched guild members");
 
