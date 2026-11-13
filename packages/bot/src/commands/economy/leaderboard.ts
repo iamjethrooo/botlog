@@ -76,42 +76,36 @@ function generateRandomName(): string {
   return `${adjectives[adjectiveIndex]} ${nouns[nounIndex]}`;
 }
 
-async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
+async function generateLeaderboard(user: User, guild: Guild) {
   const coinEmoji = await trpcNode.setting.getByKey.mutate({
     key: "coinEmoji",
   });
 
   try {
-    let leaderboard = await trpcNode.user.getLeaderboard.query();
-    let leaderboardFormatted: String[] = [];
+    const { leaderboard } = await trpcNode.user.getGuildLeaderboard.mutate({ memberIds: [...guild.members.cache.keys()] });
+    const leaderboardFormatted: string[] = [];
     let rank = 0;
     let index = 1;
 
-    for (const _user of leaderboard.leaderboard) {
-      let member = guild!.members.cache.get(_user!.discordId!);
-      let isMod = member ? member!.permissions.has("Administrator") : false;
-      isMod = false;
-
-      if (!member || (isMod && !showAll)) {
+    for (const entry of leaderboard) {
+      if (!guild.members.cache.has(entry.discordId)) {
         continue;
       }
 
-      let userHasFakeId = _user.hasFakeId;
-
-      if (user.id == _user.discordId) {
-        rank = userHasFakeId ? 0 : index;
+      if (user.id === entry.discordId && !entry.hasFakeId) {
+        rank = index;
       }
 
       leaderboardFormatted.push(
         `**${index}.** ${
-          userHasFakeId
+          entry.hasFakeId
             ? `**${generateRandomName()}**`
-            : `<@${_user.discordId}>`
-        }・${coinEmoji}${_user.cash}`
+            : `<@${entry.discordId}>`
+        }・${coinEmoji}${entry.cash}`
       );
       index++;
     }
-    return { rank: rank, array: leaderboardFormatted };
+    return { rank, array: leaderboardFormatted };
   } catch (error) {
     console.log(error);
   }
@@ -128,8 +122,7 @@ export class LeaderboardCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const leaderboard = await generateLeaderboard(
       interaction.user,
-      interaction.guild!,
-      false
+      interaction.guild!
     );
 
     const baseEmbed = new EmbedBuilder()
@@ -154,14 +147,9 @@ export class LeaderboardCommand extends Command {
     return;
   }
 
-  public override async messageRun(message: Message, args: Args) {
+  public override async messageRun(message: Message, _args: Args) {
     try {
-      let showAll = (await args.pick("string").catch(() => 0)) == "all";
-      let leaderboard = await generateLeaderboard(
-        message.author,
-        message.guild!,
-        showAll
-      );
+      const leaderboard = await generateLeaderboard(message.author, message.guild!);
 
       const baseEmbed = new EmbedBuilder()
         .setColor("#FF0000")

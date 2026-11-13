@@ -65,7 +65,7 @@ function load(file, { trpc = {}, client = {}, timer = clock(), dependencies = {}
     exports, Date: FakeDate, setTimeout: timer.setTimeout.bind(timer), setInterval: timer.setInterval.bind(timer),
     __dirname: path.dirname(path.join(root, file)), process: { env: { GUILD_ID: 'guild', GIVEAWAY_CHANNEL_ID: 'giveaway', GENERAL_CHANNEL_ID: 'general' } },
     console: { log() {}, error(...args) { errors.push(args); } },
-    require(id) { if (id === '../lib/giveawayCompletion') return load('packages/bot/src/lib/giveawayCompletion.ts', { trpc, client, timer, dependencies }); if (id in deps) return deps[id]; throw Error('Offline fixture forbids import: ' + id); },
+    require(id) { if (id === '../lib/giveawayLocation') return load('packages/bot/src/lib/giveawayLocation.ts', { trpc, client, timer, dependencies }); if (id === '../lib/giveawayCompletion') return load('packages/bot/src/lib/giveawayCompletion.ts', { trpc, client, timer, dependencies }); if (id in deps) return deps[id]; throw Error('Offline fixture forbids import: ' + id); },
   }, { filename: file });
   return { ...exports, errors, timer };
 }
@@ -74,25 +74,21 @@ const settings = {
 };
 function messageFixture(options = {}) {
   const timer = clock(), sent = [], forwarded = [];
-  let user = options.user === undefined ? { cash: 100, lastMessageDate: String(NOW) } : options.user;
   const a = api({
     'setting.getByKeys': () => Object.entries(settings).map(([settingKey, settingValue]) => ({ settingKey, settingValue })),
-    'user.getUserById': () => ({ user }),
-    'user.create': () => { user = { cash: 0, lastMessageDate: '0' }; },
-    'user.addCash': ({ cash }) => { user.cash += cash; },
-    'user.updateLastMessageDate': ({ date }) => { user.lastMessageDate = date; },
+    'user.claimMessageReward': () => ({ status: 'awarded', amount: 10 }),
     ...options.api,
   });
   const client = { channels: { cache: new Map([['735804432985620521', { send: async payload => { forwarded.push(payload); } }]]) } };
   const loaded = load('packages/bot/src/listeners/messageCreate.ts', { trpc: a.trpc, client, timer });
   const message = {
-    guild: { id: 'guild' }, author: { bot: false, id: 'user', username: 'User', displayAvatarURL: () => 'https://example.invalid/avatar.png' },
+    id: ID, guild: { id: 'guild' }, author: { bot: false, id: 'user', username: 'User', displayAvatarURL: () => 'https://example.invalid/avatar.png' },
     member: { roles: { cache: new Map() }, permissions: new discord.PermissionsBitField(), displayHexColor: '#123456' },
     channel: { id: options.channel || 'normal', name: 'fixture', send: async payload => { sent.push(payload); return { delete: async () => { sent.push('notice-deleted'); } }; } },
     content: options.content || '', attachments: new Map(), embeds: [], createdAt: new Date(NOW),
     delete: async () => { sent.push('original-deleted'); },
   };
-  return { ...loaded, a, client, message, sent, forwarded, listener: new loaded.MessageListener(), user: () => user };
+  return { ...loaded, a, client, message, sent, forwarded, listener: new loaded.MessageListener() };
 }
 
 test('settings batch reads only requested keys in one Prisma read; rejects unbounded input', async () => {
@@ -122,85 +118,78 @@ test('bot/DM/excluded messages do zero settings/economy reads, while excluded li
   }
 });
 
-test('fresh batch, inmate exclusion, cooldown boundary and inclusive random award range are preserved', async () => {
+test('the listener checks fresh settings and excludes inmates before requesting an atomic reward', async () => {
   const f = messageFixture();
   await f.listener.run(f.message);
   assert.equal(f.a.count('setting.getByKeys'), 1);
   assert.equal(f.a.calls[0].input.keys.length, 5);
-  assert.equal(f.a.count('user.addCash'), 0);
+  assert.deepEqual(JSON.parse(JSON.stringify(f.a.calls.find(c => c.route === 'user.claimMessageReward').input)),
+    { messageId: ID, userId: 'user', name: 'User' });
   f.message.member.roles.cache.set('inmate', {});
   await f.listener.run(f.message);
-  assert.equal(f.a.count('user.getUserById'), 1, 'inmate does not read user');
+  assert.equal(f.a.count('user.claimMessageReward'), 1);
   f.message.member.roles.cache.clear();
-  f.timer.now += 60000;
+  f.a.values['setting.getByKeys'] = [];
   await f.listener.run(f.message);
-  const credit = f.a.calls.find(c => c.route === 'user.addCash');
-  assert.ok(Number.isInteger(credit.input.cash) && credit.input.cash >= 10 && credit.input.cash <= 20);
-  assert.equal(f.user().lastMessageDate, String(f.timer.now));
-  await f.listener.run(f.message);
-  assert.equal(f.a.count('user.addCash'), 1);
-  f.a.values['setting.getByKeys'] = () => Object.entries({ ...settings, interval: '0', minCashPerChat: '7', maxCashPerChat: '7' }).map(([settingKey, settingValue]) => ({ settingKey, settingValue }));
-  await f.listener.run(f.message);
-  assert.equal(f.a.calls.filter(c => c.route === 'user.addCash').at(-1).input.cash, 7, 'next message sees changed settings');
+  assert.equal(f.a.count('user.claimMessageReward'), 1);
 });
 
-test('new user receives starting cash once; queued messages preserve first-message and cooldown policy', async () => {
-  const single = messageFixture({ user: null });
-  await single.listener.run(single.message);
-  assert.equal(single.user().cash, 15000);
-  assert.equal(single.user().lastMessageDate, '0');
+test('overlapping messages wait for the previous claim and release the queue on failure', async () => {
   const gate = deferred();
-  const f = messageFixture({ user: null, content: "I'm lingering!" });
-  const getUser = f.a.values['user.getUserById'];
-  f.a.values['user.getUserById'] = async () => { await gate.promise; return getUser(); };
-  const first = f.listener.run(f.message);
-  await settle();
-  const second = f.listener.run(f.message);
-  await settle();
-  assert.equal(f.a.count('setting.getByKeys'), 1);
-  gate.resolve(); await Promise.all([first, second]);
-  assert.equal(f.a.count('user.create'), 1);
-  assert.ok(f.user().cash >= 15010 && f.user().cash <= 15020);
-  assert.equal(f.user().lastMessageDate, String(NOW));
-  assert.equal(f.sent.length, 2);
-});
-
-test('overlapping existing-user messages cannot double-award and lock clears after failure', async () => {
-  const gate = deferred();
-  const f = messageFixture({ user: { cash: 100, lastMessageDate: '0' }, api: { 'user.addCash': () => gate.promise } });
+  const f = messageFixture({ api: { 'user.claimMessageReward': () => gate.promise } });
   const first = f.listener.run(f.message); await settle();
-  const second = f.listener.run(f.message); await settle();
-  assert.equal(f.a.count('user.addCash'), 1);
-  gate.reject(Error('credit unavailable')); await first;
-  f.a.values['user.addCash'] = () => {};
-  await second;
-  assert.equal(f.a.count('user.addCash'), 2);
-  assert.equal(f.a.count('user.updateLastMessageDate'), 1);
+  const second = f.listener.run({ ...f.message, id: '223456789012345678' }); await settle();
+  assert.equal(f.a.count('user.claimMessageReward'), 1);
+  f.a.values['user.claimMessageReward'] = () => ({ status: 'awarded', amount: 10 });
+  gate.reject(Error('claim unavailable'));
+  await Promise.all([first, second]);
+  assert.equal(f.a.count('user.claimMessageReward'), 2);
+  assert.equal(f.listener.awarding.size, 0);
 });
 
-test('serialized burst respects a positive cooldown while zero cooldown still awards every message', async () => {
-  for (const interval of ['60', '0']) {
-    const f = messageFixture({ user: { cash: 100, lastMessageDate: '0' } });
-    f.a.values['setting.getByKeys'] = () => Object.entries({ ...settings, interval }).map(([settingKey, settingValue]) => ({ settingKey, settingValue }));
-    await Promise.all(Array.from({ length: 10 }, () => f.listener.run(f.message)));
-    assert.equal(f.a.count('user.addCash'), interval === '0' ? 10 : 1);
-    assert.equal(f.a.count('user.updateLastMessageDate'), interval === '0' ? 10 : 1);
-    assert.equal(f.listener.awarding.size, 0, 'settled work is released');
-  }
-});
-
-test('settings/user/credit/timestamp failures are contained and linger continues', async () => {
-  for (const route of ['setting.getByKeys', 'user.getUserById', 'user.addCash', 'user.updateLastMessageDate']) {
-    const f = messageFixture({ content: "I'm lingering!", user: { cash: 100, lastMessageDate: '0' }, api: { [route]: () => { throw Error('dependency failed'); } } });
+test('settings or reward failures are contained and linger continues', async () => {
+  for (const route of ['setting.getByKeys', 'user.claimMessageReward']) {
+    const f = messageFixture({ content: "I'm lingering!", api: { [route]: () => { throw Error('dependency failed'); } } });
     await f.listener.run(f.message);
     assert.equal(f.errors.length, 1, route);
     assert.equal(f.sent.length, 1, route);
-    assert.equal(f.a.count(route), 1, 'no automatic financial retry');
+    assert.equal(f.a.count(route), 1);
   }
-  const f = messageFixture({ content: "I'm lingering!", api: { 'setting.getByKeys': [] } });
-  await f.listener.run(f.message);
-  assert.equal(f.a.count('user.getUserById'), 0);
-  assert.equal(f.sent.length, 1);
+});
+
+test('voice hub deletes the losing channel and keeps a registration whose response was lost', async () => {
+  const { VoiceStateUpdateListener } = load('packages/bot/src/listeners/tempchannels/voiceStateUpdate.ts', {
+    dependencies: { '../../trpc': { trpcNode: voiceApi() } },
+  });
+  let registered, nextChannel = 0, loseResponse = true;
+  const deleted = [], moved = [];
+  function voiceApi() {
+    return api({
+      'guild.getGuild': { guild: { hub: 'category', hubChannel: 'hub' } },
+      'hub.getTempChannel': async () => ({ tempChannel: registered }),
+      'hub.createTempChannel': ({ channelId }) => {
+        registered ??= { id: channelId };
+        if (loseResponse) {
+          loseResponse = false;
+          throw new Error('response lost');
+        }
+        return { tempChannel: registered };
+      },
+    }).trpc;
+  }
+  const state = {
+    guild: { id: 'guild', channels: { create: async () => {
+      const id = String(++nextChannel);
+      return { id, delete: async () => { deleted.push(id); } };
+    } } },
+    channelId: 'hub',
+    member: { id: 'owner', user: { username: 'Owner' }, voice: { setChannel: async id => { moved.push(id); } } },
+  };
+  const listener = new VoiceStateUpdateListener();
+  await Promise.all([listener.run({}, state), listener.run({}, state)]);
+  assert.equal(nextChannel, 2);
+  assert.deepEqual(deleted, ['2']);
+  assert.deepEqual(moved, ['1', '1']);
 });
 
 test('media-only moderation uses actual v14 embeds/permissions and survives settings outage', async () => {
@@ -392,7 +381,7 @@ async function schedulerFixture({ inmates = 0, giveaways = [], api: overrides = 
     };
     messages.set(id, message);
   }
-  const channel = { messages: { fetch: async input => { effects.push('fetch:' + input.message); return messages.get(input.message); } },
+  const channel = { id: 'giveaway', guildId: 'guild', type: discord.ChannelType.GuildText, messages: { fetch: async input => { effects.push('fetch:' + input.message); return messages.get(input.message); } },
     send: async () => { effects.push('announce'); return { id: '323456789012345678' }; } };
   const client = { user: { username: 'Fixture', id: 'bot' }, intervals: {}, activeGiveaways: new Map(),
     on(event, listener) { listeners.set(event, listener); }, guilds: { fetch: async () => guild },
@@ -400,7 +389,7 @@ async function schedulerFixture({ inmates = 0, giveaways = [], api: overrides = 
   const a = api({
     'setting.getByKey': 'inmate', 'giveaway.getActive': giveaways.map(giveawayId => ({ giveawayId, endsAt: String(NOW - 1) })),
     'user.getUserById': { user: { lastHeistDate: '0', jailTime: 1 } },
-    'giveaway.getById': ({ giveawayId }) => ({ giveawayId, endsAt: String(timer.now - 1), messageId: giveawayId, numOfWinners: 1, hostId: '', prize: 'Prize' }),
+    'giveaway.getById': ({ giveawayId }) => ({ giveawayId, endsAt: String(timer.now - 1), messageId: giveawayId, numOfWinners: 1, hostId: '', prize: 'Prize', guildId: 'guild', channelId: 'giveaway' }),
     'giveaway.getCompletionEntries': [{ userId: 'winner' }], 'giveaway.getParticipants': [{ userId: 'winner' }],
     'giveaway.endGiveaway': ({ giveawayId }) => { effects.push('end:' + giveawayId); }, ...overrides,
   });

@@ -87,31 +87,11 @@ export class MessageListener extends Listener {
         }
 
         if (!message.member.roles.cache.has(settings.roleIdInmate)) {
-          const user = await trpcNode.user.getUserById.query({
-            id: message.author.id,
+          await trpcNode.user.claimMessageReward.mutate({
+            messageId: message.id,
+            userId: message.author.id,
+            name: message.author.username,
           });
-          if (user.user == null) {
-            await trpcNode.user.create.mutate({
-              id: message.author.id,
-              name: message.author.username,
-            });
-            await trpcNode.user.addCash.mutate({
-              id: message.author.id,
-              cash: parseInt(settings.startingCash),
-            });
-          } else if (
-            (Date.now() - Number(user.user.lastMessageDate)) / 1000 >=
-            interval
-          ) {
-            await trpcNode.user.addCash.mutate({
-              id: message.author.id,
-              cash: getRandomInt(minCashPerChat, maxCashPerChat),
-            });
-            await trpcNode.user.updateLastMessageDate.mutate({
-              id: message.author.id,
-              date: Date.now().toString(),
-            });
-          }
         }
       } catch (error) {
         // Do not retry ambiguous money writes or use stale/default award settings.
@@ -222,10 +202,4 @@ function normalize(text: string) {
     .replace(/[^a-z0-9\s]/g, "") // remove punctuation
     .replace(/\s+/g, "") // collapse spaces
     .trim();
-}
-
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1)) + min;
 }

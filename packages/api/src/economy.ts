@@ -28,11 +28,58 @@ export function economyError(message: string): never {
 
 export async function economySetting(tx: Prisma.TransactionClient, key: string) {
   const setting = await tx.setting.findUnique({ where: { settingKey: key } });
-  const value = Number(setting?.settingValue);
-  if (!setting || !Number.isFinite(value) || value < 0) {
+  return economySettingNumber(key, setting?.settingValue);
+}
+
+function economySettingNumber(key: string, text?: string, allowNegative = false) {
+  const value = Number(text);
+  if (!text?.trim() || !Number.isFinite(value) || (!allowNegative && value < 0)) {
     throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Invalid economy setting: ${key}` });
   }
   return value;
+}
+
+export async function economySettings<K extends string>(
+  tx: Prisma.TransactionClient,
+  keys: readonly K[],
+  signedKeys: readonly K[] = [],
+) {
+  const rows = await tx.setting.findMany({ where: { settingKey: { in: [...keys] } } });
+  const values = new Map(rows.map(row => [row.settingKey, row.settingValue]));
+  return Object.fromEntries(keys.map(key => [key, economySettingNumber(key, values.get(key), signedKeys.includes(key))])) as Record<K, number>;
+}
+
+export const discordEventId = z.string().regex(/^\d{17,20}$/);
+
+export async function economyOperation<T extends Prisma.InputJsonObject>(
+  prisma: PrismaClient,
+  eventId: string,
+  kind: string,
+  userDiscordId: string,
+  operation: (tx: Prisma.TransactionClient) => Promise<T>,
+): Promise<T> {
+  return economyTransaction(prisma, async tx => {
+    const previous = await tx.economyOperation.findUnique({ where: { kind_eventId: { kind, eventId } } });
+    if (previous) {
+      if (previous.userDiscordId !== userDiscordId) {
+        throw new TRPCError({ code: "CONFLICT", message: "This Discord event was already recorded." });
+      }
+      return previous.result as T;
+    }
+
+    const result = await operation(tx);
+    await tx.economyOperation.create({ data: { eventId, kind, userDiscordId, result } });
+    return result;
+  });
+}
+
+// Keep the old string fields in sync during the migration and rollback window.
+export const legacyCooldownDate = z.string().trim().regex(/^\d{1,15}$/)
+  .refine(value => Number(value) <= 253402300799000, "Invalid epoch milliseconds");
+
+export function cooldownDate(value: string) {
+  const millis = Number(value);
+  return millis === 0 ? null : new Date(millis);
 }
 
 export async function consumeStock(tx: Prisma.TransactionClient, itemId: number) {

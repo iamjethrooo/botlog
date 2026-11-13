@@ -10,12 +10,12 @@ import {
   GuildMember,
   EmbedBuilder,
   ChatInputCommandInteraction,
-  //ApplicationCommandOptionType,
-  TextChannel,
   Message,
   ApplicationCommandOptionType,
 } from "discord.js";
 import { trpcNode } from "../../trpc";
+import { giveawayChannel } from "../../lib/giveawayLocation";
+import { drawWinners } from "../../lib/giveawayCompletion";
 
 export const participants: Map<string, GuildMember> = new Map();
 @ApplyOptions<CommandOptions>({
@@ -25,32 +25,26 @@ export const participants: Map<string, GuildMember> = new Map();
 })
 export class RerollCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
-    const { client } = container;
     const giveawayId = interaction.options.getString("message-id", true);
-await interaction.deferReply();
-    const giveawayChannel = <TextChannel>(
-      client.channels.cache.get(String(process.env.GIVEAWAY_CHANNEL_ID))
-    );
-
-    return interaction.editReply({
-      embeds: [await reroll(giveawayId, giveawayChannel)],
-    });
+    await interaction.deferReply();
+    try {
+      const { embed } = await reroll(giveawayId, interaction.guildId!);
+      return interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      console.error("Giveaway reroll failed", error);
+      return interaction.editReply("Could not reroll this giveaway. Check the ID and original channel.");
+    }
   }
 
   public override async messageRun(message: Message, args: Args) {
-    const { client } = container;
     const giveawayId = await args.pick("string").catch(() => "");
-
-    const giveawayChannel = <TextChannel>(
-      client.channels.cache.get(String(process.env.GIVEAWAY_CHANNEL_ID))
-    );
-
-    let winnerEmbed = await reroll(giveawayId, giveawayChannel);
-
-    return giveawayChannel.send({
-      // content: winnerString,
-      embeds: [winnerEmbed],
-    });
+    try {
+      const { channel, embed } = await reroll(giveawayId, message.guildId!);
+      return channel.send({ embeds: [embed] });
+    } catch (error) {
+      console.error("Giveaway reroll failed", error);
+      return message.reply("Could not reroll this giveaway. Check the ID and original channel.");
+    }
   }
 
   public override registerApplicationCommands(
@@ -71,84 +65,40 @@ await interaction.deferReply();
   }
 }
 
-function shuffle(array: String[]) {
-  let currentIndex = array.length,
-    randomIndex;
-
-  // While there remain elements to shuffle.
-  while (currentIndex > 0) {
-    // Pick a remaining element.
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-
-    // And swap it with the current element.
-    [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex],
-      array[currentIndex],
-    ];
-  }
-
-  return array;
-}
-
-async function reroll(giveawayId: string, giveawayChannel: TextChannel) {
+async function reroll(giveawayId: string, guildId: string) {
   const giveaway = await trpcNode.giveaway.getById.mutate({
     giveawayId: giveawayId.toString(),
   });
+  if (!giveaway?.ended) throw new Error("A completed giveaway is required.");
+  const channel = await giveawayChannel(container.client, giveaway, guildId);
   // Get participants
   const entries = await trpcNode.giveaway.getEntries.mutate({
     giveawayId: giveawayId.toString(),
   });
 
-  let entriesFiltered = entries.map((entry) => {
-    return entry.userId;
-  });
-  shuffle(entriesFiltered);
-  // Pick winner
-  let winners: String[] = [];
-  for (let i = 0; i < giveaway!.numOfWinners; i++) {
-    let random = Math.floor(Math.random() * entriesFiltered.length);
-    let winnerId = entriesFiltered[random];
-    winners.push(winnerId);
-    entriesFiltered.filter((entry) => {
-      return entry != winnerId;
-    });
-  }
-  let winnerString = "";
-  winners.forEach((winner) => {
-    winnerString += `<@${winner}> `;
-  });
-  winnerString.trimEnd();
-  // Announce winner
-
-  let message = await giveawayChannel.messages.fetch(giveaway!.messageId);
-  let messageEmbed = message.embeds[0];
-  let newEmbed = new EmbedBuilder()
-    .setTitle(messageEmbed.title)
-    .setColor(messageEmbed.color)
+  const winners = drawWinners(entries, giveaway.numOfWinners);
+  const mentions = winners.map(winner => `<@${winner}>`).join(" ");
+  const message = await channel.messages.fetch(giveaway.messageId);
+  const newEmbed = new EmbedBuilder()
+    .setTitle(giveaway.prize)
+    .setColor(message.embeds[0]?.color ?? "#546e7a")
     .setDescription(
-      `Winner${giveaway!.numOfWinners > 1 ? "s" : ""}: ${winnerString}
-      
-      Hosted by: <@${giveaway?.hostId}>`
+      `Winner${giveaway.numOfWinners > 1 ? "s" : ""}: ${mentions || "No eligible participants."}` +
+      (giveaway.hostId ? `\n\nHosted by: <@${giveaway.hostId}>` : "")
     )
     .setFooter({ text: "Ended: " })
     .setTimestamp();
-  message.edit({
+  await message.edit({
     content: "🎉Giveaway Ended🎉",
     embeds: [newEmbed],
   });
-  winnerString.trimEnd();
-  winnerString =
-    `The new winner${
-      giveaway!.numOfWinners > 1 ? "s" : ""
-    } of the giveaway [**${giveaway!.prize}**](${await message.url}) ${
-      giveaway!.numOfWinners > 1 ? "are" : "is"
-    }: ` +
-    winnerString +
-    ". Congratulations! 🎉";
+  const prizeLink = `[**${giveaway.prize}**](${message.url})`;
+  const announcement = winners.length
+    ? `${mentions} won ${prizeLink} in the reroll. Congratulations! 🎉`
+    : `No eligible participants for the reroll of ${prizeLink}.`;
   const winnerEmbed = new EmbedBuilder()
     .setColor("#546e7a")
-    .setDescription(`${winnerString}`);
+    .setDescription(announcement);
 
-  return winnerEmbed;
+  return { channel, embed: winnerEmbed };
 }

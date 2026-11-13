@@ -44,11 +44,11 @@ async function cooldown(member: GuildMember) {
     name: `${member.user.username}`,
     iconURL: member.displayAvatarURL(),
   });
-  let lastRobDate = Number(user.user!.lastRobDate);
+  let lastRobDate = Number(user.user!.lastRobAt ?? user.user!.lastRobDate);
 
-  let lastHeistDate = Number(user.user!.lastHeistDate);
+  let lastHeistDate = Number(user.user!.lastHeistAt ?? user.user!.lastHeistDate);
 
-  const lastBodyguardDate = user.user?.lastBodyguardDate;
+  const lastBodyguardDate = (user.user?.lastBodyguardAt ?? user.user?.lastBodyguardDate);
   const bodyguardUntil =
     Number(lastBodyguardDate) + Number(bodyguardDuration) * 1000;
 
@@ -80,7 +80,7 @@ async function cooldown(member: GuildMember) {
         : ""
       }
       ${isInmate
-        ? `\n\nYou will be released from jail <t:${Math.round(lastHeistDate / 1000) + Number(user.user?.jailTime)
+        ? `\n\nYou will be released from jail <t:${Math.round(lastHeistDate / 1000) + Number(user.user?.jailDurationSeconds ?? user.user?.jailTime)
         }:R>`
         : ""
       }`

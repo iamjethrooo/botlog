@@ -59,7 +59,7 @@ function fixture(overrides = {}) {
   let version = 0, attempts = 0, fail, commitError;
   const calls = [];
   const matches = (row, where = {}) => Object.entries(where).every(([key, value]) => {
-    if (key === 'userId_itemId') return matches(row, value);
+    if (key === 'userDiscordId_itemId') return matches(row, value);
     if (value && typeof value === 'object') return Object.entries(value).every(([op, n]) => {
       if (op === 'gte') return row[key] >= n;
       if (op === 'gt') return row[key] > n;
@@ -69,7 +69,7 @@ function fixture(overrides = {}) {
   });
   const apply = (row, data) => {
     for (const [key, value] of Object.entries(data)) {
-      row[key] = value && typeof value === 'object'
+      row[key] = value && typeof value === 'object' && ('increment' in value || 'decrement' in value)
         ? row[key] + (value.increment ?? -value.decrement) : value;
     }
   };
@@ -124,7 +124,7 @@ const transfer = (f, overrides = {}) => f.user.transfer({ sourceId: 'sender', re
 const purchase = (f, overrides = {}) => f.item.purchase({ userId: 'sender', guildId: 'guild', itemId: 1, roleGiven: null, ...overrides });
 
 test('concurrent cash, guild-bank and inventory arithmetic preserves every delta and identities', async () => {
-  const f = fixture({ inventory: [{ userId: 'sender', itemId: 1, amount: 2 }] });
+  const f = fixture({ inventory: [{ userDiscordId: 'sender', itemId: 1, amount: 2 }] });
   await Promise.all([f.user.addCash({ id: 'sender', cash: 10 }), f.user.addCash({ id: 'sender', cash: 20 }), f.user.subtractCash({ id: 'sender', cash: 5 })]);
   await Promise.all([f.guild.addToBank({ id: 'guild', amount: 10 }), f.guild.addToBank({ id: 'guild', amount: 20 }), f.guild.subtractFromBank({ id: 'guild', amount: 5 })]);
   await Promise.all([f.guild.addToThievesBank({ id: 'guild', amount: 10 }), f.guild.addToThievesBank({ id: 'guild', amount: 20 })]);
@@ -190,6 +190,8 @@ test('purchase rollback covers stock, inventory, bank, cash and special-item dat
       const f = fixture();
       const item = f.state().item[0];
       item.name = name;
+      if (name === 'Bodyguard') item.systemKey = 'BODYGUARD';
+      if (name === 'Refresher Orb') item.systemKey = 'REFRESHER_ORB';
       if (name === 'Role') item.roleGiven = 'role';
       const users = f.state().user;
       users[0].lastRobDate = String(Date.now());
@@ -263,7 +265,7 @@ test('percentage pricing uses the transactional balance and preserves bodyguard 
   await Promise.all([purchase(f), purchase(f)]);
   assert.equal(f.state().user[0].cash, 81);
   assert.equal(f.state().guild[0].bank, 19);
-  item.name = 'Bodyguard';
+  item.name = 'Bodyguard'; item.systemKey = 'BODYGUARD';
   const g = fixture({ item: [item] });
   await purchase(g);
   assert.equal(g.state().inventory.length, 0);
@@ -272,13 +274,14 @@ test('percentage pricing uses the transactional balance and preserves bodyguard 
   await assert.rejects(purchase(g), /already have/);
   assert.deepEqual(g.state(), before);
   const users = g.state().user;
-  users[0].lastBodyguardDate = String(Date.now() - 2 * 86400000);
+  users[0].lastBodyguardAt = new Date(Date.now() - 2 * 86400000);
+  users[0].lastBodyguardDate = String(users[0].lastBodyguardAt.getTime());
   const h = fixture({ item: [item], user: users });
   await assert.rejects(purchase(h), /every 5 days/);
 });
 
 test('refresher orb only resets an active rob cooldown as part of payment', async () => {
-  const item = fixture().state().item[0]; item.name = 'Refresher Orb';
+  const item = fixture().state().item[0]; item.name = 'Refresher Orb'; item.systemKey = 'REFRESHER_ORB';
   const f = fixture({ item: [item] });
   await assert.rejects(purchase(f), /on cooldown/);
   const users = f.state().user; users[0].lastRobDate = String(Date.now());

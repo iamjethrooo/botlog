@@ -75,7 +75,8 @@ async function main() {
         const value = typeof f.default === 'object' ? (f.type === 'String' ? "''" : f.type === 'DateTime' ? 'CURRENT_TIMESTAMP' : '0') : typeof f.default === 'string' ? `'${f.default.replaceAll("'", "''")}'` : f.default;
         return `"${f.dbName || f.name}" ${type}${f.isRequired ? ' NOT NULL' : ''}${value !== undefined ? ' DEFAULT ' + value : ''}`;
       });
-      const keys = model.primaryKey?.fields || model.fields.filter(f => f.isId).map(f => f.name);
+      const keys = (model.primaryKey?.fields || model.fields.filter(f => f.isId).map(f => f.name))
+        .map(key => model.fields.find(field => field.name === key).dbName || key);
       if (keys.length) columns.push(`PRIMARY KEY (${keys.map(k => `"${k}"`).join(',')})`);
       for (const field of model.fields.filter(f => f.isUnique)) columns.push(`UNIQUE ("${field.name}")`);
       await db.$executeRawUnsafe(`CREATE TABLE "${name}" (${columns.join(',')})`);
@@ -87,14 +88,21 @@ async function main() {
     result.emptyDatabaseLeaderboardQueries = queries.length;
     assert.equal(queries.length, 2);
     await db.user.createMany({ data: Array.from({ length: 1200 }, (_, i) => ({ id: 'internal' + i, discordId: 'u' + i, name: i < 3 ? ['Zed', 'Amy', 'Joe'][i] : 'Member' + String(i).padStart(4, '0'), cash: i === 1199 ? 15000 : 20000 - Math.floor(i / 3), email: 'private' + i + '@example.invalid', image: 'private-image' })) });
-    await db.item.createMany({ data: Array.from({ length: 1001 }, (_, i) => ({ id: i + 1, name: i === 0 ? 'FaKe ID' : i === 1 ? 'fake id' : 'Item ' + i, emoji: i === 3 ? null : '🍎', buyPrice: 100 })) });
+    await db.item.createMany({ data: Array.from({ length: 1001 }, (_, i) => ({ id: i + 1, name: i === 0 ? 'FaKe ID' : i === 1 ? 'fake id' : 'Item ' + i, systemKey: i === 0 ? 'FAKE_ID' : null, emoji: i === 3 ? null : '🍎', buyPrice: 100 })) });
     await db.setting.create({ data: { id: 1, guildId: 'g', settingKey: 'coinEmoji', settingValue: 'coin' } });
-    const routers = old => ({
+    const routers = old => {
+      // The old router uses the old Prisma field name. Keep its query count and
+      // selected rows while running against the current generated client.
+      const inventoryPrisma = old ? { inventory: { findMany: ({ where }) =>
+        db.inventory.findMany({ where: { userDiscordId: where.userId } }),
+      } } : db;
+      return {
       user: load('packages/api/src/routers/user.ts', old).userRouter.createCaller({ prisma: db }),
-      inventory: load('packages/api/src/routers/inventory.ts', old).inventoryRouter.createCaller({ prisma: db }),
+      inventory: load('packages/api/src/routers/inventory.ts', old).inventoryRouter.createCaller({ prisma: inventoryPrisma }),
       item: { getAll: async () => ({ allItems: await db.item.findMany() }), getItemById: async ({ id }) => ({ item: await db.item.findUnique({ where: { id } }) }) },
       setting: { getByKey: async ({ key }) => (await db.setting.findUnique({ where: { settingKey: key } })).settingValue },
-    });
+      };
+    };
     const oldRoutes = routers(true), newRoutes = routers(false);
     async function command(kind, old, size, slash = false, viewer = 'u0', showAll = false, delay = 0) {
       const routes = old ? oldRoutes : newRoutes;
@@ -108,7 +116,7 @@ async function main() {
       const Command = load(file, old, api, capture)[kind === 'inventory' ? 'InventoryCommand' : 'LeaderboardCommand'];
       const author = { id: viewer, username: 'Fixture', displayAvatarURL: () => '' };
       const cache = new Map(Array.from({ length: size }, (_, i) => ['u' + i, { permissions: { has: () => true } }]));
-      cache.set('member-without-db-row', { permissions: { has: () => true } });
+      cache.set('missing-member', { permissions: { has: () => true } });
       const guild = { name: 'Fixture', iconURL: () => '', members: { cache } };
       const member = { displayHexColor: '#000000' };
       queries = [];
@@ -130,7 +138,7 @@ async function main() {
     }
     for (const size of [0, 1, 10, 100, 1000]) {
       const viewer = 'u' + (1100 + [0, 1, 10, 100, 1000].indexOf(size));
-      if (size) await db.inventory.createMany({ data: Array.from({ length: size }, (_, i) => ({ userId: viewer, itemId: i + 1, amount: i % 4 })) });
+      if (size) await db.inventory.createMany({ data: Array.from({ length: size }, (_, i) => ({ userDiscordId: viewer, itemId: i + 1, amount: i % 4 })) });
       for (const slash of [false, true]) {
         const measured = await compare('inventory', size, { slash, viewer });
         assert.equal(measured.before.apiCalls, 1 + size);
@@ -143,7 +151,7 @@ async function main() {
       for (let i = 0; i < 5; i++) samples.push(await compare('inventory', size, { viewer }));
       record('inventory', size, 0, samples);
     }
-    await db.inventory.createMany({ data: [{ userId: 'u0', itemId: 1, amount: 0 }, { userId: 'u2', itemId: 1, amount: 2 }, { userId: 'u3', itemId: 2, amount: 1 }, { userId: 'u1198', itemId: 1, amount: 1 }] });
+    await db.inventory.createMany({ data: [{ userDiscordId: 'u0', itemId: 1, amount: 0 }, { userDiscordId: 'u2', itemId: 1, amount: 2 }, { userDiscordId: 'u3', itemId: 2, amount: 1 }, { userDiscordId: 'u1198', itemId: 1, amount: 1 }] });
     for (const size of [0, 1, 10, 1000, 1200]) {
       const samples = [];
       for (let i = 0; i < 5; i++) samples.push(await compare('leaderboard', size));
@@ -170,13 +178,6 @@ async function main() {
     const inventory = await newRoutes.inventory.getDisplayByUserId({ userId: 'u0' });
     assert.deepEqual(Object.keys(inventory.inventory[0]).sort(), ['amount', 'item', 'itemId']);
     assert.deepEqual(Object.keys(inventory.inventory[0].item).sort(), ['emoji', 'name']);
-    // Original crashes only on nonempty inventories if no Fake ID exists. New
-    // behavior degrades to ordinary visibility instead of suppressing all rows.
-    await db.item.update({ where: { id: 1 }, data: { name: 'Former ID 1' } });
-    await db.item.update({ where: { id: 2 }, data: { name: 'Former ID 2' } });
-    assert((await newRoutes.user.getLeaderboard()).leaderboard.every(u => !u.hasFakeId));
-    await db.item.update({ where: { id: 1 }, data: { name: 'FaKe ID' } });
-    await db.item.update({ where: { id: 2 }, data: { name: 'fake id' } });
     // Same bounded synthetic per-call delay as BBC-16; end-to-end local SQL +
     // requested API delay, not real network/Discord/Neon latency.
     const delayed = [];
@@ -189,14 +190,18 @@ async function main() {
       for (let i = 0; i < 3; i++) invDelayed.push(await compare('inventory', size, { delay: 5, viewer }));
       record('inventory', size, 5, invDelayed);
     }
+    await db.item.update({ where: { id: 1 }, data: { name: 'Renamed disguise' } });
+    const guildResult = await newRoutes.user.getGuildLeaderboard({ memberIds: ['u0', 'u0', 'u3', 'u1199', 'departed'] });
+    assert.deepEqual(plain(guildResult.leaderboard.map(({ discordId, hasFakeId }) => [discordId, hasFakeId])),
+      [['u0', true], ['u3', false]]);
     // Query evidence excludes setup and timing measurements.
     queries = [];
-    await newRoutes.user.getLeaderboard();
+    await newRoutes.user.getGuildLeaderboard({ memberIds: ['u0', 'u1'] });
     result.leaderboardSql = [...queries];
     queries = [];
     await newRoutes.inventory.getDisplayByUserId({ userId: 'u0' });
     result.inventorySql = [...queries];
-    result.checks.push('prefix/slash rendered output equivalence', 'empty and multi-item inventories, zero quantities and null emoji', '1/10/1000/1200 users; departed and missing cached members; administrators retained', 'cash/name descending ties; cash=15000 exclusion', 'Fake ID first mixed-case match; zero-quantity ownership; anonymous rank N/A', 'request/query count bounds; narrow response keys; no Fake ID catalog fallback');
+    result.checks.push('prefix/slash rendered output equivalence', 'empty and multi-item inventories, zero quantities and null emoji', '1/10/1000/1200 users; departed and missing cached members; administrators retained', 'cash/name descending ties; cash=15000 exclusion', 'Fake ID stable key; zero-quantity ownership; anonymous rank N/A', 'request/query count bounds; narrow response keys; membership filtering in PostgreSQL');
     const output = process.env.BOTLOG_QUERY_RESULTS_DIR || __dirname;
     fs.writeFileSync(path.join(output, 'bbc19-results.json'), JSON.stringify(result, null, 2) + '\n');
     console.log(JSON.stringify({ samples: result.samples, checks: result.checks }, null, 2));

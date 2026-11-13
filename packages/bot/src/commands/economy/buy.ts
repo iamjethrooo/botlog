@@ -37,7 +37,7 @@ async function buy(itemName: string, customer: GuildMember) {
   if (!item) return fail(`Sorry, we don't sell **${itemName}** here.`);
   const greenColor = await trpcNode.setting.getByKey.mutate({ key: "greenColor" });
   const coinEmoji = await trpcNode.setting.getByKey.mutate({ key: "coinEmoji" });
-  const special = ["bodyguard", "refresher orb"].includes(item.name.toLowerCase());
+  const special = item.systemKey === "BODYGUARD" || item.systemKey === "REFRESHER_ORB";
   try {
     if (item.roleGiven && !special) {
       const role = await customer.guild.roles.fetch(item.roleGiven);
@@ -58,7 +58,7 @@ async function buy(itemName: string, customer: GuildMember) {
         return fail(`Your purchase of **${item.name}** is paid, but the role could not be confirmed. Retry this buy command to deliver the role without another charge. If it keeps failing, contact an admin.`);
       }
     }
-    return embed.setDescription(`✅ You bought a **${purchase.item.name}**${purchase.item.name.toLowerCase() === "bodyguard" ? ` for **${coinEmoji}${purchase.buyPrice}**` : ""}!`)
+    return embed.setDescription(`✅ You bought a **${purchase.item.name}**${purchase.item.systemKey === "BODYGUARD" ? ` for **${coinEmoji}${purchase.buyPrice}**` : ""}!`)
       .setColor(`#${greenColor}`);
   } catch (error) {
     const failure = error as { data?: { code?: string }; message?: string };

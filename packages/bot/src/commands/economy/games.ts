@@ -62,7 +62,7 @@ export class GamesCommand extends Command {
     let user = await trpcNode.user.getUserById.query({
       id: interaction.user.id,
     });
-    let lastGameDate = Number(user.user!.lastCoinFlipDate);
+    let lastGameDate = Number(user.user!.lastCoinFlipAt ?? user.user!.lastCoinFlipDate);
     let gameCooldown = Number(coinflipCooldown);
 
     let tooSoon = (Date.now() - lastGameDate) / 1000 < gameCooldown;
@@ -211,7 +211,7 @@ export class GamesCommand extends Command {
               let player = await trpcNode.user.getUserById.query({
                 id: response.user.id,
               });
-              let lastGameDate = Number(player.user!.lastCoinFlipDate);
+              let lastGameDate = Number(player.user!.lastCoinFlipAt ?? player.user!.lastCoinFlipDate);
               let tooSoon = (Date.now() - lastGameDate) / 1000 < gameCooldown;
               if (tooSoon) {
                 const embed = new EmbedBuilder()

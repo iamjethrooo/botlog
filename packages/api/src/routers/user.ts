@@ -1,8 +1,41 @@
 import { t } from "../trpc";
 import { z } from "zod";
-import { economyError, economyInteger, economySetting, economyTransaction } from "../economy";
+import { cooldownDate, discordEventId, economyError, economyInteger, economyOperation, economySetting, economySettings, economyTransaction, legacyCooldownDate } from "../economy";
 
 export const userRouter = t.router({
+  claimMessageReward: t.procedure
+    .input(z.object({ messageId: discordEventId, userId: z.string().min(1), name: z.string() }))
+    .mutation(async ({ ctx, input }) => economyOperation(
+      ctx.prisma, input.messageId, "message_reward", input.userId, async tx => {
+        const { startingCash, minCashPerChat, maxCashPerChat, interval } = await economySettings(
+          tx, ["startingCash", "minCashPerChat", "maxCashPerChat", "interval"],
+          ["startingCash", "minCashPerChat", "maxCashPerChat"],
+        );
+        const min = Math.ceil(minCashPerChat);
+        const max = Math.floor(maxCashPerChat);
+        if (!economyInteger.safeParse(startingCash).success ||
+            !economyInteger.safeParse(min).success || !economyInteger.safeParse(max).success || min > max) {
+          economyError("Invalid message reward settings.");
+        }
+        const where = { discordId: input.userId };
+        const user = await tx.user.findUnique({ where });
+        if (!user) {
+          await tx.user.create({ data: { ...where, name: input.name, cash: startingCash } });
+          return { status: "initialized", amount: startingCash } as const;
+        }
+        const now = Date.now();
+        const lastReward = Number(user.lastMessageRewardAt ?? user.lastMessageDate);
+        if (!Number.isFinite(lastReward) || now - lastReward < interval * 1000) {
+          return { status: "cooldown", amount: 0 } as const;
+        }
+        const amount = Math.floor(Math.random() * (max - min + 1)) + min;
+        await tx.user.update({
+          where,
+          data: { cash: { increment: amount }, lastMessageRewardAt: new Date(now), lastMessageDate: String(now) },
+        });
+        return { status: "awarded", amount } as const;
+      },
+    )),
   transfer: t.procedure
     .input(z.object({
       sourceId: z.string().min(1),
@@ -108,7 +141,7 @@ export const userRouter = t.router({
     .input(
       z.object({
         id: z.string(),
-        date: z.string(),
+        date: legacyCooldownDate,
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -118,7 +151,7 @@ export const userRouter = t.router({
         where: {
           discordId: id,
         },
-        data: { lastMessageDate: date },
+        data: { lastMessageDate: date, lastMessageRewardAt: cooldownDate(date) },
       });
 
       return { lastMessageDate };
@@ -127,7 +160,7 @@ export const userRouter = t.router({
     .input(
       z.object({
         id: z.string(),
-        date: z.string(),
+        date: legacyCooldownDate,
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -137,7 +170,7 @@ export const userRouter = t.router({
         where: {
           discordId: id,
         },
-        data: { lastRobDate: date },
+        data: { lastRobDate: date, lastRobAt: cooldownDate(date) },
       });
 
       return { lastRobDate };
@@ -146,7 +179,7 @@ export const userRouter = t.router({
     .input(
       z.object({
         id: z.string(),
-        date: z.string(),
+        date: legacyCooldownDate,
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -156,7 +189,7 @@ export const userRouter = t.router({
         where: {
           discordId: id,
         },
-        data: { lastBodyguardDate: date },
+        data: { lastBodyguardDate: date, lastBodyguardAt: cooldownDate(date) },
       });
 
       return { lastBodyguardDate };
@@ -165,7 +198,7 @@ export const userRouter = t.router({
     .input(
       z.object({
         id: z.string(),
-        date: z.string(),
+        date: legacyCooldownDate,
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -175,7 +208,7 @@ export const userRouter = t.router({
         where: {
           discordId: id,
         },
-        data: { lastHeistDate: date },
+        data: { lastHeistDate: date, lastHeistAt: cooldownDate(date) },
       });
 
       return { lastHeistDate };
@@ -184,7 +217,7 @@ export const userRouter = t.router({
     .input(
       z.object({
         id: z.string(),
-        date: z.string(),
+        date: legacyCooldownDate,
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -194,7 +227,7 @@ export const userRouter = t.router({
         where: {
           discordId: id,
         },
-        data: { lastCoinFlipDate: date },
+        data: { lastCoinFlipDate: date, lastCoinFlipAt: cooldownDate(date) },
       });
 
       return { lastCoinFlipDate };
@@ -203,8 +236,8 @@ export const userRouter = t.router({
     .input(
       z.object({
         id: z.string(),
-        jailTime: z.string(),
-        lastHeistDate: z.string().optional(),
+        jailTime: z.string().refine(value => /^-?\d+$/.test(value) && economyInteger.safeParse(Number(value)).success),
+        lastHeistDate: legacyCooldownDate.optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -214,7 +247,12 @@ export const userRouter = t.router({
         where: {
           discordId: id,
         },
-        data: { jailTime, lastHeistDate },
+        data: {
+          jailTime,
+          jailDurationSeconds: Number(jailTime),
+          lastHeistDate,
+          lastHeistAt: lastHeistDate === undefined ? undefined : cooldownDate(lastHeistDate),
+        },
       });
 
       return { jt };
@@ -276,11 +314,31 @@ export const userRouter = t.router({
 
       return { userCash };
     }),
+  getGuildLeaderboard: t.procedure
+    .input(z.object({ memberIds: z.array(z.string().min(1).max(20)) }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.memberIds.length === 0) return { leaderboard: [] };
+      // Send membership as one parameter so large guilds don't hit PostgreSQL's
+      // parameter limit. Rank remains relative to the entire guild.
+      const leaderboard = await ctx.prisma.$queryRaw<{
+        discordId: string;
+        cash: number;
+        hasFakeId: boolean;
+      }[]>`
+        SELECT u."discordId", u.cash, EXISTS (
+          SELECT 1 FROM "Item" item JOIN "Inventory" inventory ON inventory."itemId" = item.id
+          WHERE item."systemKey" = 'FAKE_ID' AND inventory."userId" = u."discordId"
+        ) AS "hasFakeId"
+        FROM "User" u
+        WHERE u.cash <> 15000
+          AND u."discordId" IN (SELECT jsonb_array_elements_text(${JSON.stringify(input.memberIds)}::jsonb))
+        ORDER BY u.cash DESC, u.name DESC, u."discordId" ASC
+      `;
+      return { leaderboard };
+    }),
+  // Keep the original endpoint for callers predating guild membership input.
   getLeaderboard: t.procedure.query(async ({ ctx }) => {
-    // Preserve the catalog's first case-insensitive Fake ID match, including
-    // zero-quantity ownership. Do not return the catalog or other user fields.
-    const items = await ctx.prisma.item.findMany({ select: { id: true, name: true } });
-    const fakeId = items.find((item) => item.name.toLowerCase() === "fake id");
+    const fakeId = await ctx.prisma.item.findUnique({ where: { systemKey: "FAKE_ID" }, select: { id: true } });
     const leaderboard = await ctx.prisma.user.findMany({
       where: {
         NOT: { cash: 15000 }
@@ -292,6 +350,7 @@ export const userRouter = t.router({
         {
           name: "desc",
         },
+        { discordId: "asc" },
       ],
       select: {
         discordId: true,

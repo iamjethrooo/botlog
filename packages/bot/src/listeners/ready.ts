@@ -3,6 +3,7 @@ import { Listener, ListenerOptions, container } from "@sapphire/framework";
 import { type Client, type TextChannel } from "discord.js";
 import { trpcNode } from "../trpc";
 import { completeGiveaway } from "../lib/giveawayCompletion";
+import { giveawayChannel } from "../lib/giveawayLocation";
 import * as fs from "fs";
 import { topicFile } from '../lib/topicState';
 import { setInterval } from '../lib/lifecycle';
@@ -46,7 +47,7 @@ export class ReadyListener extends Listener {
 
     for (const giveaway of await trpcNode.giveaway.getActive.query()) {
       if (!extendedClient.activeGiveaways.has(giveaway.giveawayId)) {
-        const endsAt = Number(giveaway.endsAt);
+        const endsAt = Number(giveaway.endsAtTimestamp ?? giveaway.endsAt);
         extendedClient.activeGiveaways.set(giveaway.giveawayId, Number.isSafeInteger(endsAt) ? endsAt : 0);
       }
     }
@@ -77,7 +78,7 @@ export class ReadyListener extends Listener {
             const { user } = await trpcNode.user.getUserById.query({ id: inmate });
             const member = inmateRole?.members.get(inmate);
             if (!inmateRole || !member || inmateChecks.get(inmate) !== check) continue;
-            const releaseAt = Number(user?.lastHeistDate) + Number(user?.jailTime) * 1000;
+            const releaseAt = Number(user?.lastHeistAt ?? user?.lastHeistDate) + Number(user?.jailDurationSeconds ?? user?.jailTime) * 1000;
             if (!Number.isFinite(releaseAt)) {
               throw new Error("Missing or invalid jail deadline");
             }
@@ -140,15 +141,13 @@ export class ReadyListener extends Listener {
           try {
             const giveaway = await trpcNode.giveaway.getById.mutate({ giveawayId });
             if (giveaway && !giveaway.ended) {
-              const endsAt = Number(giveaway.endsAt);
+              const endsAt = Number(giveaway.endsAtTimestamp ?? giveaway.endsAt);
               if (!Number.isSafeInteger(endsAt) || endsAt <= 0) throw Error("Invalid giveaway end time");
               if (Date.now() < endsAt) {
                 extendedClient.activeGiveaways.set(giveawayId, endsAt);
                 continue;
               }
-              await completeGiveaway(giveaway, client.channels.cache.get(
-                String(process.env.GIVEAWAY_CHANNEL_ID)
-              ) as TextChannel);
+              await completeGiveaway(giveaway, await giveawayChannel(client, giveaway));
             }
             extendedClient.activeGiveaways.delete(giveawayId);
           } catch (error) {

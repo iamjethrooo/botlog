@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, DiscordAPIError, EmbedBuilder, type TextChannel } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, DiscordAPIError, EmbedBuilder, type NewsChannel, type TextChannel } from "discord.js";
 import { trpcNode } from "../trpc";
 
 type Giveaway = NonNullable<Awaited<ReturnType<typeof trpcNode.giveaway.getById.mutate>>>;
@@ -20,7 +20,7 @@ export function drawWinners(entries: { userId: string }[], count: number) {
 // The disabled Join button's custom ID is an invisible delivery checkpoint.
 // This requires the existing single bot process/scheduler guard. It is not a
 // distributed lock or a transaction spanning PostgreSQL and Discord.
-export async function completeGiveaway(giveaway: Giveaway, channel: TextChannel) {
+export async function completeGiveaway(giveaway: Giveaway, channel: NewsChannel | TextChannel) {
   const id = giveaway.giveawayId;
   let message = await channel.messages.fetch({ message: giveaway.messageId, force: true });
   const checkpoint = message.components.flatMap(row => row.type === ComponentType.ActionRow ? row.components : [])

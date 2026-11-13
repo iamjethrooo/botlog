@@ -136,7 +136,7 @@ export class HeistCommand extends Command {
         id: message.member!.id,
       });
 
-      let lastRobDate = Number(suspect.user!.lastHeistDate);
+      let lastRobDate = Number(suspect.user!.lastHeistAt ?? suspect.user!.lastHeistDate);
       let tooSoon = (Date.now() - lastRobDate) / 1000 < heistCooldown;
 
       if (tooSoon) {

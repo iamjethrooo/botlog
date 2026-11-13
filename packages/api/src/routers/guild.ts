@@ -23,6 +23,10 @@ async function welcomeChannels(guildId: string) {
   );
 }
 
+function withLegacyOwnerId<T extends { ownerDiscordId: string }>(guild: T) {
+  return { ...guild, ownerId: guild.ownerDiscordId };
+}
+
 export const guildRouter = t.router({
   getChannelFeatureHealth: t.procedure
     .input(z.object({ guildId: snowflake }))
@@ -85,7 +89,7 @@ export const guildRouter = t.router({
         },
       });
 
-      return { guild };
+      return { guild: guild && withLegacyOwnerId(guild) };
     }),
   getGuildFromAPI: t.procedure
     .input(
@@ -125,7 +129,7 @@ export const guildRouter = t.router({
         },
       });
 
-      return { guild, user };
+      return { guild: guild && withLegacyOwnerId(guild), user };
     }),
   create: t.procedure
     .input(
@@ -145,13 +149,13 @@ export const guildRouter = t.router({
         update: {},
         create: {
           id: id,
-          ownerId: ownerId,
+          ownerDiscordId: ownerId,
           volume: 100,
           name: name,
         },
       });
 
-      return { guild };
+      return { guild: withLegacyOwnerId(guild) };
     }),
   createViaTwitchNotification: t.procedure
     .input(
@@ -170,7 +174,7 @@ export const guildRouter = t.router({
           id: guildId,
           notifyList: [userId],
           volume: 100,
-          ownerId: ownerId,
+          ownerDiscordId: ownerId,
           name: name,
         },
         select: { notifyList: true },
@@ -195,7 +199,7 @@ export const guildRouter = t.router({
         },
       });
 
-      return { guild };
+      return { guild: withLegacyOwnerId(guild) };
     }),
   getAllFromLocal: t.procedure
     .input(
@@ -208,11 +212,11 @@ export const guildRouter = t.router({
 
       const guilds = await ctx.prisma.guild.findMany({
         where: {
-          ownerId: ownerId as string,
+          ownerDiscordId: ownerId,
         },
       });
 
-      return { guilds };
+      return { guilds: guilds.map(withLegacyOwnerId) };
     }),
   getAll: t.procedure.query(async ({ ctx }) => {
     const { guilds } = await managedGuilds(ctx);
@@ -369,7 +373,7 @@ export const guildRouter = t.router({
         data: { bank: { increment: amount } },
       });
 
-      return { guildMoney };
+      return { guildMoney: withLegacyOwnerId(guildMoney) };
     }),
   subtractFromBank: t.procedure
     .input(
@@ -388,7 +392,7 @@ export const guildRouter = t.router({
         data: { bank: { decrement: amount } },
       });
 
-      return { guildMoney };
+      return { guildMoney: withLegacyOwnerId(guildMoney) };
     }),
   setBankBalance: t.procedure
     .input(
@@ -407,7 +411,7 @@ export const guildRouter = t.router({
         data: { bank: amount },
       });
 
-      return { guildMoney };
+      return { guildMoney: withLegacyOwnerId(guildMoney) };
     }),
   addToThievesBank: t.procedure
     .input(
@@ -426,6 +430,6 @@ export const guildRouter = t.router({
         data: { thievesBank: { increment: amount } },
       });
 
-      return { guildMoney };
+      return { guildMoney: withLegacyOwnerId(guildMoney) };
     }),
 });

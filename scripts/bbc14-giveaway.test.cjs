@@ -12,7 +12,7 @@ const t = initTRPC.create();
 const ID = '123456789012345678', USER = '223456789012345678', ANN = '323456789012345678';
 const NOW = 1800000000000;
 const clone = value => structuredClone(value);
-const base = { giveawayId: ID, messageId: ID, prize: 'Prize', entryFee: '10', numOfEntries: 2,
+const base = { giveawayId: ID, messageId: ID, prize: 'Prize', entryFee: '10', maxEntriesPerUser: 2, guildId: 'guild', channelId: 'channel',
   numOfWinners: 2, hostId: '', endsAt: String(NOW + 1000), dateStarted: '0', ended: false };
 function load(file, { api = {}, client = {}, clock = { now: NOW }, pagination, timer } = {}) {
   const exports = {}, errors = [];
@@ -31,6 +31,7 @@ function load(file, { api = {}, client = {}, clock = { now: NOW }, pagination, t
       if (['../trpc', '../../trpc'].includes(id) && file.includes('/bot/')) return { trpcNode: api };
       if (id === '../economy') return load('packages/api/src/economy.ts', env);
       if (id === '../lib/giveawayCompletion') return load('packages/bot/src/lib/giveawayCompletion.ts', env);
+      if (id === '../lib/giveawayLocation') return load('packages/bot/src/lib/giveawayLocation.ts', env);
       if (id === '../lib/topicState') return load('packages/bot/src/lib/topicState.ts', env);
       // Deterministic scheduler boundary; real lifecycle/topic behavior is covered by BBC-21.
       if (id === '../lib/lifecycle') return { setInterval: fn => {
@@ -62,12 +63,12 @@ function storage(overrides = {}, clock = { now: NOW }) {
         if (fail?.route === route && fail.remaining-- > 0) throw Object.assign(Error('Injected failure'), { code: fail.code });
         const rows = get()[entity], selected = rows.filter(row => matches(row, args.where));
         if (method === 'findUnique') return clone(selected[0] ?? null);
-        if (method === 'findMany') return clone(args.distinct ? selected.filter((row, i) => selected.findIndex(r => r.userId === row.userId) === i) : selected);
+        if (method === 'findMany') return clone(args.distinct ? selected.filter((row, i) => selected.findIndex(r => r.userDiscordId === row.userDiscordId) === i) : selected);
         if (method === 'count') return selected.length;
         if (method === 'create') { const row = { id: rows.length + 1, ...clone(args.data) }; rows.push(row); write(); return clone(row); }
         if (method === 'update' && !selected.length) throw Error('Missing row');
         for (const row of selected) for (const [key, value] of Object.entries(args.data))
-          row[key] = value && typeof value === 'object' ? row[key] - value.decrement : value;
+          row[key] = value && typeof value === 'object' && 'decrement' in value ? row[key] - value.decrement : value;
         if (selected.length) write();
         return method === 'updateMany' ? { count: selected.length } : clone(selected[0]);
       }]))]));
@@ -140,7 +141,7 @@ test('missing/ended/expired and malformed legacy giveaways cannot charge', async
     const f = storage({ giveaway }), before = f.state();
     assert.ok(['missing', 'ended'].includes((await enter(f)).status)); assert.deepEqual(f.state(), before);
   }
-  for (const changes of [{ entryFee: '-1' }, { entryFee: 'NaN' }, { entryFee: '' }, { entryFee: '1.2' }, { endsAt: 'NaN' }, { numOfEntries: 0 }]) {
+  for (const changes of [{ entryFee: '-1' }, { entryFee: 'NaN' }, { entryFee: '' }, { entryFee: '1.2' }, { endsAt: 'NaN' }, { maxEntriesPerUser: 0 }]) {
     const f = storage({ giveaway: [{ ...base, ...changes }] }), before = f.state();
     await assert.rejects(enter(f)); assert.deepEqual(f.state(), before);
   }
@@ -154,14 +155,14 @@ test('deadline race excludes rolled-back late payment and completion snapshot is
   await assert.rejects(storage().caller.getCompletionEntries({ giveawayId: ID }));
 });
 test('creation rejects invalid fees, counts and end times at the API boundary', async () => {
-  for (const changes of [{ entryFee: '-1' }, { entryFee: 'Infinity' }, { numOfEntries: 0 }, { numOfWinners: 0 }, { numOfWinners: 101 }, { endsAt: 'bad' }, { endsAt: String(NOW) }, { prize: '' }]) {
+  for (const changes of [{ entryFee: '-1' }, { entryFee: 'Infinity' }, { maxEntriesPerUser: 0 }, { numOfWinners: 0 }, { numOfWinners: 101 }, { endsAt: 'bad' }, { endsAt: String(NOW) }, { prize: '' }]) {
     const f = storage(); await assert.rejects(f.caller.create({ ...base, ...changes }));
     assert.equal(f.calls.length, 0);
   }
 });
 
 function discordFixture(f = storage({ giveaway: [{ ...base, endsAt: String(NOW - 1) }],
-  giveawayEntry: [{ giveawayId: ID, userId: USER }, { giveawayId: ID, userId: USER }, { giveawayId: ID, userId: '423456789012345678' }] })) {
+  giveawayEntry: [{ giveawayId: ID, userDiscordId: USER }, { giveawayId: ID, userDiscordId: USER }, { giveawayId: ID, userDiscordId: '423456789012345678' }] })) {
   let data = { content: '🎉Giveaway🎉', embeds: [{ title: 'Prize', color: 0x123456 }], components: [], attachments: ['preserved'] };
   const history = new discord.Collection(), effects = [];
   const faults = {};
@@ -213,7 +214,7 @@ test('zero entrants complete with a truthful no-participant announcement', async
 });
 test('maximum accepted winner count produces valid Discord content and embeds', async () => {
   const d = discordFixture(storage({ giveaway: [{ ...base, numOfWinners: 100, endsAt: String(NOW - 1) }],
-    giveawayEntry: Array.from({ length: 100 }, (_, i) => ({ giveawayId: ID, userId: String(10000000000000000000n + BigInt(i)) })) }));
+    giveawayEntry: Array.from({ length: 100 }, (_, i) => ({ giveawayId: ID, userDiscordId: String(10000000000000000000n + BigInt(i)) })) }));
   const send = d.channel.send;
   d.channel.send = async payload => {
     assert.ok(payload.content.length <= 2000); payload.embeds.forEach(embed => embed.toJSON()); return send(payload);
@@ -315,7 +316,7 @@ test('command validates before deferral and creates record before exposing butto
   f.api.giveaway.create.mutate = async input => { order.push('create'); return create(input); };
   f.api.setting = { getByKey: { mutate: async () => 'coin' } };
   const { GiveawayCommand } = load('packages/bot/src/commands/guild/giveaway.ts', { api: f.api, client });
-  await new GiveawayCommand().chatInputRun({ id: ID, channelId: 'channel', member: { displayHexColor: '#123456' },
+  await new GiveawayCommand().chatInputRun({ id: ID, channelId: 'channel', guildId: 'guild', member: { displayHexColor: '#123456' },
     options: { getString: key => key === 'prize' ? 'Prize' : String(NOW + 10000), getInteger: () => null, getUser: () => null, getAttachment: () => null },
     deferReply: async () => {}, editReply: async payload => { order.push(payload.components?.length ? 'buttons' : 'placeholder'); }, fetchReply: async () => ({ id: ID }) });
   assert.deepEqual(order, ['placeholder', 'create', 'buttons']);
@@ -326,7 +327,7 @@ test('ready reloads active records after restart; overlapping delayed ticks comp
   const fetch = d.channel.messages.fetch; d.channel.messages.fetch = async input => { await gate.promise; return fetch(input); };
   const guild = { members: { fetch: async () => {} }, roles: { fetch: async () => {}, cache: new discord.Collection() } };
   const client = { user: { username: 'Fixture', id: 'bot' }, intervals: {}, activeGiveaways: new Map(), on() {},
-    guilds: { fetch: async () => guild }, channels: { cache: new Map([['channel', d.channel]]) } };
+    guilds: { fetch: async () => guild }, channels: { cache: new Map([['channel', Object.assign(d.channel, { id: 'channel', guildId: 'guild', type: discord.ChannelType.GuildText })]]) } };
   d.f.api.setting = { getByKey: { mutate: async () => 'inmate' } };
   const clock = { now: 1762695426597 }; // Keep topic work outside this isolated test.
   const { ReadyListener } = load('packages/bot/src/listeners/ready.ts', { api: d.f.api, client, timer, clock });
@@ -336,4 +337,27 @@ test('ready reloads active records after restart; overlapping delayed ticks comp
   gate.resolve(); await first;
   assert.equal(d.effects.filter(e => e === 'send').length, 1); assert.equal(client.activeGiveaways.size, 0);
   await timer.tick(); assert.equal(d.effects.filter(e => e === 'send').length, 1);
+});
+
+test('stored giveaway location wins over configuration and legacy location requires the bot message', async () => {
+  const recorded = [];
+  const legacyChannel = {
+    id: 'channel', guildId: 'guild', type: discord.ChannelType.GuildText,
+    messages: { fetch: async ({ message }) => ({ id: message, author: { id: 'bot' } }) },
+  };
+  const movedChannel = { id: 'original', guildId: 'guild', type: discord.ChannelType.GuildText };
+  const client = { user: { id: 'bot' }, channels: { cache: new Map([['channel', legacyChannel], ['original', movedChannel]]) } };
+  const api = { giveaway: { recordLegacyLocation: { mutate: async input => { recorded.push(input); } } } };
+  const { giveawayChannel } = load('packages/bot/src/lib/giveawayLocation.ts', { api, client });
+  assert.equal(await giveawayChannel(client, { ...base, channelId: 'original' }), movedChannel);
+  assert.equal(recorded.length, 0);
+  const legacy = { ...base, channelId: null, guildId: null };
+  assert.equal(await giveawayChannel(client, legacy), legacyChannel);
+  assert.equal(recorded.length, 1);
+  assert.equal(recorded[0].messageId, base.messageId);
+  assert.equal(recorded[0].channelId, 'channel');
+  legacyChannel.messages.fetch = async () => ({ author: { id: 'another-bot' } });
+  await assert.rejects(giveawayChannel(client, legacy), /verify the original/);
+  assert.equal(recorded.length, 1);
+  await assert.rejects(giveawayChannel(client, { ...base, channelId: 'original' }, 'other-guild'), /operator review/);
 });

@@ -40,7 +40,7 @@ export class GiveawayCommand extends Command {
     if (!prize.trim() || prize.length > 256 || !Number.isSafeInteger(entryFee) || entryFee < 0 || entryFee > 2147483647 ||
         !Number.isSafeInteger(winners) || winners < 1 || winners > 100 ||
         !Number.isSafeInteger(entries) || entries < 1 || entries > 2147483647 ||
-        !endsAt.trim() || !Number.isSafeInteger(Number(endsAt)) || Number(endsAt) <= Date.now() || Number(endsAt) > 8640000000000000) {
+        !endsAt.trim() || !Number.isSafeInteger(Number(endsAt)) || Number(endsAt) <= Date.now() || Number(endsAt) > 253402300799000) {
       await interaction.reply({ content: ":x: Use a valid future end time, nonnegative entry fee, positive entry count, and 1–100 winners.", ephemeral: true });
       return;
     }
@@ -87,12 +87,13 @@ export class GiveawayCommand extends Command {
         messageId: message.id,
         giveawayId: interaction.id,
         hostId: host == null ? "" : host.id,
-        entryFee: entryFee.toString(),
+        entryFee,
         prize,
         numOfWinners: winners,
-        numOfEntries: entries,
-        endsAt: endsAt.toString(),
-        dateStarted: Math.round(Date.now() / 1000).toString(),
+        maxEntriesPerUser: entries,
+        endsAt: new Date(Number(endsAt)),
+        guildId: interaction.guildId!,
+        channelId: interaction.channelId,
       });
 
       client.activeGiveaways.set(interaction.id, Number(endsAt));

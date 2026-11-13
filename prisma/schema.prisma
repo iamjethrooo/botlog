@@ -24,6 +24,7 @@ model Account {
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -32,6 +33,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model User {
@@ -54,6 +57,12 @@ model User {
   lastCoinFlipDate  String        @default("0")
   lastBodyguardDate String        @default("0")
   jailTime          String        @default("0")
+  lastMessageRewardAt DateTime?   @db.Timestamptz(3)
+  lastRobAt         DateTime?     @db.Timestamptz(3)
+  lastHeistAt       DateTime?     @db.Timestamptz(3)
+  lastCoinFlipAt    DateTime?     @db.Timestamptz(3)
+  lastBodyguardAt   DateTime?     @db.Timestamptz(3)
+  jailDurationSeconds Int?
   cash              Int           @default(0)
   birthday          String        @default("0")
 }
@@ -70,13 +79,13 @@ model Guild {
   name                  String
   added                 DateTime      @default(now())
   volume                Int           @default(100)
-  notifyList            String[]
-  ownerId               String
-  owner                 User          @relation(fields: [ownerId], references: [discordId])
+  notifyList            String[]      @default([])
+  ownerDiscordId        String        @map("ownerId")
+  owner                 User          @relation(fields: [ownerDiscordId], references: [discordId])
   bank                  Int           @default(0)
   thievesBank           Int           @default(0)
   // Settings
-  disabledCommands      String[]      @map("disabled_commands")
+  disabledCommands      String[]      @default([]) @map("disabled_commands")
   logChannel            String?       @map("log_channel")
   welcomeMessageChannel String?       @map("welcome_message_channel")
   welcomeMessage        String?       @map("welcome_message")
@@ -85,6 +94,8 @@ model Guild {
   hub                   String?
   hubChannel            String?       @map("hub_channel") // The channel that users enter to get redirected
   tempChannels          TempChannel[]
+
+  @@index([ownerDiscordId])
 }
 
 enum DashboardActivityKind {
@@ -124,10 +135,12 @@ model Topic {
 }
 
 model TempChannel {
-  id      String @id
-  guildId String
-  guild   Guild  @relation(fields: [guildId], references: [id])
-  ownerId String @unique
+  id             String @id
+  guildId        String
+  guild          Guild  @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  ownerDiscordId String @map("ownerId")
+
+  @@unique([guildId, ownerDiscordId])
 }
 
 model Reminder {
@@ -137,14 +150,18 @@ model Reminder {
   event       String
   description String?
   dateTime    String
-  userId      String
-  user        User?    @relation(fields: [userId], references: [discordId])
+  scheduledAt DateTime? @db.Timestamptz(3)
+  userDiscordId String @map("userId")
+  user        User     @relation(fields: [userDiscordId], references: [discordId], onDelete: Restrict)
   timeOffset  Int
+
+  @@index([userDiscordId, id])
 }
 
 model Item {
   id                Int       @id @default(autoincrement())
   name              String    @unique
+  systemKey         String?   @unique
   emoji             String?
   description       String?
   stackable         Boolean   @default(false)
@@ -157,12 +174,13 @@ model Item {
 }
 
 model Inventory {
-  userId    String
+  userDiscordId String @map("userId")
   itemId    Int
   amount    Int
-  user      User    @relation(fields: [userId], references: [discordId], onDelete: Cascade)
+  user      User    @relation(fields: [userDiscordId], references: [discordId], onDelete: Cascade)
   item      Item    @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  @@id([userId, itemId])
+  @@id([userDiscordId, itemId])
+  @@index([itemId])
 }
 
 model StarboardMessage {
@@ -189,10 +207,15 @@ model Giveaway {
   hostId        String @default("")
   prize         String
   numOfWinners  Int @default(1)
-  numOfEntries  Int @default(1)
-  entryFee      String  @default("0")
-  endsAt        String  @default("0")
+  maxEntriesPerUser Int @default(1) @map("numOfEntries")
+  entryFee      String @default("0")
+  endsAt        String @default("0")
   dateStarted   String
+  startedAt     DateTime? @db.Timestamptz(3)
+  endsAtTimestamp DateTime? @db.Timestamptz(3)
+  entryFeeCoins Int?
+  guildId       String?
+  channelId     String?
   ended         Boolean @default(false)
   entries       GiveawayEntry[]
 }
@@ -200,10 +223,10 @@ model Giveaway {
 model GiveawayEntry {
   id          Int @id @default(autoincrement())
   giveawayId  String
-  userId      String
+  userDiscordId String @map("userId")
   giveaway    Giveaway @relation(fields: [giveawayId], references: [giveawayId], onDelete: Restrict)
 
-  @@index([giveawayId, userId])
+  @@index([giveawayId, userDiscordId])
 }
 
 model RobLog {
@@ -215,7 +238,8 @@ model RobLog {
   amount      Int?
   reason      String?
 
-  @@index([robberId, victimId])
+  @@index([victimId, success, timestamp(sort: Desc), id(sort: Desc)])
+  @@index([robberId, success, timestamp(sort: Desc), id(sort: Desc)])
 }
 
 model HoldupLog {
@@ -226,4 +250,19 @@ model HoldupLog {
   timestamp     DateTime  @default(now())
   success       Boolean   @default(false)
   totalLoot     Int?
+
+  @@index([victimId, success, timestamp(sort: Desc), id(sort: Desc)])
+  @@index([participants(ops: JsonbPathOps)], type: Gin)
+}
+
+/// A message can trigger a chat reward and a command. Keep one result per
+/// operation type and event so a repeated request cannot pay again.
+model EconomyOperation {
+  eventId       String
+  kind          String
+  userDiscordId String
+  result        Json
+  createdAt     DateTime @default(now())
+
+  @@id([kind, eventId])
 }

@@ -7,7 +7,7 @@ export const inventoryRouter = t.router({
     .input(z.object({ userId: z.string() }))
     .query(async ({ ctx, input }) => {
       const inventory = await ctx.prisma.inventory.findMany({
-        where: { userId: input.userId },
+        where: { userDiscordId: input.userId },
         select: {
           itemId: true,
           amount: true,
@@ -19,7 +19,7 @@ export const inventoryRouter = t.router({
   getAll: t.procedure.query(async ({ ctx }) => {
     const all = await ctx.prisma.inventory.findMany();
 
-    return { all };
+    return { all: all.map(withLegacyUserId) };
   }),
   getByUserId: t.procedure
     .input(
@@ -32,11 +32,11 @@ export const inventoryRouter = t.router({
 
       const inventory = await ctx.prisma.inventory.findMany({
         where: {
-          userId,
+          userDiscordId: userId,
         },
       });
 
-      return { inventory };
+      return { inventory: inventory.map(withLegacyUserId) };
     }),
   incrementUserItemAmount: t.procedure
     .input(
@@ -50,12 +50,12 @@ export const inventoryRouter = t.router({
 
       const item = await ctx.prisma.inventory.update({
         where: {
-          userId_itemId: { userId, itemId },
+          userDiscordId_itemId: { userDiscordId: userId, itemId },
         },
         data: { amount: { increment: 1 } },
       });
 
-      return { item };
+      return { item: withLegacyUserId(item) };
     }),
   create: t.procedure
     .input(
@@ -70,13 +70,13 @@ export const inventoryRouter = t.router({
 
       const inventory = await ctx.prisma.inventory.create({
         data: {
-          userId,
+          userDiscordId: userId,
           itemId,
           amount,
         },
       });
 
-      return { inventory };
+      return { inventory: withLegacyUserId(inventory) };
     }),
   delete: t.procedure
     .input(
@@ -90,7 +90,7 @@ export const inventoryRouter = t.router({
 
       const inventory = await ctx.prisma.inventory.deleteMany({
         where: {
-          userId,
+          userDiscordId: userId,
           itemId,
         },
       });
@@ -98,3 +98,7 @@ export const inventoryRouter = t.router({
       return { inventory };
     }),
 });
+
+function withLegacyUserId<T extends { userDiscordId: string }>(row: T) {
+  return { ...row, userId: row.userDiscordId };
+}

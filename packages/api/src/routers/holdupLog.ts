@@ -15,9 +15,7 @@ export const holdupLogRouter = t.router({
                         array_contains: [input.suspectId]
                     }
                 },
-                orderBy: {
-                    timestamp: "desc",
-                },
+                orderBy: [{ timestamp: "desc" }, { id: "desc" }],
             });
             return { lastHoldup };
         }),
@@ -33,9 +31,7 @@ export const holdupLogRouter = t.router({
                     success: true,
                     victimId: input.victimId
                 },
-                orderBy: {
-                    timestamp: "desc",
-                },
+                orderBy: [{ timestamp: "desc" }, { id: "desc" }],
             });
             return { lastTimeHeldup };
         }),

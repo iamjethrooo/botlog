@@ -122,14 +122,13 @@ export const hubRouter = t.router({
     .query(async ({ ctx, input }) => {
       const { guildId, ownerId } = input;
 
-      const tempChannel = await ctx.prisma.tempChannel.findFirst({
+      const tempChannel = await ctx.prisma.tempChannel.findUnique({
         where: {
-          guildId,
-          ownerId,
+          guildId_ownerDiscordId: { guildId, ownerDiscordId: ownerId },
         },
       });
 
-      return { tempChannel };
+      return { tempChannel: tempChannel && { ...tempChannel, ownerId: tempChannel.ownerDiscordId } };
     }),
   createTempChannel: t.procedure
     .input(
@@ -142,15 +141,17 @@ export const hubRouter = t.router({
     .mutation(async ({ ctx, input }) => {
       const { guildId, ownerId, channelId } = input;
 
-      const tempChannel = await ctx.prisma.tempChannel.create({
-        data: {
+      const tempChannel = await ctx.prisma.tempChannel.upsert({
+        where: { guildId_ownerDiscordId: { guildId, ownerDiscordId: ownerId } },
+        update: { ownerDiscordId: ownerId },
+        create: {
           guildId,
-          ownerId,
+          ownerDiscordId: ownerId,
           id: channelId,
         },
       });
 
-      return { tempChannel };
+      return { tempChannel: { ...tempChannel, ownerId: tempChannel.ownerDiscordId } };
     }),
   deleteTempChannel: t.procedure
     .input(
@@ -161,12 +162,11 @@ export const hubRouter = t.router({
     .mutation(async ({ ctx, input }) => {
       const { channelId } = input;
 
-      const tempChannel = await ctx.prisma.tempChannel.delete({
-        where: {
-          id: channelId,
-        },
+      const tempChannel = await ctx.prisma.tempChannel.findUnique({
+        where: { id: channelId },
       });
+      if (tempChannel) await ctx.prisma.tempChannel.deleteMany({ where: { id: channelId } });
 
-      return { tempChannel };
+      return { tempChannel: tempChannel && { ...tempChannel, ownerId: tempChannel.ownerDiscordId } };
     }),
 });

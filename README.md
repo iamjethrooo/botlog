@@ -30,6 +30,40 @@ Before applying migrations, check the target migration history and count
 orphaned giveaway entries, negative inventory quantities, and negative item
 prices. Resolve any violations before migrating. Rehearse the backup and
 restore on disposable PostgreSQL with `node scripts/postgres-recovery-rehearsal.cjs`.
+
+The schema maintenance migration `20261114000000_schema_audit_fixes` adds
+typed giveaway dates and fees, typed cooldown dates, reminder timestamps, and
+stable keys for special shop items. It also adds the indexes for robbery and
+holdup cooldown lookups. Rehearse the migration with representative table sizes
+before scheduling it. The backfills and index builds run in one transaction
+and can block writers while it runs.
+
+- Apply the migration before switching the bot and API to the new release.
+  The new API writes both legacy and typed fields so existing callers can keep
+  using their original payloads. If you roll back to an older API and resume
+  writes, reconcile typed dates against their legacy columns before switching
+  forward again. Keep the legacy columns until the rollback window closes and
+  unresolved legacy values have been reviewed.
+- For older giveaways, the bot verifies the original message in the configured
+  channel before saving its location. Review active rows whose location cannot
+  be verified, or whose typed deadline or fee could not be backfilled. Recover
+  the original guild and channel from the Discord message before filling both
+  IDs. Legacy reminders with ambiguous dates retain their original text.
+- The backfill assigns a special item key to the lowest item ID when multiple
+  names match case insensitively. Review catalog collisions and check that the
+  chosen row owns the intended inventory before rollout. Change display names
+  independently of these keys after migration.
+- Temporary channel records are unique per guild and owner, and are deleted
+  when the guild record is deleted. Deleting a user removes their auth accounts,
+  sessions, and inventory. Guild ownership and reminders restrict user deletion.
+  Giveaway entries restrict deletion of their giveaway and can include multiple
+  tickets for one Discord user. Activity, robbery, holdup, and economy operation
+  records retain their Discord IDs independently of live user and guild rows.
+- PostgreSQL checks require nonnegative inventory quantities, item prices, and
+  typed giveaway fees. The migration SQL defines these checks. Signed balances
+  and negative stock for unlimited items are intentional. An economy operation
+  records the result of a chat reward or robbery by operation type and Discord
+  event ID, so redelivery can recover the result without applying the write again.
 Keep real backups and manifests in protected storage outside the checkout.
 
 ## Run the production release

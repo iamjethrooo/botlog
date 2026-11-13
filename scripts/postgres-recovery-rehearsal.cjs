@@ -86,17 +86,43 @@ async function main() {
       assert.match(result.stderr, message);
     };
     expectGateFailure(env.DATABASE_URL, /Prisma migration history is missing/);
+    const auditMigration = '20261114000000_schema_audit_fixes';
+    const pending = path.join(dir, auditMigration);
+    const migration = path.join(prismaDir, 'migrations', auditMigration);
+    fs.renameSync(migration, pending);
     migrate('deploy', env.DATABASE_URL);
 
     psql('rehearsal_source', '-c', `
-      INSERT INTO "User" (id, "discordId", cash, "failedRobAttempts") VALUES ('fixture-user', 'fixture-discord', 250, 2);
+      INSERT INTO "User" (id, "discordId", cash, "failedRobAttempts", "lastRobDate", "jailTime")
+          VALUES ('fixture-user', 'fixture-discord', 250, 2, '1800000000123', '45');
       INSERT INTO "Guild" (id, name, "ownerId", bank, "thievesBank") VALUES ('fixture-guild', 'Fixture', 'fixture-discord', 125, 50);
       INSERT INTO "Item" (name, "buyPrice", stock) VALUES ('Fixture item', 20, 10);
       INSERT INTO "Inventory" ("userId", "itemId", amount) VALUES ('fixture-discord', 1, 3);
-      INSERT INTO "Giveaway" ("giveawayId", prize, "dateStarted") VALUES ('fixture-giveaway', 'Fixture prize', '1');
+      INSERT INTO "Giveaway" ("giveawayId", prize, "dateStarted", "endsAt", "entryFee")
+          VALUES ('fixture-giveaway', 'Fixture prize', '1800000000', '1800000000123', '12');
       INSERT INTO "GiveawayEntry" ("giveawayId", "userId") VALUES ('fixture-giveaway', 'fixture-discord'), ('fixture-giveaway', 'fixture-discord');
+      INSERT INTO "Giveaway" ("giveawayId", prize, "dateStarted", "endsAt", "entryFee")
+          VALUES ('unreadable-giveaway', 'Legacy prize', '', 'bad-time', '-1');
+      INSERT INTO "Reminder" (event, "dateTime", "userId", "timeOffset") VALUES
+          ('explicit-offset', '2027-01-15T16:00:00+08:00', 'fixture-discord', 8),
+          ('invalid-date', '2027-02-30T16:00:00Z', 'fixture-discord', 0),
+          ('unknown-format', 'someday', 'fixture-discord', 0);
+      INSERT INTO "Item" (name, "buyPrice") VALUES ('FaKe ID', 1), ('fake id', 1);
       SELECT setval('"Item_id_seq"', 20, true);
     `);
+    fs.renameSync(pending, migration);
+    migrate('deploy', env.DATABASE_URL);
+    assert.equal(psql('rehearsal_source', '-c', `
+      SELECT extract(epoch FROM "lastRobAt"), "lastHeistAt" IS NULL, "jailDurationSeconds" FROM "User";
+      SELECT extract(epoch FROM "startedAt"), extract(epoch FROM "endsAtTimestamp"), "entryFeeCoins"
+        FROM "Giveaway" WHERE "giveawayId" = 'fixture-giveaway';
+      SELECT "startedAt" IS NULL, "endsAtTimestamp" IS NULL, "entryFeeCoins" IS NULL
+        FROM "Giveaway" WHERE "giveawayId" = 'unreadable-giveaway';
+      SELECT extract(epoch FROM "scheduledAt") FROM "Reminder" WHERE event = 'explicit-offset';
+      SELECT count(*) FROM "Reminder" WHERE "scheduledAt" IS NULL;
+      SELECT count(*) FROM "Guild" WHERE "notifyList" = '{}' AND disabled_commands = '{}';
+      SELECT id FROM "Item" WHERE "systemKey" = 'FAKE_ID';
+    `).trim().replace(/\r\n/g, '\n'), '1800000000.123000|t|45\n1800000000.000000|1800000000.123000|12\nt|t|t\n1800000000.000000\n2\n1\n2');
     const sourceManifest = psql('rehearsal_source', '-f', checkSql);
     assert.match(sourceManifest, /table _prisma_migrations\|[1-9]/);
 
@@ -128,12 +154,15 @@ async function main() {
     };
     expectConstraintFailure('UPDATE "Inventory" SET amount = -1', 'Inventory_amount_nonnegative');
     expectConstraintFailure('UPDATE "Item" SET "buyPrice" = -1', 'Item_buyPrice_nonnegative');
+    expectConstraintFailure('UPDATE "Giveaway" SET "entryFeeCoins" = -1', 'Giveaway_entryFeeCoins_check');
+    expectConstraintFailure('UPDATE "Guild" SET "notifyList" = NULL', 'not-null constraint');
     psql('rehearsal_restore', '-c', `
       UPDATE "Inventory" SET amount = 0;
       UPDATE "Item" SET stock = -2, "buyPrice" = 0;
       UPDATE "User" SET cash = -1;
       UPDATE "Guild" SET bank = -1, "thievesBank" = -1;
     `);
+    await require('./schema-audit-fixture.cjs').verifySchemaAudit(restoreUrl, sql => psql('rehearsal_restore', '-c', sql));
     psql('rehearsal_restore', '-c', `
       UPDATE "_prisma_migrations" SET finished_at = NULL
       WHERE migration_name = (SELECT max(migration_name) FROM "_prisma_migrations");
@@ -150,6 +179,7 @@ async function main() {
       result: 'Schema, data, sequence state, Prisma migration status, and representative SQL reads matched.',
       migrationGate: 'Accepted complete history and rejected missing, unfinished, and pending history.',
       economyConstraints: 'Rejected negative quantity and price while accepting zero, unlimited stock, and signed balances.',
+      schemaAudit: 'Verified legacy backfills, channel ownership and cleanup, economy transactions, and cooldown query plans.',
     }, null, 2));
   } finally {
     if (started && fs.existsSync(path.join(cluster, 'postmaster.pid'))) {
