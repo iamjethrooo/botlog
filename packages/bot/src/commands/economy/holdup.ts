@@ -1,4 +1,4 @@
-import { clearTimeout, setInterval, clearInterval } from '../../lib/lifecycle';
+import { setInterval, clearInterval } from '../../lib/lifecycle';
 import { ApplyOptions } from "@sapphire/decorators";
 import {
   ApplicationCommandRegistry,
