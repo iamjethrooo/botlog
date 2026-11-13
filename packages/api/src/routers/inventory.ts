@@ -1,7 +1,21 @@
 import { t } from "../trpc";
 import { z } from "zod";
+import { economyInteger } from "../economy";
 
 export const inventoryRouter = t.router({
+  getDisplayByUserId: t.procedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const inventory = await ctx.prisma.inventory.findMany({
+        where: { userId: input.userId },
+        select: {
+          itemId: true,
+          amount: true,
+          item: { select: { name: true, emoji: true } },
+        },
+      });
+      return { inventory };
+    }),
   getAll: t.procedure.query(async ({ ctx }) => {
     const all = await ctx.prisma.inventory.findMany();
 
@@ -34,17 +48,11 @@ export const inventoryRouter = t.router({
     .mutation(async ({ ctx, input }) => {
       const { userId, itemId } = input;
 
-      const userItem = await ctx.prisma.inventory.findUnique({
-        where: {
-          userId_itemId: { userId, itemId }
-        }
-      });
-
       const item = await ctx.prisma.inventory.update({
         where: {
           userId_itemId: { userId, itemId },
         },
-        data: { amount: userItem!.amount + 1 },
+        data: { amount: { increment: 1 } },
       });
 
       return { item };
@@ -54,7 +62,7 @@ export const inventoryRouter = t.router({
       z.object({
         userId: z.string(),
         itemId: z.number(),
-        amount: z.number(),
+        amount: economyInteger.nonnegative(),
       })
     )
     .mutation(async ({ ctx, input }) => {

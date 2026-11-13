@@ -3,8 +3,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { unstable_getServerSession as getServerSession } from 'next-auth';
 import { authOptions as nextAuthOptions } from './auth/[...nextauth]';
+import { guardApiRequest } from '../../server/request-guard';
 
 const restricted = async (req: NextApiRequest, res: NextApiResponse) => {
+  if (!guardApiRequest(req, res)) return;
   const session = await getServerSession(req, res, nextAuthOptions);
 
   if (session) {

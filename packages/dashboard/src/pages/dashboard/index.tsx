@@ -1,64 +1,76 @@
-import { GetServerSideProps, GetServerSidePropsContext, NextPage } from 'next';
+import type { NextPage } from 'next';
 import Head from 'next/head';
-import { getServerSession } from '../../shared/get-server-session';
+import Logo from '../../components/Logo/Logo';
+import { requirePageSession } from '../../shared/get-server-session';
 import { trpc } from '../../utils/trpc';
-import GuildSelectBox from '../../components/GuildSelectBox';
+import GuildSelectBox from '../../components/GuildSelectBox/GuildSelectBox';
+import AccountMenu from '../../components/AccountMenu/AccountMenu';
 
 const DashboardIndexPage: NextPage = () => {
-  const { data } = trpc.guild.getAll.useQuery();
+  const { data, error, isLoading, isFetching, refetch } = trpc.guild.getAll.useQuery();
+  const guilds = data?.apiGuilds ?? [];
 
   return (
-    <div className="bg-slate-900 h-screen text-gray-100">
+    <div className="min-h-screen">
       <Head>
-        <title>Choose Guild</title>
-        <meta name="description" content="Choose guild to manage screen" />
+        <title>Servers | BBC Bot Dashboard</title>
+        <meta name="description" content="Choose a Discord server to manage with BBC Bot." />
       </Head>
-      <main className="p-10">
-        <h1 className="text-3xl mb-4 ml-1">Choose guild to manage</h1>
-        {data?.apiGuilds ? (
-          <div className="flex gap-10">
-            {data?.apiGuilds.map(guild => {
-              const isBotInGuild = data.dbGuilds.some(
-                dbGuild => dbGuild.id === guild.id
-              );
-              return (
-                <GuildSelectBox
-                  key={guild.id}
-                  img={
-                    guild.icon
-                      ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}`
-                      : 'generic-image.png'
-                  }
-                  name={guild.name}
-                  isBotIn={isBotInGuild}
-                  id={guild.id}
-                />
-              );
-            })}
+      <header className="site-header">
+        <div className="site-width flex items-center justify-between gap-3 py-4">
+          <Logo />
+          <AccountMenu />
+        </div>
+      </header>
+      <main className="site-width py-8 sm:py-12">
+        <div className="hero-grid rounded-3xl border border-indigo-300/20 bg-indigo-950/40 p-6 sm:p-10">
+          <p className="eyebrow">Server management</p>
+          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">Your servers</h1>
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
+            Choose a server to manage BBC Bot. You’ll see servers where the bot is a member and you’re the owner or have Administrator permission.
+          </p>
+        </div>
+        <section className="mt-9" aria-labelledby="server-list-heading" aria-busy={isLoading}>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold" id="server-list-heading">Manageable servers</h2>
+            {data && !error ? (
+              <span className="rounded-full border border-white/15 px-3 py-1 text-sm text-slate-300">
+                {guilds.length} {guilds.length === 1 ? 'server' : 'servers'}
+              </span>
+            ) : null}
           </div>
-        ) : null}
+          {isLoading ? (
+            <p className="surface p-6 text-slate-300" role="status">Loading servers…</p>
+          ) : error ? (
+            <div className="surface p-6">
+              <div role="alert">
+                <p className="font-semibold">Couldn’t load your servers</p>
+                <p className="mt-1 text-sm text-slate-300">{error.message}</p>
+              </div>
+              <button className="button button-primary mt-4" disabled={isFetching} onClick={() => void refetch()} type="button">
+                {isFetching ? 'Retrying…' : 'Try again'}
+              </button>
+            </div>
+          ) : guilds.length === 0 ? (
+            <div className="surface border-dashed p-6">
+              <p className="font-semibold">No manageable servers found</p>
+              <p className="mt-1 text-sm text-slate-300">BBC Bot must be in a server you own or administer for it to appear here.</p>
+            </div>
+          ) : (
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {guilds.map(guild => (
+                <li className="min-w-0" key={guild.id}>
+                  <GuildSelectBox id={guild.id} icon={guild.icon} name={guild.name} owner={guild.owner} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </main>
     </div>
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async (
-  ctx: GetServerSidePropsContext
-) => {
-  const session = await getServerSession(ctx);
-
-  if (!session || !session.user || !session.user.id) {
-    return {
-      redirect: { destination: '../api/auth/signin', permanent: false },
-      props: {}
-    };
-  }
-
-  return {
-    props: {
-      session
-    }
-  };
-};
+export const getServerSideProps = requirePageSession;
 
 export default DashboardIndexPage;

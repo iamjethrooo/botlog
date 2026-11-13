@@ -1,3 +1,4 @@
+import { setInterval, clearInterval } from '../../lib/lifecycle';
 import { ApplyOptions } from "@sapphire/decorators";
 import {
   ApplicationCommandRegistry,
@@ -186,9 +187,9 @@ export class RussianRouletteCommand extends Command {
         const bulletIndex = getRandomInt(0, client.rrPlayers.length - 1);
         console.log(`Bullet Index: ${bulletIndex}`);
         console.log(`Total Players: ${client.rrPlayers.length}`);
-        
+
         const losingPlayerId = client.rrPlayers[bulletIndex];
-        
+
         // client.intervals["rr"]
         //let roulette = setInterval(async () => {
 

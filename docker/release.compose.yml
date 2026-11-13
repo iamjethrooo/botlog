@@ -1,0 +1,14 @@
+# BBC-22: reuse BBC-21 runtime settings, remove all build paths for deployment.
+# Invoke through scripts/deployment.cjs so both environment identities are checked.
+services:
+  bot:
+    build: !reset null
+    image: ${BOT_IMAGE:?Reviewed immutable bot image required}
+    pull_policy: never
+  dashboard:
+    build: !reset null
+    image: ${DASHBOARD_IMAGE:?Reviewed immutable dashboard image required}
+    pull_policy: never
+  redis:
+    image: ${REDIS_IMAGE:?Reviewed immutable Redis image required}
+    pull_policy: never

@@ -1,72 +1,100 @@
-import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import { useRouter } from 'next/router';
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import CommandInfo from '../../../../components/CommandInfo';
 import DashboardLayout from '../../../../components/DashboardLayout';
-import { getServerSession } from '../../../../shared/get-server-session';
+import { requirePageSession } from '../../../../shared/get-server-session';
 import { trpc } from '../../../../utils/trpc';
 import { NextPageWithLayout } from '../../../_app';
 
 const CommandsDashboardPage: NextPageWithLayout = () => {
-  const router = useRouter();
-  const query = router.query.guild_id;
-  if (!query || typeof query !== 'string') {
-    router.push('/');
-  }
+  const { query } = useRouter();
+  const guildId = typeof query.guild_id === 'string' ? query.guild_id : '';
 
-  const { isLoading, error } = trpc.guild.getGuildAndUser.useQuery(
-    { id: query as string },
-    { refetchOnWindowFocus: false }
+  const { data: guildData, isLoading, error } = trpc.guild.getGuildAndUser.useQuery(
+    { id: guildId },
+    { enabled: Boolean(guildId), refetchOnWindowFocus: false }
   );
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <p className="status-panel" role="status">Loading server…</p>;
   }
 
-  if (error?.data?.code === 'UNAUTHORIZED') {
-    return <div>{error.message}</div>;
+  if (error || !guildData?.guild) {
+    return <div className="status-panel" role="alert">{error?.message ?? 'Guild unavailable'}</div>;
   }
 
-  return <CommandsDashboardPageComponent query={query as string} />;
+  return <CommandsDashboardPageComponent guildId={guildId} />;
 };
 
 const CommandsDashboardPageComponent = ({
-  query
+  guildId
 }: {
-  query: string;
+  guildId: string;
 }): ReactElement => {
-  const { data, isLoading } = trpc.command.getCommands.useQuery({
-    guildId: query as string
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
+  const { data, isLoading, error: commandsError } = trpc.command.getCommands.useQuery({
+    guildId
   });
 
-  const { data: disabledCommandsData, isLoading: disabledCommandsLoading } =
-    trpc.command.getDisabledCommands.useQuery({ guildId: query as string });
+  const { data: disabledCommandsData, isLoading: disabledCommandsLoading, error: disabledError } =
+    trpc.command.getDisabledCommands.useQuery({ guildId });
+  const disabledIds = new Set(disabledCommandsData?.disabledCommands);
+  const searchTerm = search.trim().toLowerCase().replace(/^\//, '');
+  const visibleCommands = data?.commands.filter(command => {
+    if (!command.name.toLowerCase().includes(searchTerm)) return false;
+    if (filter === 'all') return true;
+    if (filter === 'unavailable') return !command.toggleSupported;
+    if (!command.toggleSupported) return false;
+    return filter === 'toggleable' || disabledIds.has(command.id) === (filter === 'disabled');
+  }) ?? [];
 
   return (
-    <div className="p-10">
-      <h1 className="text-slate-200 text-3xl mb-3 ml-1">
-        Enable / Disable Commands Panel
-      </h1>
-      {data?.commands &&
+    <div>
+      <p className="eyebrow">Server settings</p>
+      <h1 className="page-title mt-2">Commands</h1>
+      <p className="muted mt-3 mb-6">Set command availability and edit role permissions.</p>
+      {commandsError || disabledError ? (
+        <p className="status-panel" role="alert">{(commandsError || disabledError)?.message}</p>
+      ) : data?.commands &&
       !isLoading &&
       disabledCommandsData?.disabledCommands &&
       !disabledCommandsLoading ? (
-        <div className="p-5 bg-gray-900 text-slate-300 flex flex-col gap-7">
-          {data.commands.map(command => (
+        <div className="grid gap-3">
+          <div className="surface grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <label className="grid gap-1.5 text-sm text-slate-300">
+              Search commands
+              <input className="field" type="search" placeholder="Search by name" value={search} onChange={event => setSearch(event.target.value)} />
+            </label>
+            <label className="grid gap-1.5 text-sm text-slate-300">
+              Availability
+              <select className="field" value={filter} onChange={event => setFilter(event.target.value)}>
+                <option value="all">All commands</option>
+                <option value="enabled">Enabled</option>
+                <option value="disabled">Disabled</option>
+                <option value="toggleable">Supports toggling</option>
+                <option value="unavailable">Toggle unavailable</option>
+              </select>
+            </label>
+          </div>
+          <p className="muted" role="status">{visibleCommands.length} of {data.commands.length} commands</p>
+          {visibleCommands.map(command => (
             <CommandInfo
               key={command.id}
-              guildId={query as string}
+              guildId={guildId}
               commandId={command.id}
-              disabled={disabledCommandsData.disabledCommands.includes(
-                command.id
-              )}
+              disabled={disabledIds.has(command.id)}
               name={command.name}
               description={command.description}
+              toggleSupported={command.toggleSupported}
             />
           ))}
+          {visibleCommands.length === 0 ? (
+            <p className="status-panel">{data.commands.length === 0 ? 'No commands are registered for this server.' : 'No commands match your search and filter.'}</p>
+          ) : null}
         </div>
       ) : (
-        <div>Loading</div>
+        <p className="status-panel" role="status">Loading commands…</p>
       )}
     </div>
   );
@@ -76,23 +104,6 @@ CommandsDashboardPage.getLayout = function getLayout(page: ReactElement) {
   return <DashboardLayout>{page}</DashboardLayout>;
 };
 
-export const getServerSideProps: GetServerSideProps = async (
-  ctx: GetServerSidePropsContext
-) => {
-  const session = await getServerSession(ctx);
-
-  if (!session || !session.user || !session.user.id) {
-    return {
-      redirect: { destination: '../../api/auth/signin', permanent: false },
-      props: {}
-    };
-  }
-
-  return {
-    props: {
-      session
-    }
-  };
-};
+export const getServerSideProps = requirePageSession;
 
 export default CommandsDashboardPage;

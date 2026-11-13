@@ -1,3 +1,4 @@
+import { clearTimeout, setInterval, clearInterval } from '../../lib/lifecycle';
 import { ApplyOptions } from "@sapphire/decorators";
 import {
   ApplicationCommandRegistry,
@@ -193,16 +194,17 @@ export class HeistCommand extends Command {
 
             success = Math.random() <= robChance;
 
-            client.heistMembers.forEach(async (member) => {
-              await trpcNode.user.updateLastHeistDate.mutate({
-                id: String(member),
-                date: Date.now().toString(),
-              });
-            });
+            const heistDate = Date.now().toString();
 
             let robAmount = Math.round(guild!.guild!.bank * robRate);
             // let robAmount = client.heistMembers.length * 1000;
             if (success) {
+              client.heistMembers.forEach(async (member) => {
+                await trpcNode.user.updateLastHeistDate.mutate({
+                  id: String(member),
+                  date: heistDate,
+                });
+              });
               embed
                 .setDescription(`✅ The bank heist was a success!`)
                 .setColor(`#${greenColor}`)
@@ -250,15 +252,17 @@ export class HeistCommand extends Command {
                 Number(heistReducedJailTime) * (client.heistMembers.length - 1);
               client.heistMembers.forEach(async (member) => {
                 splitMessage += `<@${member}> got caught.\n`;
-                await trpcNode.user.setJailTime
-                  .mutate({
+                try {
+                  await trpcNode.user.setJailTime.mutate({
                     id: String(member),
                     jailTime: String(jailTime),
-                  })
-                  .then(() => {
-                    let user = message.guild!.members.cache.get(String(member));
-                    user!.roles.add(inmateRole!);
+                    lastHeistDate: heistDate,
                   });
+                  const user = message.guild!.members.cache.get(String(member));
+                  await user!.roles.add(inmateRole!);
+                } catch (error) {
+                  console.error(`Failed to jail heist member (${member})`, error);
+                }
               });
               embed
                 .setAuthor(null)

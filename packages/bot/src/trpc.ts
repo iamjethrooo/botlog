@@ -1,33 +1,28 @@
 import type { AppRouter } from '@bbc-bot/api/src/routers/index';
 import { createTRPCProxyClient } from '@trpc/client';
 import { httpLink } from '@trpc/client/links/httpLink';
-import { splitLink } from '@trpc/client/links/splitLink';
-import { createWSClient, wsLink } from '@trpc/client/links/wsLink';
+import { getApiUrl } from '@bbc-bot/node/api-url.cjs';
 import superjson from 'superjson';
 import fetch from 'node-fetch';
-import ws from 'ws';
+import dotenv from 'dotenv';
+import path from 'path';
+import { isStopping, trackWork } from './lib/lifecycle';
 
-const globalAny = global as any;
-globalAny.fetch = fetch;
-globalAny.WebSocket = ws;
-
-const wsClient = createWSClient({
-  url: `ws://localhost:2022`
-});
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// Preserve the existing fetch polyfill used by commands on older bot runtimes.
+globalThis.fetch = fetch as unknown as typeof globalThis.fetch;
 
 export const trpcNode = createTRPCProxyClient<AppRouter>({
   transformer: superjson,
   links: [
-    splitLink({
-      condition(op) {
-        return op.type === 'subscription';
-      },
-      true: wsLink({
-        client: wsClient
-      }),
-      false: httpLink({
-        url: 'http://localhost:3000/api/trpc'
-      })
+    httpLink({
+      url: getApiUrl(),
+      fetch: (url, options) => {
+        if (isStopping()) return Promise.reject(new Error('Bot is stopping'));
+        return trackWork(fetch(url, {
+          ...options, timeout: 10000
+        } as import('node-fetch').RequestInit));
+      }
     })
   ]
 });

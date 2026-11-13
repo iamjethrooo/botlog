@@ -25,7 +25,6 @@ export const participants: Map<string, GuildMember> = new Map();
 export class GiveawayCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     const { client } = container;
-    await interaction.deferReply();
     const prize = interaction.options.getString("prize", true);
     const endsAt = interaction.options.getString("ends-at", true);
 
@@ -38,74 +37,84 @@ export class GiveawayCommand extends Command {
     const host = interaction.options.getUser("host");
     let attachment = interaction.options.getAttachment("attachment");
 
-    if (entryFee < 0) {
-      return await interaction.reply({
-        content: ":x: Entry fee must not be less than 0!",
-        ephemeral: true,
-      });
+    if (!prize.trim() || prize.length > 256 || !Number.isSafeInteger(entryFee) || entryFee < 0 || entryFee > 2147483647 ||
+        !Number.isSafeInteger(winners) || winners < 1 || winners > 100 ||
+        !Number.isSafeInteger(entries) || entries < 1 || entries > 2147483647 ||
+        !endsAt.trim() || !Number.isSafeInteger(Number(endsAt)) || Number(endsAt) <= Date.now() || Number(endsAt) > 8640000000000000) {
+      await interaction.reply({ content: ":x: Use a valid future end time, nonnegative entry fee, positive entry count, and 1–100 winners.", ephemeral: true });
+      return;
     }
-    const coinEmoji = await trpcNode.setting.getByKey.mutate({
-      key: "coinEmoji",
-    });
-    const invite = new EmbedBuilder()
-      .setTitle(`${prize}`)
-      .setColor((<GuildMember>interaction.member)!.displayHexColor)
-      .setDescription(
-        `Click the button to join!\n
-      Entry Fee: ${coinEmoji}${entryFee}
-      Number of Entries: ${entries}
-      Number of Winners: ${winners}
-      Ends at: <t:${Math.round(Number(endsAt) / 1000)}:F>
-      ${host == null ? "" : `Hosted by: <@${host.id}>`}
-      `
-      )
-      .setTimestamp();
-
-    const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`${interaction.id}-Join`)
-        .setLabel("Join")
-        .setEmoji("🎉")
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId(`${interaction.id}-Participants`)
-        .setLabel("Participants")
-        .setEmoji("👥")
-        .setStyle(ButtonStyle.Secondary)
-    );
-    if (attachment == null) {
-      await interaction.editReply({
-        content: "🎉Giveaway🎉",
-        embeds: [invite],
-        components: [buttons],
-      });
-    } else {
-      await interaction.editReply({
-        content: "🎉Giveaway🎉",
-        embeds: [invite],
-        components: [buttons],
-        files: [{ attachment: attachment.url }],
-      });
+    if (interaction.channelId !== process.env.GIVEAWAY_CHANNEL_ID) {
+      await interaction.reply({ content: ":x: Start the giveaway in the configured giveaway channel.", ephemeral: true });
+      return;
     }
+    await interaction.deferReply();
+    try {
+      const coinEmoji = await trpcNode.setting.getByKey.mutate({
+        key: "coinEmoji",
+      });
+      const invite = new EmbedBuilder()
+        .setTitle(`${prize}`)
+        .setColor((<GuildMember>interaction.member)!.displayHexColor)
+        .setDescription(
+          `Click the button to join!\n
+        Entry Fee: ${coinEmoji}${entryFee}
+        Number of Entries: ${entries}
+        Number of Winners: ${winners}
+        Ends at: <t:${Math.round(Number(endsAt) / 1000)}:F>
+        ${host == null ? "" : `Hosted by: <@${host.id}>`}
+        `
+        )
+        .setTimestamp();
 
-    let message = await interaction.fetchReply();
-    await trpcNode.giveaway.create.mutate({
-      messageId: message.id,
-      giveawayId: interaction.id,
-      hostId: host == null ? "" : host.id,
-      entryFee: entryFee.toString(),
-      prize,
-      numOfWinners: winners,
-      numOfEntries: entries,
-      endsAt: endsAt.toString(),
-      dateStarted: Math.round(Date.now() / 1000).toString(),
-    });
+      const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`${interaction.id}-Join`)
+          .setLabel("Join")
+          .setEmoji("🎉")
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId(`${interaction.id}-Participants`)
+          .setLabel("Participants")
+          .setEmoji("👥")
+          .setStyle(ButtonStyle.Secondary)
+      );
+      // Obtain the message identity without exposing a payable button before the
+      // database record exists. A failed publish leaves a recoverable active row.
+      await interaction.editReply({ content: "Creating giveaway…" });
+      let message = await interaction.fetchReply();
+      await trpcNode.giveaway.create.mutate({
+        messageId: message.id,
+        giveawayId: interaction.id,
+        hostId: host == null ? "" : host.id,
+        entryFee: entryFee.toString(),
+        prize,
+        numOfWinners: winners,
+        numOfEntries: entries,
+        endsAt: endsAt.toString(),
+        dateStarted: Math.round(Date.now() / 1000).toString(),
+      });
 
-    client.activeGiveaways = (await trpcNode.giveaway.getActive.query()).map(
-      (giveaway) => {
-        return giveaway.giveawayId;
+      client.activeGiveaways.set(interaction.id, Number(endsAt));
+      if (attachment == null) {
+        await interaction.editReply({
+          content: "🎉Giveaway🎉",
+          embeds: [invite],
+          components: [buttons],
+        });
+      } else {
+        await interaction.editReply({
+          content: "🎉Giveaway🎉",
+          embeds: [invite],
+          components: [buttons],
+          files: [{ attachment: attachment.url }],
+        });
       }
-    );
+
+    } catch (error) {
+      console.error("Giveaway creation failed", error);
+      await interaction.editReply({ content: ":x: Could not publish the giveaway. Check its recorded state before creating another.", components: [] });
+    }
     return;
   }
 

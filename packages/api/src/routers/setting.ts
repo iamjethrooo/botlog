@@ -2,6 +2,14 @@ import { t } from "../trpc";
 import { z } from "zod";
 
 export const settingRouter = t.router({
+  getByKeys: t.procedure
+    .input(z.object({ keys: z.array(z.string().min(1)).min(1).max(5) }))
+    .query(async ({ ctx, input }) => {
+      return ctx.prisma.setting.findMany({
+        where: { settingKey: { in: input.keys } },
+        select: { settingKey: true, settingValue: true },
+      });
+    }),
   getAll: t.procedure.query(async ({ ctx }) => {
     const all = await ctx.prisma.setting.findMany();
 

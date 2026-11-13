@@ -3,7 +3,6 @@ import { t } from '../trpc';
 import { userRouter } from './user';
 import { guildRouter } from './guild';
 import { channelRouter } from './channel';
-import { welcomeRouter } from './welcome';
 import { commandRouter } from './command';
 import { hubRouter } from './hub';
 import { reminderRouter } from './reminder';
@@ -26,7 +25,6 @@ export const appRouter = t.router({
   user: userRouter,
   guild: guildRouter,
   channel: channelRouter,
-  welcome: welcomeRouter,
   command: commandRouter,
   hub: hubRouter,
   reminder: reminderRouter,

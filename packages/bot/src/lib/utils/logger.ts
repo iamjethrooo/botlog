@@ -34,14 +34,14 @@ const format = winston.format.combine(
 );
 const transports = [
   new winston.transports.Console(),
-  new winston.transports.DailyRotateFile({
+  ...(process.env.LOG_TO_CONSOLE_ONLY === 'true' ? [] : [new winston.transports.DailyRotateFile({
     dirname: './logs',
     filename: 'BBC-Bot-%DATE%.log',
     datePattern: 'MM-DD-YYYY',
     zippedArchive: true,
     maxSize: '20m',
     maxFiles: '14d'
-  })
+  })])
 ];
 
 const Logger = winston.createLogger({

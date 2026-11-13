@@ -19,194 +19,53 @@ import { trpcNode } from "../../trpc";
 
 async function buy(itemName: string, customer: GuildMember) {
   const { client } = container;
-  let argumentIsNumber = false;
-  let userId = customer.id;
-
+  const userId = customer.id;
   const embed = new EmbedBuilder().setAuthor({
-    name: `${customer.user.username}`,
+    name: customer.user.username,
     iconURL: customer.user.displayAvatarURL(),
   });
-  const redColor = await trpcNode.setting.getByKey.mutate({
-    key: "redColor",
-  });
-
-  let holdupIsOngoing = client.intervals["holdup"];
-  if (holdupIsOngoing && client.holdupVictim == userId) {
-    embed.setDescription(
-      `❌ You cannot make purchases while a holdup targeting you is in progress!`
-    );
-    embed.setColor(`#${redColor}`);
-    return embed;
+  const redColor = await trpcNode.setting.getByKey.mutate({ key: "redColor" });
+  const fail = (message: string) => embed.setDescription(`❌ ${message}`).setColor(`#${redColor}`);
+  if (client.intervals["holdup"] && client.holdupVictim === userId) {
+    return fail("You cannot make purchases while a holdup targeting you is in progress!");
   }
-  let shop = await trpcNode.item.getAll.query();
-  let user = await trpcNode.user.getUserById.query({
-    id: userId,
-  });
-  let item;
-  let number = -1;
+  const shop = await trpcNode.item.getAll.query();
+  const number = Number(itemName);
+  const item = Number.isNaN(number)
+    ? shop.allItems.find(i => i.name.toLowerCase() === itemName.toLowerCase())
+    : shop.allItems[number - 1];
+  if (!item) return fail(`Sorry, we don't sell **${itemName}** here.`);
+  const greenColor = await trpcNode.setting.getByKey.mutate({ key: "greenColor" });
+  const coinEmoji = await trpcNode.setting.getByKey.mutate({ key: "coinEmoji" });
+  const special = ["bodyguard", "refresher orb"].includes(item.name.toLowerCase());
   try {
-    number = Number(itemName);
-    argumentIsNumber = isNaN(number) ? false : true;
+    if (item.roleGiven && !special) {
+      const role = await customer.guild.roles.fetch(item.roleGiven);
+      if (!role) return fail("The shop role is unavailable. No new charge was made.");
+      const member = await customer.guild.members.fetch({ user: userId, force: true });
+      if (member.roles.cache.has(item.roleGiven)) return fail(`You already have a **${item.name}**!`);
+    }
+    const purchase = await trpcNode.item.purchase.mutate({
+      userId, guildId: customer.guild.id, itemId: item.id, roleGiven: item.roleGiven,
+    });
+    if (purchase.roleGiven) {
+      try {
+        // Single-role add uses Discord's idempotent PUT endpoint. The persisted
+        // entitlement lets a repeated buy recover without another DB charge.
+        await customer.roles.add(purchase.roleGiven);
+      } catch (error) {
+        console.error("Paid shop role delivery failed", error);
+        return fail(`Your purchase of **${item.name}** is paid, but the role could not be confirmed. Retry this buy command to deliver the role without another charge. If it keeps failing, contact an admin.`);
+      }
+    }
+    return embed.setDescription(`✅ You bought a **${purchase.item.name}**${purchase.item.name.toLowerCase() === "bodyguard" ? ` for **${coinEmoji}${purchase.buyPrice}**` : ""}!`)
+      .setColor(`#${greenColor}`);
   } catch (error) {
-    console.log(error);
+    const failure = error as { data?: { code?: string }; message?: string };
+    if (failure.data?.code === "BAD_REQUEST") return fail(failure.message!);
+    console.error("Shop purchase could not be confirmed", error);
+    return fail("The purchase could not be confirmed. Check your balance and inventory before trying again. Paid role deliveries can be retried without another charge.");
   }
-
-  if (argumentIsNumber) {
-    item = shop.allItems[number - 1];
-  } else {
-    shop.allItems.forEach((i) => {
-      if (i.name.toLowerCase() == itemName.toLowerCase()) {
-        item = i;
-      }
-    });
-  }
-
-  const robCooldown = await trpcNode.setting.getByKey.mutate({
-    key: "robCooldown",
-  });
-  const greenColor = await trpcNode.setting.getByKey.mutate({
-    key: "greenColor",
-  });
-  const bodyguardDuration = Number(
-    await trpcNode.setting.getByKey.mutate({
-      key: "bodyguardDuration",
-    })
-  );
-  const coinEmoji = await trpcNode.setting.getByKey.mutate({
-    key: "coinEmoji",
-  });
-
-  let lastRobDate = Number(user.user!.lastRobDate);
-  let canRob = (Date.now() - lastRobDate) / 1000 > Number(robCooldown);
-  const hasBodyguard =
-    Number(user.user?.lastBodyguardDate) + Math.round(bodyguardDuration * 1000) >
-    Date.now();
-  console.log(user.user?.lastBodyguardDate)
-  const canBuyBodyguard =
-    Number(user.user?.lastBodyguardDate) + Math.round(432000 * 1000) < // 5 days
-    Date.now();
-
-  if (item) {
-    let itemId = item!.id;
-    let buyPrice = item!.buyPrice;
-    if (item!.percentage) {
-      buyPrice = Math.round(user!.user!.cash * (item!.buyPrice / 100))
-    }
-    let insufficientFunds = user!.user!.cash < buyPrice;
-    if (insufficientFunds) {
-      embed.setDescription(
-        `❌ You do not have enough money to buy a **${item!.name}**!`
-      );
-      embed.setColor(`#${redColor}`);
-      return embed;
-    }
-
-    if (item!.name.toLowerCase() == "refresher orb") {
-      if (canRob) {
-        embed.setDescription(
-          `❌ You can only buy a **Refresher Orb** when \`rob\` is on cooldown!`
-        );
-        embed.setColor(`#${redColor}`);
-        return embed;
-      }
-
-      await trpcNode.user.updateLastRobDate.mutate({
-        id: userId,
-        date: "0",
-      });
-    } else if (item!.name.toLowerCase() == "bodyguard") {
-      if (hasBodyguard) {
-        embed.setDescription(`❌ You already have a \`Bodyguard\`!`);
-        embed.setColor(`#${redColor}`);
-        return embed;
-      }
-      if (!canBuyBodyguard) {
-        console.log(`Last bodyguard: ${Math.round(Number(user.user?.lastBodyguardDate) * 1000) + 43200}`);
-        embed.setDescription(`❌ You can only hire a \`Bodyguard\` every 5 days. Come back <t:${Math.round(Number(user.user?.lastBodyguardDate) / 1000) + 432000}:R>`); // 432000 = 5 days
-        embed.setColor(`#${redColor}`);
-        return embed;
-      }
-      await trpcNode.user.updateLastBodyguardDate.mutate({
-        id: userId,
-        date: String(Date.now()),
-      });
-    }
-    // If item is supposed to give a role when purchased
-    else if (item.roleGiven) {
-      let roleId = item.roleGiven;
-      let roleGiven = customer.guild!.roles.cache.find(
-        (role) => role.id == roleId
-      );
-
-      // If the role exists
-      if (roleGiven) {
-        const customerHasRole = customer.roles.cache.has(roleId);
-        if (customerHasRole) {
-          embed.setDescription(`❌ You already have a **${item!.name}**!`);
-          embed.setColor(`#${redColor}`);
-          return embed;
-        } else {
-          customer.roles.add(roleGiven);
-        }
-      }
-    } else {
-      let userInventory = await trpcNode.inventory.getByUserId.mutate({
-        userId: userId,
-      });
-      let userHasItem = userInventory.inventory.some((e) => e.itemId == itemId);
-      // If item is stackable
-      if (item!.stackable) {
-        if (!userHasItem) {
-          // If user doesn't have item, add it to their inventory
-          await trpcNode.inventory.create.mutate({
-            userId: userId,
-            itemId: itemId,
-            amount: 1,
-          });
-        } else {
-          // If user has item, increment amount
-          await trpcNode.inventory.incrementUserItemAmount.mutate({
-            userId: userId,
-            itemId: itemId,
-          });
-        }
-      } else {
-        // If item is not stackable, and user doesn't have item, add it to their inventory
-        if (!userHasItem) {
-          await trpcNode.inventory.create.mutate({
-            userId: userId,
-            itemId: itemId,
-            amount: 1,
-          });
-        } else {
-          embed.setDescription(`❌ You already have a **${item!.name}**!`);
-          embed.setColor(`#${redColor}`);
-          return embed;
-        }
-      }
-    }
-
-    await trpcNode.user.subtractCash.mutate({
-      id: userId,
-      cash: buyPrice,
-    });
-
-    await trpcNode.item.buyItem.mutate({
-      id: itemId,
-    });
-
-    await trpcNode.guild.addToBank.mutate({
-      id: customer.guild.id,
-      amount: buyPrice,
-    });
-    embed.setDescription(`✅ You bought a **${item!.name!}**${item!.name.toLowerCase() == 'bodyguard' ? ` for **${coinEmoji}${buyPrice}**` : ''}!`);
-    embed.setColor(`#${greenColor}`);
-  } else {
-    embed.setDescription(`❌ Sorry, we don't sell **${itemName}** here.`);
-    embed.setColor(`#${redColor}`);
-  }
-
-  return embed;
 }
 
 @ApplyOptions<CommandOptions>({

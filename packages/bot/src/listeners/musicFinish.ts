@@ -1,3 +1,4 @@
+import { setTimeout } from '../lib/lifecycle';
 import { ApplyOptions } from '@sapphire/decorators';
 import { Listener, ListenerOptions, container } from '@sapphire/framework';
 import { deletePlayerEmbed } from '../lib/utils/music/buttonsCollector';

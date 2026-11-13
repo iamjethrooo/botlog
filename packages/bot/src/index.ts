@@ -12,6 +12,11 @@ import buttonsCollector from "./lib/utils/music/buttonsCollector";
 import { ExtendedClient } from "./structures/ExtendedClient";
 import Logger from "./lib/utils/logger";
 import { ErrorListeners } from "./listeners/ErrorHandling";
+import * as fs from 'fs';
+import { beginShutdown, drainWork } from './lib/lifecycle';
+import { once } from 'events';
+import { tmpdir } from 'os';
+import path from 'path';
 
 if (process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET) {
   load({
@@ -89,9 +94,62 @@ declare module "lavaclient" {
   }
 }
 
-ApplicationCommandRegistries.setDefaultGuildIds(['669190303353143306']);
+if (!process.env.GUILD_ID) throw new Error('GUILD_ID is required');
+ApplicationCommandRegistries.setDefaultGuildIds([process.env.GUILD_ID]);
 ApplicationCommandRegistries.setDefaultBehaviorWhenNotIdentical(
   RegisterBehavior.Overwrite
 );
 
-client.login(process.env.DISCORD_TOKEN);
+// Runtime Redis reconnection is automatic, but initial login must wait for it.
+const heartbeatFile = path.join(tmpdir(), 'botlog-ready');
+try { fs.unlinkSync(heartbeatFile); } catch { /* No previous readiness marker. */ }
+const startupDeadline = setTimeout(() => {
+  if (!client.startupReady) {
+    console.error('Bot initialization timed out');
+    void shutdown(1);
+  }
+}, 120000);
+startupDeadline.unref();
+const heartbeat = setInterval(() => {
+  if (client.isReady() && client.startupReady && client.music.queues.redis.status === 'ready') {
+    fs.writeFileSync(heartbeatFile, String(Date.now()));
+  }
+}, 5000);
+heartbeat.unref();
+
+let stopping = false;
+async function shutdown(code = 0) {
+  if (stopping) return;
+  stopping = true;
+  clearInterval(heartbeat);
+  clearTimeout(startupDeadline);
+  try { fs.unlinkSync(heartbeatFile); } catch { /* Not yet ready. */ }
+  const deadline = setTimeout(() => process.exit(1), 25000);
+  deadline.unref();
+  beginShutdown();
+  client.removeAllListeners();
+  client.ws.removeAllListeners();
+  const drained = await drainWork();
+  client.music.conn.disconnect();
+  client.music.removeAllListeners();
+  await client.destroy();
+  const redisDeadline = setTimeout(() => client.music.queues.redis.disconnect(), 2000);
+  try { await client.music.queues.redis.quit(); }
+  catch { /* An offline Redis connection cannot acknowledge QUIT. */ }
+  finally { clearTimeout(redisDeadline); client.music.queues.redis.disconnect(); }
+  // Process exit also releases third-party internal timers and connection pools.
+  // Never clear Redis music keys or rewrite topic state during shutdown.
+  process.exit(drained ? code : 1);
+}
+process.once('SIGTERM', () => void shutdown());
+process.once('SIGINT', () => void shutdown());
+
+async function start() {
+  const redis = client.music.queues.redis;
+  if (redis.status !== 'ready') await once(redis, 'ready');
+  await client.login(process.env.DISCORD_TOKEN);
+}
+void start().catch(() => {
+  console.error('Bot startup failed');
+  void shutdown(1);
+});

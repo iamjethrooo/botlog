@@ -1,16 +1,13 @@
 import { ApplyOptions } from "@sapphire/decorators";
 import { Listener, ListenerOptions, container } from "@sapphire/framework";
-import {
-  type Client,
-  type TextChannel,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-} from "discord.js";
+import { type Client, type TextChannel } from "discord.js";
 import { trpcNode } from "../trpc";
+import { completeGiveaway } from "../lib/giveawayCompletion";
 import * as fs from "fs";
-import * as path from "path";
+import { topicFile } from '../lib/topicState';
+import { setInterval } from '../lib/lifecycle';
+
+const retryDelay = 30_000;
 
 @ApplyOptions<ListenerOptions>({
   once: true,
@@ -33,228 +30,146 @@ export class ReadyListener extends Listener {
     const roleIdInmate = await trpcNode.setting.getByKey.mutate({
       key: "roleIdInmate",
     });
-    console.log(`Fetched Inmate ID: ${roleIdInmate}`)
+    console.log(`Fetched Inmate ID: ${roleIdInmate}`);
 
-    let inmateRole = guild.roles.cache.find(
-      (role) => role.id == roleIdInmate!
-    );
-    console.log("Fetched Inmate Role")
-    // 1762695426597
-    // 1789723417000
-    // https://www.epochconverter.com/ milliseconds
+    const inmateChecks = new Map<string, { at: number }>();
+    client.on("guildMemberUpdate", (oldMember, member) => {
+      if (member.guild.id === guild.id && roleIdInmate &&
+          oldMember.roles.cache.has(roleIdInmate) !== member.roles.cache.has(roleIdInmate)) {
+        inmateChecks.delete(member.id);
+      }
+    });
+
     let lastExecutionTime = 1789723417000;
     //await guild.members.fetch();
     //console.log("Fetched guild members");
 
-    extendedClient.activeGiveaways = (
-      await trpcNode.giveaway.getActive.query()
-    ).map((giveaway) => {
-      return giveaway.giveawayId;
-    });
-
-    setInterval(async () => {
-      // console.log("Inside interval");
-      // #region Topics
-      const currentTime = Date.now();
-      //console.log(currentTime);
-
-      let inmates = guild.roles.cache
-        .get(String(roleIdInmate))
-        ?.members.map((member) => member.id);
-      inmates?.forEach(async (inmate) => {
-        let user = await trpcNode.user.getUserById.query({
-          id: inmate,
-        });
-        let lastHeistDate = Number(user.user?.lastHeistDate);
-        if ((Date.now() - lastHeistDate) / 1000 > Number(user.user?.jailTime)) {
-          let member = guild.members.cache.get(inmate);
-          member?.roles.remove(inmateRole!);
-        }
-      });
-      // lastExecutionTime + minutes * 60 * 1000;
-      const nextExecutionTime = lastExecutionTime + 180 * 60 * 1000; // 30 minutes in milliseconds
-      // console.log("Current Time: " + currentTime);
-      // console.log("Next Execution Time: " + nextExecutionTime);
-      if (currentTime >= nextExecutionTime) {
-        // if (false) {
-        lastExecutionTime = currentTime;
-        // dev 1223433266686595154
-        // prod 669193383503200266
-        const targetChannel = client.channels.cache.get(String(process.env.GENERAL_CHANNEL_ID));
-        // fs.readFile(
-        //   path.join(__dirname, "../../src/resources/other/topics.txt"),
-        //   "utf8",
-        //   (err, content) => {
-        //     if (err) {
-        //       console.error("Error reading the file: ", err);
-        //     }
-        //     const lines = content
-        //       .split("\n")
-        //       .filter((line) => line.trim() !== "");
-        //     // console.log(content);
-        //     const randomIndex = Math.floor(Math.random() * lines.length);
-        //     const randomLine = lines[randomIndex];
-        //     (<TextChannel>targetChannel).send(randomLine);
-        //   }
-        // );
-        let topic = getRandomTopicAndRemove();
-
-        if (!topic) {
-          console.log("Nothing to send, boss.");
-          return;
-        }
-
-        (<TextChannel>targetChannel).send(topic);
+    for (const giveaway of await trpcNode.giveaway.getActive.query()) {
+      if (!extendedClient.activeGiveaways.has(giveaway.giveawayId)) {
+        const endsAt = Number(giveaway.endsAt);
+        extendedClient.activeGiveaways.set(giveaway.giveawayId, Number.isSafeInteger(endsAt) ? endsAt : 0);
       }
-      // #endregion
+    }
 
-      // #region Giveaway
-      extendedClient.activeGiveaways.forEach(async (giveawayId) => {
-        const giveaway = await trpcNode.giveaway.getById.mutate({
-          giveawayId: giveawayId.toString(),
-        });
-        if (Number(Date.now()) > Number(giveaway!.endsAt)) {
-          // Get participants
-          const entries = await trpcNode.giveaway.getEntries.mutate({
-            giveawayId: giveawayId.toString(),
-          });
+    let running = false;
+    extendedClient.intervals.reliability = setInterval(async () => {
+      if (running) return;
+      running = true;
+      try {
+        // console.log("Inside interval");
+        // #region Topics
+        const currentTime = Date.now();
+        //console.log(currentTime);
 
-          let entriesFiltered = entries.map((entry) => {
-            return entry.userId;
-          });
-          shuffle(entriesFiltered);
-          console.log(entriesFiltered);
-          entriesFiltered = entriesFiltered.filter((entry) => {
-            return entry != "496523098439548929";
-          });
-          console.log(entriesFiltered);
-          // Pick winner
-          let winners: string[] = [];
-          for (let i = 0; i < giveaway!.numOfWinners; i++) {
-            let random = Math.floor(Math.random() * entriesFiltered.length);
-            let winnerId = entriesFiltered[random];
-            winners.push(winnerId);
-            entriesFiltered = entriesFiltered.filter((entry) => {
-              return entry != winnerId;
-            });
-          }
-          let winnerString = "";
-          winners.forEach((winner) => {
-            winnerString += `<@${winner}> `;
-          });
-          winnerString.trim();
-
-          const giveawayChannel = <TextChannel>(
-            client.channels.cache.get(String(process.env.GIVEAWAY_CHANNEL_ID))
-          );
-
-          giveawayChannel.messages
-            .fetch(giveaway!.messageId)
-            .then(async (message) => {
-              let messageEmbed = message.embeds[0];
-              let newEmbed = new EmbedBuilder()
-                .setTitle(messageEmbed.title)
-                .setColor(messageEmbed.color)
-                .setDescription(
-                  `Winner${giveaway!.numOfWinners > 1 ? "s" : ""
-                  }: ${winnerString}${giveaway?.hostId == ""
-                    ? ""
-                    : `\n\nHosted by: <@${giveaway?.hostId}>`
-                  }`
-                )
-                .setFooter({ text: "Ended: " })
-                .setTimestamp();
-              const participants =
-                await trpcNode.giveaway.getParticipants.mutate({
-                  giveawayId: String(giveaway?.giveawayId),
-                });
-              const buttons =
-                new ActionRowBuilder<ButtonBuilder>().addComponents(
-                  new ButtonBuilder()
-                    .setCustomId(`${giveaway!.giveawayId}-Join`)
-                    .setLabel(`${participants.length}`)
-                    .setEmoji("🎉")
-                    .setStyle(ButtonStyle.Primary)
-                    .setDisabled(true),
-                  new ButtonBuilder()
-                    .setCustomId(`${giveaway!.giveawayId}-Participants`)
-                    .setLabel("Participants")
-                    .setEmoji("👥")
-                    .setStyle(ButtonStyle.Secondary)
-                );
-
-              const attachmentUrl =
-                message.attachments.size > 0
-                  ? message.attachments.first()!.url
-                  : "";
-              if (attachmentUrl == "") {
-                message.edit({
-                  content: "🎉Giveaway Ended🎉",
-                  embeds: [newEmbed],
-                  components: [buttons],
-                });
-              } else {
-                message.edit({
-                  content: "🎉Giveaway Ended🎉",
-                  embeds: [newEmbed],
-                  components: [buttons],
-                  files: [{ attachment: attachmentUrl }],
-                });
-              }
-
-              const winnerEmbed = new EmbedBuilder()
-                .setColor("#546e7a")
-                .setDescription(
-                  `${winnerString} won the giveaway of [**${giveaway!.prize
-                  }**](${message.url})
-                  
-                  - Reroll Command: \`bbc reroll ${giveaway!.giveawayId}\``
-                );
-
-              winnerString = "Congratulations to " + winnerString + "!🎉";
-              // Announce winner
-              giveawayChannel.send({
-                content: winnerString,
-                embeds: [winnerEmbed],
-              });
-            });
-
-          await trpcNode.giveaway.endGiveaway.mutate({
-            giveawayId: giveawayId.toString(),
-          });
-
-          // Remove giveaway from active list
-          const index = extendedClient.activeGiveaways.indexOf(giveawayId);
-          extendedClient.activeGiveaways.splice(index, 1);
+        const inmateRole = guild.roles.cache.get(String(roleIdInmate));
+        const inmates = inmateRole?.members;
+        for (const inmate of inmateChecks.keys()) {
+          if (!inmates?.has(inmate)) inmateChecks.delete(inmate);
         }
-      });
-      // #endregion
+        for (const inmate of inmates?.keys() ?? []) {
+          let check = inmateChecks.get(inmate);
+          if (check && currentTime < check.at) continue;
+          if (!check) {
+            check = { at: 0 };
+            inmateChecks.set(inmate, check);
+          }
+          try {
+            const { user } = await trpcNode.user.getUserById.query({ id: inmate });
+            const member = inmateRole?.members.get(inmate);
+            if (!inmateRole || !member || inmateChecks.get(inmate) !== check) continue;
+            const releaseAt = Number(user?.lastHeistDate) + Number(user?.jailTime) * 1000;
+            if (!Number.isFinite(releaseAt)) {
+              throw new Error("Missing or invalid jail deadline");
+            }
+            if (Date.now() <= releaseAt) {
+              check.at = Math.floor(releaseAt) + 1;
+              continue;
+            }
+            await member.roles.remove(inmateRole);
+            check.at = Date.now() + retryDelay;
+          } catch (error) {
+            check.at = Date.now() + retryDelay;
+            console.error(`Inmate release failed (${inmate})`, error);
+          }
+        }
+        // lastExecutionTime + minutes * 60 * 1000;
+        const nextExecutionTime = lastExecutionTime + 180 * 60 * 1000; // 30 minutes in milliseconds
+        // console.log("Current Time: " + currentTime);
+        // console.log("Next Execution Time: " + nextExecutionTime);
+        try {
+          if (currentTime >= nextExecutionTime) {
+            // if (false) {
+            lastExecutionTime = currentTime;
+            // dev 1223433266686595154
+            // prod 669193383503200266
+            const targetChannel = client.channels.cache.get(
+              String(process.env.GENERAL_CHANNEL_ID)
+            );
+            // fs.readFile(
+            //   path.join(__dirname, "../../src/resources/other/topics.txt"),
+            //   "utf8",
+            //   (err, content) => {
+            //     if (err) {
+            //       console.error("Error reading the file: ", err);
+            //     }
+            //     const lines = content
+            //       .split("\n")
+            //       .filter((line) => line.trim() !== "");
+            //     // console.log(content);
+            //     const randomIndex = Math.floor(Math.random() * lines.length);
+            //     const randomLine = lines[randomIndex];
+            //     (<TextChannel>targetChannel).send(randomLine);
+            //   }
+            // );
+            let topic = getRandomTopicAndRemove();
+
+            if (!topic) {
+              console.log("Nothing to send, boss.");
+            } else {
+              await (<TextChannel>targetChannel).send(topic);
+            }
+          }
+        } catch (error) {
+          console.error("Scheduled topic failed", error);
+        }
+        // #endregion
+
+        // #region Giveaway
+        for (const [giveawayId, checkAt] of [...extendedClient.activeGiveaways]) {
+          if (Date.now() < checkAt) continue;
+          try {
+            const giveaway = await trpcNode.giveaway.getById.mutate({ giveawayId });
+            if (giveaway && !giveaway.ended) {
+              const endsAt = Number(giveaway.endsAt);
+              if (!Number.isSafeInteger(endsAt) || endsAt <= 0) throw Error("Invalid giveaway end time");
+              if (Date.now() < endsAt) {
+                extendedClient.activeGiveaways.set(giveawayId, endsAt);
+                continue;
+              }
+              await completeGiveaway(giveaway, client.channels.cache.get(
+                String(process.env.GIVEAWAY_CHANNEL_ID)
+              ) as TextChannel);
+            }
+            extendedClient.activeGiveaways.delete(giveawayId);
+          } catch (error) {
+            extendedClient.activeGiveaways.set(giveawayId, Date.now() + retryDelay);
+            console.error(`Scheduled giveaway failed (${giveawayId})`, error);
+          }
+        }
+        // #endregion
+      } catch (error) {
+        console.error("Scheduled tick failed", error);
+      } finally {
+        running = false;
+      }
     }, 1000);
+    (extendedClient as import('../structures/ExtendedClient').ExtendedClient).startupReady = true;
   }
 }
-
-function shuffle(array: String[]) {
-  let currentIndex = array.length,
-    randomIndex;
-
-  while (currentIndex > 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-
-    // Swap elements
-    [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex],
-      array[currentIndex],
-    ];
-  }
-
-  return array;
-}
-
-const FILE = path.join(__dirname, "../../src/resources/other/topics.txt");
-const TEMP = path.join(__dirname, "../../src/resources/other/topics_temp.txt");
 
 function getRandomTopicAndRemove() {
+  const FILE = topicFile();
+  const TEMP = FILE + '.tmp';
   if (!fs.existsSync(FILE)) {
     console.log("topics.txt not found");
     return null;

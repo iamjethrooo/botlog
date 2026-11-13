@@ -82,11 +82,6 @@ async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
   });
 
   try {
-    let allItems = await trpcNode.item.getAll.query();
-
-    let fakeId = allItems.allItems.find(
-      (i) => i.name.toLowerCase() == "fake id"
-    );
     let leaderboard = await trpcNode.user.getLeaderboard.query();
     let leaderboardFormatted: String[] = [];
     let rank = 0;
@@ -101,13 +96,7 @@ async function generateLeaderboard(user: User, guild: Guild, showAll: boolean) {
         continue;
       }
 
-      let userInventory = await trpcNode.inventory.getByUserId.mutate({
-        userId: _user.discordId,
-      });
-
-      let userHasFakeId = userInventory.inventory.some(
-        (e) => e.itemId == fakeId!.id
-      );
+      let userHasFakeId = _user.hasFakeId;
 
       if (user.id == _user.discordId) {
         rank = userHasFakeId ? 0 : index;

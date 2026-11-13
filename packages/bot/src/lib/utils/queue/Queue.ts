@@ -1,4 +1,5 @@
 // Inspired from skyra's queue(when it had a music feature)
+import { clearTimeout } from '../../lifecycle';
 import type {
   CommandInteraction,
   Guild,

@@ -6,6 +6,19 @@
 .env*.local
 BAK.env
 
+# BBC-29: private/local evidence and backups are not source baseline inputs.
+/dump_nov15_1254pm.bak
+/packages/bot/src/resources/other/topics.txt.bak
+/packages/bot/src/resources/other/topics.txt.bak2
+/scripts/bbc14-live-recovery-state.json
+/scripts/bbc20-live-login-state.json
+/docs/bbc20-dev-redirect.png
+/docs/bbc22-continuation-evidence.json
+/docs/bbc22-rollback-baseline.json
+# Filled Docker runtime inputs; sanitized *.env.example templates remain visible.
+/docker/*.env
+/docker/releases.json
+
 # Testing
 /coverage
 

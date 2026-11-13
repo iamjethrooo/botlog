@@ -6,7 +6,9 @@ import {
     Args,
 } from "@sapphire/framework";
 import {
-    CommandInteraction,
+    ChatInputCommandInteraction,
+    User,
+    GuildMember,
     Message,
     EmbedBuilder,
     ApplicationCommandOptionType,
@@ -19,73 +21,39 @@ import { trpcNode } from "../../trpc";
     preconditions: ["inBotChannel", "isNotInmate"],
 })
 export class TransferCommand extends Command {
-    public override async chatInputRun(interaction: CommandInteraction) { }
+    private async transfer(source: User, member: GuildMember, recipient: User | undefined, amount: number) {
+        const coinEmoji = await trpcNode.setting.getByKey.mutate({ key: "coinEmoji" });
+        const redColor = await trpcNode.setting.getByKey.mutate({ key: "redColor" });
+        const embed = new EmbedBuilder().setAuthor({ name: source.username, iconURL: source.displayAvatarURL() });
+        const fail = (text: string) => embed.setDescription(`❌ ${text}`).setColor(`#${redColor}`);
+        if (!recipient) return fail("Mention exactly one user to transfer coins to.");
+        if (!Number.isInteger(amount) || amount <= 0 || amount > 2147483647) return fail("Enter a positive whole number of coins.");
+        if (source.id === recipient.id) return fail("You cannot transfer coins to yourself.");
+        try {
+            await trpcNode.user.transfer.mutate({
+                sourceId: source.id, recipientId: recipient.id, recipientName: recipient.username, amount,
+            });
+            return embed.setDescription(`Gave <@${recipient.id}> ${coinEmoji}${amount}.`).setColor(member.displayHexColor);
+        } catch (error) {
+            const failure = error as { data?: { code?: string }; message?: string };
+            if (failure.data?.code === "BAD_REQUEST") return fail(failure.message!);
+            console.error("Transfer could not be confirmed", error);
+            return fail("The transfer could not be confirmed. Check both balances before trying again.");
+        }
+    }
+
+    public override async chatInputRun(interaction: ChatInputCommandInteraction) {
+        await interaction.deferReply();
+        const embed = await this.transfer(interaction.user, interaction.member as GuildMember,
+            interaction.options.getUser("user", true), interaction.options.getInteger("amount", true));
+        return interaction.editReply({ embeds: [embed] });
+    }
 
     public override async messageRun(message: Message, args: Args) {
-        let amount = await args.pick("integer").catch(() => 0);
-        const coinEmoji = await trpcNode.setting.getByKey.mutate({
-            key: "coinEmoji",
-        });
-        const startingCash = await trpcNode.setting.getByKey.mutate({
-            key: "startingCash",
-        });
-        const redColor = await trpcNode.setting.getByKey.mutate({
-            key: "redColor",
-        });
-
-        let sourceId = message.author.id;
-        let user = await trpcNode.user.getUserById.query({
-            id: sourceId,
-        });
-        // Give cash to a user
-        if (message.mentions.users.size == 1) {
-            console.log(message.mentions.users!.first()!.id);
-            let id = message.mentions.users!.first()!.id;
-            const embed = new EmbedBuilder().setAuthor({
-                name: `${message.author.username}`,
-                iconURL: message.author.displayAvatarURL(),
-            });
-
-            if (amount > user!.user!.cash) {
-                embed.setDescription(`❌ You cannot transfer more than your current balance.`)
-                embed.setColor(`#${redColor}`);
-                return await message.reply({ embeds: [embed] });
-            }
-            try {
-                // Check if user exists in database
-                let user = await trpcNode.user.getUserById.query({
-                    id: id,
-                });
-
-                if (user.user == null) {
-                    await trpcNode.user.create.mutate({
-                        id: id,
-                        name: message.author.username,
-                    });
-                    await trpcNode.user.addCash.mutate({
-                        id: id,
-                        cash: Number(startingCash) + amount,
-                    });
-                } else {
-                    await trpcNode.user.addCash.mutate({
-                        id: id,
-                        cash: amount,
-                    });
-                    await trpcNode.user.subtractCash.mutate({
-                        id: sourceId,
-                        cash: amount,
-                    });
-                }
-
-                embed.setDescription(`Gave <@${id}> ${coinEmoji}${String(amount)}.`);
-                embed.setColor(message.member!.displayHexColor);
-                return await message.reply({ embeds: [embed] });
-            } catch (error) {
-                console.log(error);
-                return;
-            }
-        }
-        return;
+        const amount = await args.pick("integer").catch(() => 0);
+        const recipient = message.mentions.users.size === 1 ? message.mentions.users.first() : undefined;
+        const embed = await this.transfer(message.author, message.member!, recipient, amount);
+        return message.reply({ embeds: [embed] });
     }
 
     public override registerApplicationCommands(
@@ -105,6 +73,8 @@ export class TransferCommand extends Command {
                     type: ApplicationCommandOptionType.Integer,
                     required: true,
                     name: "amount",
+                    min_value: 1,
+                    max_value: 2147483647,
                     description: "How many coins do you want to give?",
                 },
             ],

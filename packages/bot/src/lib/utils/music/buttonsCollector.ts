@@ -5,6 +5,7 @@ import type { Queue } from "../queue/Queue";
 import { NowPlayingEmbed } from "./NowPlayingEmbed";
 import type { Song } from "../queue/Song";
 import Logger from "../logger";
+import { setTimeout, clearTimeout, trackCollector, isStopping } from '../../lifecycle';
 
 export default async function buttonsCollector(message: Message, song: Song) {
   const { client } = container;
@@ -12,13 +13,13 @@ export default async function buttonsCollector(message: Message, song: Song) {
   const queue = client.music.queues.get(message.guildId!);
   const channel = await queue.getTextChannel();
 
-  const collector = message.createMessageComponentCollector();
   if (!channel) return;
-
+  const collector = trackCollector(message.createMessageComponentCollector());
   const maxLimit = Time.Minute * 30;
   let timer: NodeJS.Timeout | undefined;
 
   collector.on("collect", async (i: MessageComponentInteraction) => {
+    if (isStopping()) return;
     if (!message.member?.voice.channel?.members.has(i.user.id)) {
       await i.reply({
         content: `:x: Only available to members in ${message.member?.voice.channel} <-- Click To Join`,

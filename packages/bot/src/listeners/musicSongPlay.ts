@@ -1,3 +1,4 @@
+import { clearTimeout } from '../lib/lifecycle';
 import { ApplyOptions } from "@sapphire/decorators";
 import { container, Listener, ListenerOptions } from "@sapphire/framework";
 import { manageStageChannel } from "../lib/utils/music/channelHandler";

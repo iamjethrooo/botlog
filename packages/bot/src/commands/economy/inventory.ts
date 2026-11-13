@@ -23,17 +23,15 @@ export class InventoryCommand extends Command {
   public override async chatInputRun(interaction: ChatInputCommandInteraction) {
     let userId = interaction.user.id;
 
-    let userInventory = await trpcNode.inventory.getByUserId.mutate({
+    let userInventory = await trpcNode.inventory.getDisplayByUserId.query({
       userId: userId,
     });
 
     let inventoryFormatted: String[] = [];
 
     for (const i of userInventory.inventory) {
-      let item = await trpcNode.item.getItemById.query({ id: i.itemId });
-
       inventoryFormatted.push(
-        `${item.item!.emoji} **${item.item!.name} x ${i.amount}** \n`
+        `${i.item.emoji} **${i.item.name} x ${i.amount}** \n`
       );
     }
 
@@ -59,17 +57,15 @@ export class InventoryCommand extends Command {
   public override async messageRun(message: Message) {
     let userId = message.author.id;
 
-    let userInventory = await trpcNode.inventory.getByUserId.mutate({
+    let userInventory = await trpcNode.inventory.getDisplayByUserId.query({
       userId: userId,
     });
 
     let inventoryFormatted: String[] = [];
 
     for (const i of userInventory.inventory) {
-      let item = await trpcNode.item.getItemById.query({ id: i.itemId });
-
       inventoryFormatted.push(
-        `${item.item!.emoji} **${item.item!.name} x ${i.amount}** \n`
+        `${i.item.emoji} **${i.item.name} x ${i.amount}** \n`
       );
     }
 

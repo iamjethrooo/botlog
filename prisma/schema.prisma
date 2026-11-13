@@ -87,6 +87,28 @@ model Guild {
   tempChannels          TempChannel[]
 }
 
+enum DashboardActivityKind {
+  COMMAND_TOGGLE
+  COMMAND_PERMISSIONS
+  VOICE_HUB
+}
+
+model DashboardActivity {
+  id             Int                   @id @default(autoincrement())
+  guildId        String
+  actorDiscordId String
+  actorName      String?
+  kind           DashboardActivityKind
+  commandName    String?
+  before         Json
+  after          Json
+  createdAt      DateTime              @default(now())
+
+  @@index([guildId, createdAt, id])
+}
+
+/// Deployment-wide configuration keyed by settingKey. guildId records the
+/// originating guild for legacy listings and does not scope runtime lookups.
 model Setting {
   id            Int @id @default(autoincrement())
   guildId       String
@@ -172,12 +194,16 @@ model Giveaway {
   endsAt        String  @default("0")
   dateStarted   String
   ended         Boolean @default(false)
+  entries       GiveawayEntry[]
 }
 
 model GiveawayEntry {
   id          Int @id @default(autoincrement())
   giveawayId  String
   userId      String
+  giveaway    Giveaway @relation(fields: [giveawayId], references: [giveawayId], onDelete: Restrict)
+
+  @@index([giveawayId, userId])
 }
 
 model RobLog {

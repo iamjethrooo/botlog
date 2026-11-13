@@ -3,39 +3,26 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import type {
   APIGuildChannel,
-  APIApplicationCommandPermission,
   APIRole,
   ChannelType,
 } from "discord-api-types/v10";
-import { getFetch } from "@trpc/client";
+import { discordRequest } from "../discord";
+import { requireGuildManager } from "../guildAccess";
+import { dashboardSettingsTransaction, recordDashboardActivity, roleRulesForActivity } from "../dashboardActivity";
 
-const fetch = getFetch();
+import {
+  availableCommands, commandDiscord, commandPath, commandPermissions, discordApi as api, resolveCommand
+} from '../commandManagement';
+import type { CommandType, CommandPermissionsResponseOkay } from '../commandManagement';
+import { commandPermissionPayload } from '../commandPermissions';
+export type { CommandType, CommandPermissionsResponseOkay, CommandPermissionsResponseNotOkay } from '../commandManagement';
 
-export type CommandType = {
-  code: number;
-  id: string;
-  applicationId: string;
-  version: string;
-  default_permission: string;
-  default_member_permissions: null | string[];
-  type: number;
-  name: string;
-  description: string;
-  dm_permission: boolean;
-  options: any[];
-};
-
-export type CommandPermissionsResponseOkay = {
-  id: string;
-  application_id: string;
-  guild_id: string;
-  permissions: APIApplicationCommandPermission[];
-};
-
-export type CommandPermissionsResponseNotOkay = {
-  message: string;
-  code: number;
-};
+// Only these registered commands run the bot's isCommandDisabled precondition.
+const toggleableCommands = new Set([
+  "bassboost", "karaoke", "leave", "lyrics", "move", "nightcore",
+  "pause", "play", "queue", "remove", "resume", "seek", "shuffle",
+  "skip", "skipto", "summon", "vaporwave", "volume",
+]);
 
 export const commandRouter = t.router({
   getDisabledCommands: t.procedure
@@ -71,27 +58,13 @@ export const commandRouter = t.router({
         guildId: z.string(),
       })
     )
-    .query(async ({}) => {
-      try {
-        const token = process.env.DISCORD_TOKEN;
-        const response = await fetch(
-          `https://discordapp.com/api/applications/${process.env.DISCORD_CLIENT_ID}/commands`,
-          {
-            headers: {
-              Authorization: `Bot ${token}`,
-            },
-          }
-        );
-        const commands: CommandType[] = <CommandType[]>await response.json();
-
-        return { commands };
-      } catch (e) {
-        console.error(e);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Something went wrong when trying to fetch guilds",
-        });
-      }
+    .query(async ({ ctx, input }) => {
+      await requireGuildManager(ctx, input.guildId);
+      const commands = await availableCommands(input.guildId, commandDiscord());
+      return { commands: commands.map(command => ({
+        ...command,
+        toggleSupported: command.type === 1 && toggleableCommands.has(command.name),
+      })) };
     }),
   getCommandAndGuildChannels: t.procedure
     .input(
@@ -101,81 +74,25 @@ export const commandRouter = t.router({
       })
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.session) {
-        throw new TRPCError({
-          message: "Not Authenticated",
-          code: "UNAUTHORIZED",
-        });
-      }
-
       const token = process.env.DISCORD_TOKEN;
       const clientID = process.env.DISCORD_CLIENT_ID;
       const { guildId, commandId } = input;
 
-      const account = await ctx.prisma.account.findFirst({
-        where: {
-          // @ts-ignore
-          userId: ctx.session?.user?.id,
-        },
-        select: {
-          access_token: true,
-          providerAccountId: true,
-          user: {
-            select: {
-              discordId: true,
-            },
-          },
-        },
-      });
+      const accessToken = await requireGuildManager(ctx, guildId);
 
-      try {
-        const [
-          guildChannelsResponse,
-          guildRolesResponse,
-          commandResponse,
-          permissionsResponse,
-        ] = await Promise.all([
-          fetch(`https://discord.com/api/guilds/${guildId}/channels`, {
-            headers: {
-              Authorization: `Bot ${token}`,
-            },
-          }).then((res: any) => res.json()) as Promise<unknown>,
-          fetch(`https://discord.com/api/guilds/${guildId}/roles`, {
-            headers: {
-              Authorization: `Bot ${token}`,
-            },
-          }).then((res: any) => res.json()) as Promise<unknown>,
-          fetch(
-            `https://discord.com/api/applications/${clientID}/commands/${commandId}`,
-            {
-              headers: {
-                Authorization: `Bot ${token}`,
-              },
-            }
-          ).then((res: any) => res.json()) as Promise<unknown>,
-          fetch(
-            `https://discord.com/api/applications/${clientID}/guilds/${guildId}/commands/${commandId}/permissions`,
-            {
-              headers: {
-                Authorization: `Bearer ${account?.access_token}`,
-              },
-            }
-          ).then((res: any) => res.json()) as Promise<any>,
-        ]);
-
-        const channels =
-          guildChannelsResponse as APIGuildChannel<ChannelType>[];
-        const roles = guildRolesResponse as APIRole[];
-        const command = commandResponse as CommandType;
-        const permissions = permissionsResponse as any;
-
-        return { channels, roles, command, permissions };
-      } catch {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Something went wrong when trying to fetch guilds",
-        });
-      }
+      const discord = commandDiscord();
+      const registered = await resolveCommand(guildId, commandId, discord);
+      const resolvedPath = commandPath(guildId, registered);
+      const [channels, roles, command, permissions] = await Promise.all([
+        discordRequest<APIGuildChannel<ChannelType>[]>(`${api}/guilds/${guildId}/channels`,
+          { headers: { Authorization: `Bot ${token}` } }, "Fetching guild channels"),
+        discordRequest<APIRole[]>(`${api}/guilds/${guildId}/roles`,
+          { headers: { Authorization: `Bot ${token}` } }, "Fetching guild roles"),
+        discordRequest<CommandType>(`${api}/applications/${clientID}/${resolvedPath}`,
+          { headers: { Authorization: `Bot ${token}` } }, "Fetching guild command"),
+        commandPermissions(guildId, registered, accessToken, discord),
+      ]);
+      return { channels, roles, command, permissions };
     }),
   getCommandPermissions: t.procedure
     .input(
@@ -185,50 +102,13 @@ export const commandRouter = t.router({
       })
     )
     .query(async ({ ctx, input }) => {
-      const clientID = process.env.DISCORD_CLIENT_ID;
       const { guildId, commandId } = input;
 
-      if (!ctx.session) {
-        throw new TRPCError({
-          message: "Not Authenticated",
-          code: "UNAUTHORIZED",
-        });
-      }
-
-      const account = await ctx.prisma.account.findFirst({
-        where: {
-          // @ts-ignore
-          userId: ctx.session?.user?.id,
-        },
-        select: {
-          access_token: true,
-          providerAccountId: true,
-          user: {
-            select: {
-              discordId: true,
-            },
-          },
-        },
-      });
-      try {
-        const response = await fetch(
-          `https://discord.com/api/applications/${clientID}/guilds/${guildId}/commands/${commandId}/permissions`,
-          {
-            headers: {
-              Authorization: `Bearer ${account?.access_token}`,
-            },
-          }
-        );
-        const command = await response.json();
-        if (!command) throw new Error();
-
-        return { command };
-      } catch {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Something went wrong when trying to fetch guilds",
-        });
-      }
+      const accessToken = await requireGuildManager(ctx, guildId);
+      const discord = commandDiscord();
+      const registered = await resolveCommand(guildId, commandId, discord);
+      const command = await commandPermissions(guildId, registered, accessToken, discord);
+      return { command };
     }),
   editCommandPermissions: t.procedure
     .input(
@@ -248,57 +128,37 @@ export const commandRouter = t.router({
     .mutation(async ({ ctx, input }) => {
       const clientID = process.env.DISCORD_CLIENT_ID;
       const { guildId, commandId, permissions, type } = input;
-      if (!ctx.session) {
-        throw new TRPCError({
-          message: "Not Authenticated",
-          code: "UNAUTHORIZED",
-        });
-      }
+      const accessToken = await requireGuildManager(ctx, guildId);
 
-      const account = await ctx.prisma.account.findFirst({
-        where: {
-          // @ts-ignore
-          userId: ctx.session?.user?.id,
+      const discord = commandDiscord();
+      const registered = await resolveCommand(guildId, commandId, discord);
+      const current = await commandPermissions(guildId, registered, accessToken, discord);
+      const payload = commandPermissionPayload(guildId, type, permissions, current.permissions);
+      const command = await discordRequest<CommandPermissionsResponseOkay>(
+        `${api}/applications/${clientID}/guilds/${guildId}/commands/${commandId}/permissions`,
+        {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         },
-        select: {
-          access_token: true,
-          providerAccountId: true,
-          user: {
-            select: {
-              discordId: true,
-            },
-          },
-        },
-      });
-
-      let everyone = {
-        id: guildId,
-        type: 1,
-        permission: type === "allow" ? true : false,
-      };
-
-      try {
-        const response = await fetch(
-          `https://discord.com/api/applications/${clientID}/guilds/${guildId}/commands/${commandId}/permissions`,
-          {
-            method: "PUT",
-            headers: {
-              Authorization: `Bearer ${account?.access_token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ permissions: [everyone, ...permissions] }),
-          }
-        );
-        const command = await response.json();
-        if (!command) throw new Error();
-
-        return { command };
-      } catch {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Something went wrong when trying to fetch guilds",
-        });
+        "Updating command permissions"
+      );
+      const before = roleRulesForActivity(current.permissions);
+      const after = roleRulesForActivity(command?.permissions ?? payload.permissions);
+      if (JSON.stringify(before) !== JSON.stringify(after)) {
+        try {
+          await recordDashboardActivity(ctx.prisma, ctx.session, guildId, {
+            kind: 'COMMAND_PERMISSIONS',
+            commandName: registered.type === 1 ? `/${registered.name}` : registered.name,
+            before, after
+          });
+        } catch {
+          // Discord already committed the change, so report the logging failure
+          // separately. Retrying the whole mutation would issue another PUT.
+          return { command, activityRecorded: false as const };
+        }
       }
+      return { command };
     }),
 
   toggleCommand: t.procedure
@@ -312,48 +172,30 @@ export const commandRouter = t.router({
     .mutation(async ({ ctx, input }) => {
       const { guildId, commandId, status } = input;
 
-      const guild = await ctx.prisma.guild.findUnique({
-        where: {
-          id: guildId,
-        },
-        select: {
-          disabledCommands: true,
-        },
+      await requireGuildManager(ctx, guildId);
+      const command = await resolveCommand(guildId, commandId, commandDiscord(), "Command is not registered in this guild");
+      if (command.type !== 1 || !toggleableCommands.has(command.name)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "The bot does not support dashboard toggles for this command" });
+      }
+
+      return dashboardSettingsTransaction(ctx.prisma, async tx => {
+        const guild = await tx.guild.findUnique({ where: { id: guildId } });
+        if (!guild) throw new TRPCError({ message: 'Guild not found', code: 'NOT_FOUND' });
+
+        const wasDisabled = guild.disabledCommands.includes(commandId);
+        if (wasDisabled === status) return { updatedGuild: guild };
+
+        const disabledCommands = status ? [...guild.disabledCommands, commandId] :
+          guild.disabledCommands.filter(id => id !== commandId);
+        const updatedGuild = await tx.guild.update({
+          where: { id: guildId },
+          data: { disabledCommands: { set: disabledCommands } },
+        });
+        await recordDashboardActivity(tx, ctx.session, guildId, {
+          kind: 'COMMAND_TOGGLE', commandName: `/${command.name}`,
+          before: { enabled: !wasDisabled }, after: { enabled: !status }
+        });
+        return { updatedGuild };
       });
-
-      if (!guild) {
-        throw new TRPCError({
-          message: "Guild not found",
-          code: "NOT_FOUND",
-        });
-      }
-
-      let updatedGuild;
-
-      if (status) {
-        updatedGuild = await ctx.prisma.guild.update({
-          where: {
-            id: guildId,
-          },
-          data: {
-            disabledCommands: {
-              set: [...guild?.disabledCommands, commandId],
-            },
-          },
-        });
-      } else {
-        updatedGuild = await ctx.prisma.guild.update({
-          where: {
-            id: guildId,
-          },
-          data: {
-            disabledCommands: {
-              set: guild?.disabledCommands.filter((cid) => cid !== commandId),
-            },
-          },
-        });
-      }
-
-      return { updatedGuild };
     }),
 });

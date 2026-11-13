@@ -1,3 +1,4 @@
+import { setTimeout } from '../lib/lifecycle';
 import { ApplyOptions } from "@sapphire/decorators";
 import {
   Precondition,

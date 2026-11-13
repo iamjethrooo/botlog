@@ -1,10 +1,40 @@
 import { t } from "../trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { getFetch } from "@trpc/client";
 import type { APIGuildChannel } from "discord-api-types/v10";
+import { discordRequest } from "../discord";
+import { requireGuildManager } from "../guildAccess";
+import { dashboardSettingsTransaction, recordDashboardActivity } from "../dashboardActivity";
+import type { VoiceHubSettings } from "../dashboardActivity";
+import type { Context } from "../createContext";
 
-const fetch = getFetch();
+const api = "https://discord.com/api/v10";
+
+async function deleteChannel(id: string, token: string) {
+  try {
+    await discordRequest<void>(`${api}/channels/${id}`,
+      { method: "DELETE", headers: { Authorization: `Bot ${token}` } }, "Deleting hub channel");
+  } catch (error) {
+    // A retry may encounter a channel removed by an earlier partial attempt.
+    if (!(error instanceof TRPCError && error.code === "NOT_FOUND")) throw error;
+  }
+}
+
+function saveHubSettings(ctx: Context, guildId: string, before: VoiceHubSettings, after: VoiceHubSettings) {
+  return dashboardSettingsTransaction(ctx.prisma, async tx => {
+    const current = await tx.guild.findUnique({ where: { id: guildId } });
+    if (!current) throw new TRPCError({ code: "NOT_FOUND", message: "Guild not found" });
+    // A concurrent removal may have already cleared these same settings.
+    if (!current.hub && !current.hubChannel && !after.hub && !after.hubChannel) return current;
+    if (current.hub !== before.hub || current.hubChannel !== before.hubChannel) {
+      throw new TRPCError({ code: "CONFLICT", message: "Hub settings changed during this request. Refresh and try again." });
+    }
+
+    const updatedGuild = await tx.guild.update({ where: { id: guildId }, data: after });
+    await recordDashboardActivity(tx, ctx.session, guildId, { kind: 'VOICE_HUB', before, after });
+    return updatedGuild;
+  });
+}
 
 export const hubRouter = t.router({
   create: t.procedure
@@ -16,71 +46,37 @@ export const hubRouter = t.router({
     )
     .mutation(async ({ ctx, input }) => {
       const { guildId, name } = input;
+      await requireGuildManager(ctx, guildId);
       const token = process.env.DISCORD_TOKEN;
 
-      let parent;
-      try {
-        const response = await fetch(
-          `https://discordapp.com/api/guilds/${guildId}/channels`,
-          {
-            headers: {
-              Authorization: `Bot ${token}`,
-              "Content-Type": "application/json",
-            },
-            method: "POST",
-            body: JSON.stringify({
-              name,
-              type: 4,
-            }),
-          }
-        );
-        parent = <APIGuildChannel<any>>await response.json();
-      } catch (e) {
-        console.log(e);
-        throw new TRPCError({
-          message: "Could not create channel",
-          code: "INTERNAL_SERVER_ERROR",
-        });
-      }
-
-      let hubChannel;
-      try {
-        const response = await fetch(
-          `https://discordapp.com/api/guilds/${guildId}/channels`,
-          {
-            headers: {
-              Authorization: `Bot ${token}`,
-              "Content-Type": "application/json",
-            },
-            method: "POST",
-            body: JSON.stringify({
-              name: "Join To Create",
-              type: 2,
-              parent_id: parent.id,
-            }),
-          }
-        );
-        hubChannel = <APIGuildChannel<any>>await response.json();
-      } catch {
-        throw new TRPCError({
-          message: "Could not create channel",
-          code: "INTERNAL_SERVER_ERROR",
-        });
-      }
-
-      const updatedGuild = await ctx.prisma.guild.update({
-        where: {
-          id: guildId,
-        },
-        data: {
-          hub: parent.id,
-          hubChannel: hubChannel.id,
-        },
+      const guild = await ctx.prisma.guild.findUnique({ where: { id: guildId }, select: { hub: true, hubChannel: true } });
+      if (!guild) throw new TRPCError({ code: "NOT_FOUND", message: "Guild not found" });
+      if (guild.hub || guild.hubChannel) throw new TRPCError({
+        code: "CONFLICT", message: "A hub already exists or needs recovery; inspect its channels before creating another",
       });
+      const headers = { Authorization: `Bot ${token}`, "Content-Type": "application/json" };
+      const parent = await discordRequest<APIGuildChannel<any>>(`${api}/guilds/${guildId}/channels`,
+        { method: "POST", headers, body: JSON.stringify({ name, type: 4 }) }, "Creating hub category");
 
-      return {
-        guild: updatedGuild,
-      };
+      let hubChannel: APIGuildChannel<any> | undefined;
+      try {
+        hubChannel = await discordRequest<APIGuildChannel<any>>(`${api}/guilds/${guildId}/channels`,
+          { method: "POST", headers, body: JSON.stringify({ name: "Join To Create", type: 2, parent_id: parent.id }) },
+          "Creating hub voice channel");
+        const updatedGuild = await saveHubSettings(ctx, guildId, guild, {
+          hub: parent.id, hubChannel: hubChannel.id
+        });
+        return { guild: updatedGuild };
+      } catch (error) {
+        try {
+          if (hubChannel) await deleteChannel(hubChannel.id, token as string);
+          await deleteChannel(parent.id, token as string);
+        } catch {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR",
+            message: `Hub creation failed; inspect and remove Discord channel ${hubChannel?.id ?? parent.id} and category ${parent.id} before retrying` });
+        }
+        throw error;
+      }
     }),
   delete: t.procedure
     .input(
@@ -91,6 +87,7 @@ export const hubRouter = t.router({
     .mutation(async ({ ctx, input }) => {
       const { guildId } = input;
 
+      await requireGuildManager(ctx, guildId);
       const token = process.env.DISCORD_TOKEN;
 
       const guild = await ctx.prisma.guild.findUnique({
@@ -110,38 +107,10 @@ export const hubRouter = t.router({
         });
       }
 
-      try {
-        Promise.all([
-          fetch(`https://discordapp.com/api/channels/${guild.hubChannel}`, {
-            headers: {
-              Authorization: `Bot ${token}`,
-            },
-            method: "DELETE",
-          }),
-          fetch(`https://discordapp.com/api/channels/${guild.hub}`, {
-            headers: {
-              Authorization: `Bot ${token}`,
-            },
-            method: "DELETE",
-          }),
-        ]).then(async () => {
-          await ctx.prisma.guild.update({
-            where: {
-              id: guildId,
-            },
-            data: {
-              hub: null,
-              hubChannel: null,
-            },
-          });
-        });
-      } catch (e) {
-        console.log(e);
-        throw new TRPCError({
-          message: "Could not delete channel",
-          code: "INTERNAL_SERVER_ERROR",
-        });
-      }
+      if (!guild.hub && !guild.hubChannel) return;
+      if (guild.hubChannel) await deleteChannel(guild.hubChannel, token as string);
+      if (guild.hub) await deleteChannel(guild.hub, token as string);
+      await saveHubSettings(ctx, guildId, guild, { hub: null, hubChannel: null });
     }),
   getTempChannel: t.procedure
     .input(

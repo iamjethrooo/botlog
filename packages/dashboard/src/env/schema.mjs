@@ -1,14 +1,28 @@
 // @ts-check
 import { z } from 'zod';
 
+const originSchema = z.string().url().refine(value => {
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol) && url.pathname === '/' &&
+      !url.username && !url.password && !url.search && !url.hash;
+  } catch { return false; }
+}, 'Use an HTTP(S) origin without credentials or a path');
+
 /**
  * Specify your server-side environment variables schema here.
  * This way you can ensure the app isn't built with invalid env vars.
  */
 export const serverSchema = z.object({
   NEXTAUTH_SECRET: z.string(),
-  NEXTAUTH_URL: z.string().url(),
-  NEXTAUTH_URL_INTERNAL: z.string().url().default('http://localhost:3000'),
+  NEXTAUTH_URL: originSchema.refine(value => {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'http:' && url.hostname === '127.0.0.1';
+    } catch { return false; }
+  }, 'Use the local browser origin http://127.0.0.1:<port>'),
+  NEXTAUTH_URL_INTERNAL: originSchema.optional(),
+  API_INTERNAL_URL: originSchema.optional(),
   DISCORD_CLIENT_ID: z.string(),
   DISCORD_CLIENT_SECRET: z.string()
 });

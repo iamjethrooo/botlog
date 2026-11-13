@@ -2,6 +2,9 @@
   "name": "bbc-bot-mono",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "description": "A Discord Bot for the Baguio Benguet Chat Discord Server",
   "scripts": {
     "dev": "npm run copy-env && concurrently \"npm run dev:dashboard\" \"npm run dev:bot\"",

@@ -7,6 +7,9 @@ declare module 'next-auth' {
   interface Session {
     user?: {
       id: string;
+      discordId: string;
     } & DefaultSession['user'];
+    error?: 'DiscordTokenExpired';
   }
+  interface User { discordId: string; }
 }

@@ -1,178 +1,93 @@
-import React from 'react';
 import { useRouter } from 'next/router';
-import { ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import DashboardLayout from '../../../components/DashboardLayout';
 import { trpc } from '../../../utils/trpc';
-import { NextPageWithLayout } from '../../_app';
+import type { NextPageWithLayout } from '../../_app';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { getServerSession } from '../../../shared/get-server-session';
+import { requirePageSession } from '../../../shared/get-server-session';
 
 const TemporaryChannelsDashboardPage: NextPageWithLayout = () => {
-  const router = useRouter();
-  const query = router.query.guild_id;
-  if (!query || typeof query !== 'string') {
-    router.push('/');
-  }
-
-  const { isLoading, error } = trpc.guild.getGuildAndUser.useQuery(
-    { id: query as string },
-    { refetchOnWindowFocus: false }
+  const { query } = useRouter();
+  const guildId = typeof query.guild_id === 'string' ? query.guild_id : '';
+  const { data, isLoading, error } = trpc.guild.getGuildAndUser.useQuery(
+    { id: guildId },
+    { enabled: Boolean(guildId) }
   );
+  const utils = trpc.useContext();
+  const refreshSettings = () => Promise.all([
+    utils.guild.getGuildAndUser.invalidate({ id: guildId }),
+    utils.guild.getRecentActivity.invalidate({ guildId }),
+    utils.guild.getChannelFeatureHealth.invalidate({ guildId })
+  ]);
+  const createHub = trpc.hub.create.useMutation({
+    onSuccess: async () => {
+      await refreshSettings();
+      toast.success('Temporary channels enabled');
+    },
+    onError: error => toast.error(error.message),
+  });
+  const deleteHub = trpc.hub.delete.useMutation({
+    onSuccess: async () => {
+      await refreshSettings();
+      toast.success('Temporary channels disabled');
+    },
+    onError: error => toast.error(error.message),
+  });
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (isLoading) return <p className="status-panel" role="status">Loading settings…</p>;
+  if (error || !data?.guild) {
+    return <p className="status-panel" role="alert">{error?.message ?? 'Server settings are unavailable.'}</p>;
   }
 
-  if (error?.data?.code === 'UNAUTHORIZED') {
-    return <div>{error.message}</div>;
-  }
+  const { hub, hubChannel } = data.guild;
+  const enabled = Boolean(hub && hubChannel);
+  const hasHub = Boolean(hub || hubChannel);
+  const removalDetails = hub && hubChannel ? 'the configured voice channel and its category' :
+    hubChannel ? 'the configured voice channel' : 'the configured category';
 
-  return <TemporaryChannelsDashboardPageComponent query={query as string} />;
-};
-
-const TemporaryChannelsDashboardPageComponent = ({
-  query
-}: {
-  query: string;
-}) => {
-  const [isToggling, setIsToggling] = React.useState(false);
-
-  function handleToggle() {
-    setIsToggling(true);
-    if (enabled) {
-      deleteHub(
-        { guildId: query as string },
-        {
-          onSuccess: () => {
-            setIsToggling(false);
-            toast.success('Temporary channels disabled', {
-              position: 'top-right',
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: true,
-              progress: undefined
-            });
-            utils.guild.getGuild.invalidate();
-          },
-          onError: () => {
-            setIsToggling(false);
-            toast.error('Error!', {
-              position: 'top-right',
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: true,
-              progress: undefined
-            });
-          }
-        }
-      );
-    } else {
-      createHub(
-        { guildId: query as string, name: 'Join To Create' },
-        {
-          onSuccess: () => {
-            setIsToggling(false);
-            toast.success('Temporary channels enabled', {
-              position: 'top-right',
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: true,
-              progress: undefined
-            });
-            utils.guild.getGuild.invalidate();
-          },
-          onError: () => {
-            setIsToggling(false);
-            toast.error('Error!', {
-              position: 'top-right',
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: false,
-              draggable: true,
-              progress: undefined
-            });
-          }
-        }
-      );
+  function disableHub() {
+    if (window.confirm(`Disable the voice hub? This deletes ${removalDetails} from Discord.`)) {
+      deleteHub.mutate({ guildId });
     }
   }
 
-  const { mutate: createHub } = trpc.hub.create.useMutation();
-  const { mutate: deleteHub } = trpc.hub.delete.useMutation();
-  const utils = trpc.useContext();
-  const { data, isLoading } = trpc.guild.getGuild.useQuery({
-    id: query as string
-  });
-
-  const enabled = data?.guild?.hub && data.guild.hubChannel;
-
   return (
-    <div className="p-10 text-xl">
-      <h1 className="text-white text-5xl">Temporary Channels</h1>
-      <p className="mt-3">
-        Creating a hub enables users to create their own temporary voice
-        channels with permissions over it
-      </p>
-      {data?.guild && !isLoading ? (
-        <div className="flex flex-col gap-4">
-          <h3>
-            The temporary channels feature is {enabled ? 'enabled' : 'disabled'}
-            , do you want to {enabled ? 'disable' : 'enable'} it?
-          </h3>
-          <button
-            type="submit"
-            disabled={isToggling}
-            onClick={handleToggle}
-            className="bg-red-600 text-white mx-auto w-fit block p-1 px-2 rounded-sm hover:bg-red-500"
-          >
-            {isToggling
-              ? enabled
-                ? 'Disabling...'
-                : 'Enabling...'
-              : enabled
-              ? 'Disable'
-              : 'Enable'}
-          </button>
+    <div>
+      <p className="eyebrow">Server settings</p>
+      <h1 className="page-title mt-2">Temporary channels</h1>
+      <p className="muted mt-3 mb-6">Let members create their own voice channels by joining a voice hub.</p>
+      <section className="surface flex flex-wrap items-start justify-between gap-4 p-5 sm:p-6">
+        <div className="min-w-0">
+          <h2 className="font-semibold text-white">Voice hub</h2>
+          <p className={`mt-2 text-sm font-medium ${enabled ? 'text-emerald-300' : 'text-slate-300'}`}>
+            {enabled ? 'Enabled' : hasHub ? 'Setup incomplete' : 'Disabled'}
+          </p>
+          {hubChannel ? (
+            <a className="mt-3 inline-block text-sm text-indigo-200 underline" href={`https://discord.com/channels/${guildId}/${hubChannel}`} target="_blank" rel="noreferrer">
+              Open configured channel in Discord <span aria-hidden="true">↗</span>
+            </a>
+          ) : null}
+          {hasHub ? <p className="muted mt-2">Disabling the hub deletes {removalDetails} from Discord.</p> : null}
         </div>
-      ) : (
-        <div>Loading...</div>
-      )}
+        {hasHub ? (
+          <button className="button button-danger" disabled={createHub.isLoading || deleteHub.isLoading} onClick={disableHub} type="button">
+            {deleteHub.isLoading ? 'Disabling…' : 'Disable hub'}
+          </button>
+        ) : (
+          <button className="button button-primary" disabled={createHub.isLoading || deleteHub.isLoading}
+            onClick={() => createHub.mutate({ guildId, name: 'Join To Create' })} type="button">
+            {createHub.isLoading ? 'Enabling…' : 'Enable hub'}
+          </button>
+        )}
+      </section>
     </div>
   );
 };
 
-TemporaryChannelsDashboardPage.getLayout = function getLayout(
-  page: ReactElement
-) {
+TemporaryChannelsDashboardPage.getLayout = function getLayout(page: ReactElement) {
   return <DashboardLayout>{page}</DashboardLayout>;
 };
 
-export const getServerSideProps: GetServerSideProps = async (
-  ctx: GetServerSidePropsContext
-) => {
-  const session = await getServerSession(ctx);
-
-  if (!session || !session.user || !session.user.id) {
-    return {
-      redirect: { destination: '../../api/auth/signin', permanent: false },
-      props: {}
-    };
-  }
-
-  return {
-    props: {
-      session
-    }
-  };
-};
+export const getServerSideProps = requirePageSession;
 
 export default TemporaryChannelsDashboardPage;

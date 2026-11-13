@@ -1,38 +1,31 @@
-//import type { Guild } from '@prisma/client';
 import { ApplyOptions } from '@sapphire/decorators';
-import { Listener, ListenerOptions } from '@sapphire/framework';
-import type { GuildMember, TextChannel } from 'discord.js';
+import { Listener, type ListenerOptions } from '@sapphire/framework';
+import { ChannelType, PermissionFlagsBits, type GuildMember } from 'discord.js';
 import { trpcNode } from '../trpc';
 
-@ApplyOptions<ListenerOptions>({
-  name: 'guildMemberAdd'
-})
-export class GuildMemberListener extends Listener {
-  public override async run(member: GuildMember): Promise<void> {
-    const guildQuery = await trpcNode.guild.getGuild.query({
-      id: member.guild.id
-    });
+@ApplyOptions<ListenerOptions>({ name: 'guildMemberAdd' })
+export class GuildMemberAddListener extends Listener {
+  public override async run(member: GuildMember) {
+    if (member.user.bot) return;
 
-    if (!guildQuery || !guildQuery.guild) return;
+    const { guild: settings } = await trpcNode.guild.getGuild.query({ id: member.guild.id });
+    if (!settings?.welcomeMessageEnabled || !settings.welcomeMessageChannel || !settings.welcomeMessage?.trim()) return;
 
-    const { welcomeMessage, welcomeMessageEnabled, welcomeMessageChannel } =
-      guildQuery.guild;
+    const channel = member.guild.channels.cache.get(settings.welcomeMessageChannel);
+    if (channel?.type !== ChannelType.GuildText && channel?.type !== ChannelType.GuildAnnouncement) return;
+    const bot = member.guild.members.me;
+    if (!bot || !channel.permissionsFor(bot)?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) return;
 
-    if (
-      !welcomeMessageEnabled ||
-      !welcomeMessage ||
-      !welcomeMessage.length ||
-      !welcomeMessageChannel
-    ) {
-      return;
-    }
-
-    const channel = (await member.guild.channels.fetch(
-      welcomeMessageChannel
-    )) as TextChannel;
-
-    if (channel) {
-      await channel.send({ content: `@${member.id} ${welcomeMessage}` });
+    const content = settings.welcomeMessage
+      .replace(/\{(member|server)\}/g, (_, token) => token === 'member' ? member.displayName : member.guild.name)
+      .trim()
+      .slice(0, 2000)
+      .replace(/[\uD800-\uDBFF]$/, '');
+    if (!content) return;
+    try {
+      await channel.send({ content, allowedMentions: { parse: [] } });
+    } catch {
+      this.container.logger.warn('Could not deliver a configured welcome message.');
     }
   }
 }

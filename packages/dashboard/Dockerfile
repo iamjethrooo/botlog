@@ -1,68 +1,39 @@
-# Stage 1: Dependencies - Install monorepo dependencies
-FROM node:21 AS deps
-
+FROM node:22-bookworm AS build
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ pkg-config libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
+    && rm -rf /var/lib/apt/lists/*
+COPY package.json package-lock.json ./
+COPY packages/api/package.json ./packages/api/
+COPY packages/node/package.json ./packages/node/
+COPY packages/react/package.json ./packages/react/
+COPY packages/bot/package.json ./packages/bot/
+COPY packages/dashboard/package.json ./packages/dashboard/
+COPY patches ./patches
+COPY prisma/schema.prisma ./prisma/schema.prisma
+RUN npm ci --no-audit --no-fund
+COPY packages ./packages
+COPY docker ./docker
+# Only public configuration is a build argument. Validators receive dummy
+# values for this RUN only. Generation/build do not connect to PostgreSQL.
+ARG NEXT_PUBLIC_INVITE_URL=https://discord.com/
+RUN npx --no-install prisma generate \
+    && NEXTAUTH_SECRET=build-only-not-a-runtime-secret NEXTAUTH_URL=http://127.0.0.1:3000 \
+       DISCORD_CLIENT_ID=build-only DISCORD_CLIENT_SECRET=build-only \
+       DATABASE_URL=postgresql://build:build@127.0.0.1:1/build \
+       NEXT_PUBLIC_INVITE_URL=$NEXT_PUBLIC_INVITE_URL NEXT_TELEMETRY_DISABLED=1 \
+       npm run build --workspace dashboard -- --no-lint \
+    && npm prune --omit=dev --ignore-scripts --no-audit --no-fund
 
-# Copy package.json and package-lock.json for dependency installation
-COPY . .
-
-# Install all monorepo dependencies
-RUN npm ci
-
-# Stage 2: Builder - Build the Next.js application
-FROM node:21 AS builder
-
+FROM node:22-bookworm-slim AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-
-COPY --from=deps /app/package.json ./
-COPY --from=deps /app/package-lock.json ./
-
-# Copy node_modules from the dependency stage
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/dashboard/node_modules ./packages/dashboard/node_modules
-COPY --from=deps /app/prisma ./prisma
-
-# Copy dashboard source code
-COPY packages/dashboard ./packages/dashboard
-
-COPY packages/api ./packages/api
-COPY packages/node ./packages/node
-COPY packages/react ./packages/react
-
-
-
-ENV NEXT_TELEMETRY_DISABLED 1
-# Build the Next.js application
-RUN npm run build --prefix packages/dashboard
-
-# Stage 3: Runner - The final, optimized runtime image
-FROM node:21-slim
-
-WORKDIR /app
-
-ENV NEXT_TELEMETRY_DISABLED 1
-
-COPY --from=deps /app/node_modules ./node_modules
-
-# Copy standalone output from the builder stage
-# Ensure you have 'output: 'standalone'' in next.config.mjs
-COPY --from=builder /app/packages/dashboard/.next/standalone ./
-COPY --from=builder /app/packages/dashboard/.next/static ./packages/dashboard/.next/static
-COPY --from=builder /app/packages/dashboard ./packages/dashboard
-
-COPY --from=builder /app/packages/api ./app/packages/api
-COPY --from=builder /app/packages/node ./app/packages/node
-COPY --from=builder /app/packages/react ./app/packages/react
-
-COPY --from=builder /app/prisma ./prisma
-
-# If your dashboard needs the generated Prisma client at runtime, ensure it's copied
-COPY --from=builder /app/prisma ./prisma
-
-# NEW: Copy the root package.json and package-lock.json
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/package-lock.json ./
-
-EXPOSE 3000
-
-CMD ["npm", "run", "dev:dashboard"]
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/packages ./packages
+COPY prisma/migrations ./prisma/migrations
+COPY docker ./docker
+USER node
+WORKDIR /app/packages/dashboard
+CMD ["node", "/app/docker/dashboard-start.cjs"]

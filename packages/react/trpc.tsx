@@ -3,6 +3,7 @@ import type { AppRouter } from '@bbc-bot/api/src/routers/index';
 import { httpBatchLink } from '@trpc/client';
 import { createTRPCNext } from '@trpc/next';
 import superjson from 'superjson';
+import { getApiUrl } from '@bbc-bot/node/api-url.cjs';
 
 export const trpc = createTRPCNext<AppRouter>({
   config({ ctx }) {
@@ -18,9 +19,7 @@ export const trpc = createTRPCNext<AppRouter>({
       };
     }
     // The server needs to know your app's full url
-    const url = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}/api/trpc`
-      : 'http://localhost:3000/api/trpc';
+    const url = getApiUrl();
     return {
       transformer: superjson, // optional - adds superjson serialization
       links: [

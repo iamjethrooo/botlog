@@ -1,4 +1,6 @@
+import { setTimeout } from '../../lib/lifecycle';
 import { GameInvite } from "../../lib/utils/games/inviteEmbed";
+import { trackCollector, isStopping } from '../../lib/lifecycle';
 import { ApplyOptions } from "@sapphire/decorators";
 import {
   ApplicationCommandRegistry,
@@ -153,11 +155,12 @@ export class GamesCommand extends Command {
         components: [invite.gameInviteButtons()],
       })
       .then(async (i) => {
-        const inviteCollector =
-          (interaction.channel as TextChannel)?.createMessageComponentCollector({
+        const inviteCollector = trackCollector(
+          (interaction.channel as TextChannel).createMessageComponentCollector({
             time: 60 * 1000,
-          });
+          }));
         inviteCollector?.on("collect", async (response) => {
+          if (isStopping()) return;
           if (response.customId === `${interaction.id}${player1.id}-Join`) {
             if (response.user.id === player1.id) {
               await interaction.followUp({
@@ -247,6 +250,7 @@ export class GamesCommand extends Command {
           playerMap.forEach((player) => accepted.push(player));
         });
         inviteCollector?.on("end", async (collected, reason) => {
+          if (isStopping()) return;
           await interaction.deleteReply()!;
           if (playerMap.size === 1 || reason === "declined") {
             playerMap.forEach((player) => playersInGame.delete(player.id));

@@ -1,40 +1,84 @@
-version: '3.8'
+name: botlog
+
+x-runtime: &runtime
+  init: true
+  restart: unless-stopped
+  stop_grace_period: 30s
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
 
 services:
-  bot:
-    build:
-      context: . # <--- CHANGE THIS: Set context to the monorepo root
-      dockerfile: packages/bot/Dockerfile # <--- Specify Dockerfile path
-    container_name: botlog
-    restart: always
-    # ... environment variables ...
-    depends_on:
-      - redis
-      - dashboard
-
   dashboard:
+    <<: *runtime
     build:
       context: .
-      # context: ./packages/dashboard # Docker will look for Dockerfile and source files HERE
-      dockerfile: packages/dashboard/Dockerfile      # This is packages/dashboard/Dockerfile
-    container_name: dashboard
-    restart: always
-    # ... environment variables ...
+      dockerfile: packages/dashboard/Dockerfile
+      args:
+        NEXT_PUBLIC_INVITE_URL: ${NEXT_PUBLIC_INVITE_URL:-https://discord.com/}
+    env_file:
+      - path: ${DASHBOARD_ENV_FILE:?Set DASHBOARD_ENV_FILE to a private runtime env file}
+        format: raw
+    environment:
+      NODE_ENV: production
+      NEXTAUTH_URL: http://127.0.0.1:${DASHBOARD_PORT:-3000}
+      NEXTAUTH_URL_INTERNAL: http://dashboard:3000
+      API_INTERNAL_URL: http://dashboard:3000
+      NEXT_PUBLIC_INVITE_URL: ${NEXT_PUBLIC_INVITE_URL:-https://discord.com/}
     ports:
-      - "3000:3000"
-    depends_on:
-      - redis
+      - "127.0.0.1:${DASHBOARD_PORT:-3000}:3000"
+    healthcheck:
+      test: [CMD, node, /app/docker/healthcheck.cjs, dashboard]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 6
 
-  redis: # <-- Redis service definition is BACK!
-    image: redis:7-alpine # Using the official Docker Redis image
-    container_name: my_redis_instance
-    restart: always
-   # command: redis-server --requirepass # Set password for Redis
+  bot:
+    <<: *runtime
+    build:
+      context: .
+      dockerfile: packages/bot/Dockerfile
+    env_file:
+      - path: ${BOT_ENV_FILE:?Set BOT_ENV_FILE to a private runtime env file}
+        format: raw
+    environment:
+      NODE_ENV: production
+      API_INTERNAL_URL: http://dashboard:3000
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_DB: "0"
+      REDIS_PASSWORD: ""
+      BOT_DATA_DIR: /app/packages/bot/data
+      LOG_TO_CONSOLE_ONLY: "true"
     volumes:
-      - redis_data:/data # Persistent storage for Redis data
-    # No ports mapping for Redis unless you need to access it from your host machine (e.g., redis-cli)
-    # ports:
-    #   - "6379:6379"
+      - bot_data:/app/packages/bot/data
+    depends_on:
+      dashboard:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, node, /app/docker/healthcheck.cjs, bot]
+      interval: 10s
+      timeout: 5s
+      start_period: 90s
+      retries: 3
+
+  redis:
+    <<: *runtime
+    image: redis:7.4-bookworm
+    command: [redis-server, --appendonly, "yes", --appendfsync, everysec]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
 volumes:
+  bot_data:
   redis_data:

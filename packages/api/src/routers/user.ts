@@ -1,7 +1,35 @@
 import { t } from "../trpc";
 import { z } from "zod";
+import { economyError, economyInteger, economySetting, economyTransaction } from "../economy";
 
 export const userRouter = t.router({
+  transfer: t.procedure
+    .input(z.object({
+      sourceId: z.string().min(1),
+      recipientId: z.string().min(1),
+      recipientName: z.string(),
+      amount: z.number().int().positive().max(2147483647),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { sourceId, recipientId, recipientName, amount } = input;
+      if (sourceId === recipientId) economyError("You cannot transfer coins to yourself.");
+      return economyTransaction(ctx.prisma, async (tx) => {
+        const debit = await tx.user.updateMany({
+          where: { discordId: sourceId, cash: { gte: amount } },
+          data: { cash: { decrement: amount } },
+        });
+        if (debit.count !== 1) economyError("You cannot transfer more than your current balance.");
+        const existing = await tx.user.findUnique({ where: { discordId: recipientId } });
+        const startingCash = existing ? 0 : await economySetting(tx, "startingCash");
+        if (!Number.isInteger(startingCash)) economyError("Invalid starting balance.");
+        const recipient = await tx.user.upsert({
+          where: { discordId: recipientId },
+          update: { cash: { increment: amount } },
+          create: { discordId: recipientId, name: recipientName, cash: startingCash + amount },
+        });
+        return { recipient };
+      });
+    }),
   getUserById: t.procedure
     .input(
       z.object({
@@ -176,16 +204,17 @@ export const userRouter = t.router({
       z.object({
         id: z.string(),
         jailTime: z.string(),
+        lastHeistDate: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { id, jailTime } = input;
+      const { id, jailTime, lastHeistDate } = input;
 
       const jt = await ctx.prisma.user.update({
         where: {
           discordId: id,
         },
-        data: { jailTime: jailTime },
+        data: { jailTime, lastHeistDate },
       });
 
       return { jt };
@@ -213,23 +242,17 @@ export const userRouter = t.router({
     .input(
       z.object({
         id: z.string(),
-        cash: z.number(),
+        cash: economyInteger,
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { id, cash } = input;
 
-      const user = await ctx.prisma.user.findUnique({
-        where: {
-          discordId: id,
-        },
-      });
-
       const userCash = await ctx.prisma.user.update({
         where: {
           discordId: id,
         },
-        data: { cash: user!.cash + cash },
+        data: { cash: { increment: cash } },
       });
 
       return { userCash };
@@ -238,28 +261,26 @@ export const userRouter = t.router({
     .input(
       z.object({
         id: z.string(),
-        cash: z.number(),
+        cash: economyInteger,
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { id, cash } = input;
 
-      const user = await ctx.prisma.user.findUnique({
-        where: {
-          discordId: id,
-        },
-      });
-
       const userCash = await ctx.prisma.user.update({
         where: {
           discordId: id,
         },
-        data: { cash: user!.cash - cash },
+        data: { cash: { decrement: cash } },
       });
 
       return { userCash };
     }),
   getLeaderboard: t.procedure.query(async ({ ctx }) => {
+    // Preserve the catalog's first case-insensitive Fake ID match, including
+    // zero-quantity ownership. Do not return the catalog or other user fields.
+    const items = await ctx.prisma.item.findMany({ select: { id: true, name: true } });
+    const fakeId = items.find((item) => item.name.toLowerCase() === "fake id");
     const leaderboard = await ctx.prisma.user.findMany({
       where: {
         NOT: { cash: 15000 }
@@ -272,8 +293,20 @@ export const userRouter = t.router({
           name: "desc",
         },
       ],
+      select: {
+        discordId: true,
+        cash: true,
+        items: fakeId ? {
+          where: { itemId: fakeId.id },
+          select: { itemId: true },
+        } : false,
+      },
     });
 
-    return { leaderboard };
+    return { leaderboard: leaderboard.map((user) => ({
+      discordId: user.discordId,
+      cash: user.cash,
+      hasFakeId: !!user.items?.length,
+    })) };
   }),
 });

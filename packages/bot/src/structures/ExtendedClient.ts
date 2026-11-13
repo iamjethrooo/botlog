@@ -16,6 +16,7 @@ dotenv.config({
 });
 
 export class ExtendedClient extends SapphireClient {
+  startupReady = false;
   readonly music: QueueClient;
   leaveTimers: { [key: string]: NodeJS.Timeout };
   snipes: Map<string, Message[]>;
@@ -29,7 +30,7 @@ export class ExtendedClient extends SapphireClient {
   rrBet: Number;
   rrIsOngoing: boolean;
   rrActive: boolean;
-  activeGiveaways: String[];
+  activeGiveaways = new Map<string, number>();
   holdupMembers: String[];
   holdupLeader: String;
   holdupIsOngoing: boolean;
@@ -63,6 +64,11 @@ export class ExtendedClient extends SapphireClient {
           port: Number.parseInt(process.env.REDIS_PORT!) || 6379,
           password: process.env.REDIS_PASSWORD || "",
           db: Number.parseInt(process.env.REDIS_DB!) || 0,
+          connectTimeout: 5000,
+          maxRetriesPerRequest: 1,
+          enableOfflineQueue: false,
+          autoResendUnfulfilledCommands: false,
+          retryStrategy: times => Math.min(times * 500, 5000),
         }),
       },
       connection: {
@@ -102,7 +108,6 @@ export class ExtendedClient extends SapphireClient {
     this.rrBet = 0;
     this.rrIsOngoing = false;
     this.rrActive = false;
-    this.activeGiveaways = [];
     this.holdupMembers = [];
     this.holdupLeader = "";
     this.holdupVictim = "";
@@ -125,7 +130,7 @@ declare module "@sapphire/framework" {
     rrBet: Number;
     rrIsOngoing: boolean;
     rrActive: boolean;
-    activeGiveaways: String[];
+    activeGiveaways: Map<string, number>;
     holdupMembers: String[];
     holdupLeader: String;
     holdupIsOngoing: boolean;

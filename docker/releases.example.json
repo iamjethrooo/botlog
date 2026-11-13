@@ -1,0 +1,18 @@
+{
+  "development": {
+    "botEnvFile": "C:/private/botlog-development/bot.env",
+    "dashboardEnvFile": "C:/private/botlog-development/dashboard.env",
+    "botImage": "sha256:REPLACE_WITH_REVIEWED_LOCAL_IMAGE_ID",
+    "dashboardImage": "sha256:REPLACE_WITH_REVIEWED_LOCAL_IMAGE_ID",
+    "redisImage": "sha256:REPLACE_WITH_REVIEWED_LOCAL_IMAGE_ID",
+    "inviteUrl": "https://discord.com/"
+  },
+  "production": {
+    "botEnvFile": "C:/private/botlog-production/bot.env",
+    "dashboardEnvFile": "C:/private/botlog-production/dashboard.env",
+    "botImage": "sha256:REPLACE_WITH_REVIEWED_LOCAL_IMAGE_ID",
+    "dashboardImage": "sha256:REPLACE_WITH_REVIEWED_LOCAL_IMAGE_ID",
+    "redisImage": "sha256:REPLACE_WITH_REVIEWED_LOCAL_IMAGE_ID",
+    "inviteUrl": "https://discord.com/"
+  }
+}

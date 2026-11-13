@@ -1,3 +1,4 @@
+import { setInterval, clearInterval } from '../../lib/lifecycle';
 import { PaginatedMessage } from "@sapphire/discord.js-utilities";
 import { ApplyOptions } from "@sapphire/decorators";
 import {
